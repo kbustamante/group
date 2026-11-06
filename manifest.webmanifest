@@ -2,6 +2,7 @@
   "name": "Ventas Lácteos",
   "short_name": "Lácteos",
   "description": "Ventas al mayor, cobros, inventario y cierre del local",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

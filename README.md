@@ -5,3 +5,7 @@ Los datos viven en Google Sheets y la lógica en Google Apps Script; esta págin
 
 - `index.html`: la app (habla con Apps Script por `API_URL`).
 - `manifest.webmanifest`, `sw.js`, íconos: para instalarla en el celular.
+
+## Dos apps, misma versión
+- Real: https://kbustamante.github.io/lacteos/ (ícono azul)
+- Prueba: https://kbustamante.github.io/lacteos/prueba/ (ícono naranja "PRUEBA"), conectada a la copia de prueba.

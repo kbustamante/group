@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRUEBA Lácteos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#9a3412">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PRUEBA">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f7f3ea; --card:#fffdf8; --ink:#1d2433; --muted:#6b7280; --line:#e7e0d0;
+  --brand:#1f3a5f; --brand-2:#2c5282; --accent:#f2b705; --accent-ink:#4a3700;
+  --ok:#1a7f4b; --ok-bg:#e3f4ea; --warn:#a15c00; --warn-bg:#fff1d6; --bad:#b42318; --bad-bg:#fde7e4;
+  --local:#2c5282; --mayor:#c27c0e; --r:14px; --shadow:0 1px 2px rgba(29,36,51,.06),0 4px 14px rgba(29,36,51,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "DM Sans",system-ui,sans-serif}
+.num,.mono{font-family:"DM Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--brand);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:5}
+.hrow{display:flex;align-items:center;gap:10px;max-width:1100px;margin:0 auto}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-size:19px}
+.brand b{display:block;font-size:16px}.brand small{opacity:.75;font-size:12px}
+.tasa{margin-left:auto;text-align:right;font-size:12px;opacity:.95}
+.tasa b{font-size:15px;display:block}
+nav{display:flex;gap:2px;overflow-x:auto;max-width:1100px;margin:10px auto 0;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:none;border:0;color:#cfdcec;padding:10px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;font-weight:500}
+nav button.on{color:#fff;border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 12px}.card h3{font-size:14px;margin:14px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:720px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.g2.st{grid-template-columns:1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow)}
+.kpi small{color:var(--muted);font-size:12px;display:block}.kpi b{font-size:21px;font-family:"DM Mono",monospace}
+.kpi.bad b{color:var(--bad)}.kpi.ok b{color:var(--ok)}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(44,82,130,.15)}
+input.num{text-align:right}
+.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--brand);color:#fff}
+.btn.sec{background:#fff;color:var(--brand);border:1px solid var(--line)}
+.btn.acc{background:var(--accent);color:var(--accent-ink)}
+.btn.bad{background:#fff;color:var(--bad);border:1px solid #f3c4bd}
+.btn.sm{padding:6px 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.full{width:100%}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.r,th.r{text-align:right}
+.tbl{overflow-x:auto}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:500;white-space:nowrap}
+.p-ok{background:var(--ok-bg);color:var(--ok)}.p-warn{background:var(--warn-bg);color:var(--warn)}.p-bad{background:var(--bad-bg);color:var(--bad)}
+.p-local{background:#e6eef8;color:var(--local)}.p-mayor{background:#fbefd9;color:var(--mayor)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:9px 12px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button.on.local{background:var(--local);color:#fff}.seg button.on.mayor{background:var(--mayor);color:#fff}
+.seg button.on.plain{background:var(--brand);color:#fff}
+.linea{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
+.linea .quien{grid-column:1/-1}
+.x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
+.muted{color:var(--muted)}.small{font-size:13px}.right{text-align:right}
+.tot{display:flex;justify-content:space-between;padding:6px 0;font-size:15px}.tot.big{font-size:18px;font-weight:700;border-top:2px solid var(--ink);margin-top:6px;padding-top:10px}
+.login{max-width:360px;margin:12vh auto;text-align:center}
+.login .logo{width:64px;height:64px;font-size:34px;margin:0 auto 12px;border-radius:18px}
+.pin{font-size:28px;letter-spacing:.4em;text-align:center}
+#toast{opacity:0;pointer-events:none;position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;transition:.25s;z-index:20;max-width:90vw}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}#toast.err{background:var(--bad)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+details summary{cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}
+.cli{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.prodtbl input{padding:7px 8px}.prodtbl td{padding:5px 4px}
+.prodtbl tr.has td{background:#fff8e5}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 14px;cursor:pointer;font-weight:500;font-size:14px}
+.badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:11px;line-height:18px;text-align:center;margin-left:2px}
+.chip.off{opacity:.45;text-decoration:line-through;cursor:not-allowed}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.ghost{border-style:dashed;color:var(--muted)}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.pcard{border:1px solid #f0dfae;border-radius:12px;padding:10px 12px;background:#fff8e5}
+.pcard .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pcard .flds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.pcard .flds.c3{grid-template-columns:1fr 1fr 1fr}
+input.big{font-size:18px;padding:11px 10px}
+.chart{position:relative;height:260px}
+.hide{display:none!important}
+/* que nada empuje la pantalla hacia los lados: las tablas anchas se desplazan dentro de su recuadro */
+.grid>*,.card,.kpi{min-width:0}
+.tbl{max-width:100%;-webkit-overflow-scrolling:touch}
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:560px){
+  main{padding:12px}
+  .card{padding:13px}
+  th,td{padding:7px 4px}
+  td .pill{white-space:normal;line-height:1.25}
+  td .num.small,td.small{font-size:11.5px}
+  .kpi b{font-size:18px}
+  .brand small{display:none}
+  .tasa b{font-size:14px}
+}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-3px}
+@keyframes s{to{transform:rotate(360deg)}}
+.banner{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}.banner.ok{background:var(--ok-bg);color:var(--ok)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+/* ===== Configuración =====
+   Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
+
+const METODOS = ['Pago móvil', 'Punto de venta', 'Efectivo $', 'Efectivo Bs', 'Zelle', 'Otro'];
+const BANCOS = ['Venezuela', 'Provincial', 'Mercantil', 'Banesco', 'Bancamiga', 'Otro'];
+const TIPOS = { PDV: 'Punto de venta', PM: 'Pago móvil', EFE: 'Efectivo' };
+const LIMITE_USD = 2000; // un cierre en $ mayor a esto probablemente se escribió en bolívares
+
+let PIN = store('pin') || '', USR = store('usr') || '';
+let USER = null, S = null, TAB = 'inicio', CHARTS = [];
+let CIERRE = null, VENTA = null, COBRO = null, FILTRO = {};
+
+/* ===== Utilidades ===== */
+function store(k, v) { try { if (v === undefined) return localStorage.getItem('lac_' + k); if (v === null) localStorage.removeItem('lac_' + k); else localStorage.setItem('lac_' + k, v); } catch (e) { return null; } }
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n2 = n => Number(n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const usd = n => '$' + n2(n);
+const bs = n => 'Bs ' + n2(n);
+const r2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+const num = v => { if (typeof v === 'number') return v; v = String(v || '').trim(); if (!v) return 0; if (v.indexOf(',') >= 0) v = v.replace(/\./g, '').replace(',', '.'); return Number(v) || 0; };
+const fdate = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4) : '';
+const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const mesDe = s => s.slice(0, 7);
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const mesNombre = m => MESES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
+
+function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3200); }
+
+function call(action, data) {
+  const req = { action, usuario: USR, pin: PIN, data: data || {} };
+  if (window.google && google.script && google.script.run) {
+    return new Promise((res, rej) => google.script.run.withSuccessHandler(r => r && r.ok ? res(r.data) : rej(new Error(r ? r.error : 'Sin respuesta'))).withFailureHandler(rej).api(req));
+  }
+  if (!API_URL) return Promise.reject(new Error('Falta configurar API_URL en index.html'));
+  return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(req) })
+    .then(r => r.json()).then(r => { if (!r.ok) throw new Error(r.error); return r.data; });
+}
+
+async function busy(btn, fn) {
+  const txt = btn && btn.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
+  try { return await fn(); } catch (e) { toast(e.message, true); throw e; } finally { if (btn) { btn.disabled = false; btn.innerHTML = txt; } }
+}
+
+function hoy() { return (S && S.hoy) || new Date().toISOString().slice(0, 10); }
+function tasaPara(fecha) {
+  const t = (S && S.tasas || []).filter(x => x.Fecha <= fecha).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1)[0];
+  return t ? Number(t.Tasa) : (S && S.tasaHoy && S.tasaHoy.tasa) || null;
+}
+
+/* ===== Arranque ===== */
+const CARGANDO = '<div class="login card" style="margin-top:20vh"><div class="logo">🧀</div><p><span class="spin"></span> Cargando…</p><p class="small muted">Trayendo la información del día</p></div>';
+async function cargarDatos() {
+  if (USER.rol === 'admin') { S = await call('datos'); PROD_CACHE = {}; }
+  else if (USER.rol === 'cliente') { S = await call('cliDatos'); S.tasas = []; }
+  else { const [t, l] = await Promise.all([call('tasa'), call('local')]); S = Object.assign({ tasaHoy: t, tasas: [] }, l); S.hoy = l.hoy || t.pedido; }
+}
+async function start() {
+  if (!PIN || !USR) return renderLogin();
+  $('#app').innerHTML = CARGANDO;
+  try {
+    USER = await call('login');
+    await cargarDatos();
+    if (!TABS().some(t => t[0] === TAB)) TAB = TABS()[0][0];
+    render();
+  } catch (e) {
+    if (/PIN|usuario|intentos/i.test(e.message)) { PIN = ''; store('pin', null); }
+    renderLogin(e.message);
+  }
+}
+async function recargar() { await cargarDatos(); render(); }
+
+function renderLogin(err) {
+  $('#app').innerHTML = `<div class="login card">
+    <div class="logo">🧀</div><h2>Ventas Lácteos</h2><p class="muted small">Entra con tu usuario y tu PIN</p>
+    <label style="text-align:left">Usuario</label><input id="usr" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(USR)}" placeholder="tu usuario">
+    <label style="text-align:left;margin-top:10px">PIN</label><input id="pin" class="pin mono" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8">
+    ${err ? `<p style="color:var(--bad)" class="small">${esc(err)}</p>` : ''}
+    <button class="btn full" style="margin-top:12px" id="entrar">Entrar</button></div>`;
+  const go = () => { USR = $('#usr').value.trim().toLowerCase(); PIN = $('#pin').value.trim(); if (!USR || !PIN) return toast('Escribe usuario y PIN', true); store('usr', USR); store('pin', PIN); start(); };
+  $('#entrar').onclick = go; $('#pin').onkeydown = e => { if (e.key === 'Enter') go(); }; $('#usr').onkeydown = e => { if (e.key === 'Enter') $('#pin').focus(); };
+  (USR ? $('#pin') : $('#usr')).focus();
+}
+
+const TABS_ADMIN = [['inicio', 'Inicio'], ['vender', 'Nueva venta'], ['cobrar', 'Cobrar'], ['pedidos', 'Pedidos'], ['cierre', 'Cierre del día'], ['deudas', 'Deudas'], ['local', 'Local'], ['inventario', 'Inventario'], ['ventas', 'Historial'], ['reportes', 'Reportes'], ['productos', 'Productos'], ['ajustes', 'Ajustes']];
+const TABS_LOCAL = [['cierre', 'Cierre del día'], ['mercancia', 'Mercancía']];
+const TABS_CLIENTE = [['pedir', 'Hacer pedido'], ['cuentas', 'Mis cuentas'], ['pagar', 'Reportar pago']];
+function TABS() { return USER.rol === 'admin' ? TABS_ADMIN : USER.rol === 'cliente' ? TABS_CLIENTE : TABS_LOCAL; }
+function pendientesAdmin() { return S.pedidos ? S.pedidos.filter(p => p.Estado === 'Pendiente').length + S.pagosReportados.filter(p => p.Estado === 'Pendiente').length : 0; }
+
+function render() {
+  CHARTS.forEach(c => c.destroy()); CHARTS = [];
+  const t = S.tasaHoy || {};
+  const rolTxt = { admin: 'Administrador', empleado: 'Local', cliente: 'Cliente' }[USER.rol];
+  const np = USER.rol === 'admin' ? pendientesAdmin() : 0;
+  $('#app').innerHTML = `<header><div class="hrow">
+      <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small></div>
+      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div>
+    </div><nav>${TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}${k === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')}
+      ${USER.rol !== 'admin' ? '<button data-salir>Salir</button>' : ''}</nav></header><main id="main"></main>`;
+  document.querySelectorAll('nav [data-tab]').forEach(b => b.onclick = () => { if (TAB !== b.dataset.tab) FILTRO = {}; TAB = b.dataset.tab; render(); });
+  const s = document.querySelector('[data-salir]'); if (s) s.onclick = salir;
+  ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
+     pedidos: vPedidos, inventario: vInventario, mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
+  window.scrollTo(0, 0);
+}
+function salir() { PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
+
+/* ===== Cálculos compartidos ===== */
+function mismoCliente(nombre, q) { const n = String(nombre || '').toLowerCase().trim(); return n.includes(q) || (n.length >= 4 && q.includes(n)); }
+/** Bs de un cierre: si se registró en Bs, los montos exactos que anotó el local; si no, $ × tasa. */
+function bsCierre(c, que) {
+  const t = tasaCierre(c);
+  if (c.Moneda === 'Bs') { const k = ['PDV', 'PM', 'Efectivo'], suf = que === 'Total' ? ['Local', 'Mayor'] : [que]; return suf.reduce((s, x) => s + k.reduce((a, y) => a + Number(c[y + '_' + x] || 0), 0), 0); }
+  const usdV = que === 'Total' ? c.Total_USD : que === 'Local' ? c.Total_Local_USD : c.Total_Mayor_USD;
+  return t ? Number(usdV) * t : 0;
+}
+function tasaCierre(c) { return Number(c.Tasa) || tasaPara(c.Fecha); }
+/** Agrega datos traídos del historial sin duplicar. */
+function mergeS(r) {
+  const add = (arr, items, key) => { const have = new Set(arr.map(key)); (items || []).forEach(x => { if (!have.has(key(x))) { arr.push(x); have.add(key(x)); } }); };
+  const conDet = new Set(S.detalle.map(d => d.VentaID));
+  add(S.ventas, r.ventas, x => x.ID);
+  add(S.cobros, r.cobros, x => x.ID);
+  add(S.cierres, r.cierres, x => x.ID);
+  (r.detalle || []).forEach(d => { if (!conDet.has(d.VentaID)) S.detalle.push(d); });
+}
+function ventasActivas() { return S.ventas.filter(v => v.Estado !== 'Anulada'); }
+function deudasPorCliente() {
+  const h = hoy(), m = {};
+  ventasActivas().filter(v => Number(v.Saldo) > 0.01).forEach(v => {
+    const c = m[v.Cliente] = m[v.Cliente] || { cliente: v.Cliente, saldo: 0, vencido: 0, notas: [], venceMin: '9999' };
+    c.saldo += Number(v.Saldo); c.notas.push(v);
+    if (v.Vence < h) c.vencido += Number(v.Saldo);
+    if (v.Vence < c.venceMin) c.venceMin = v.Vence;
+  });
+  return Object.values(m).sort((a, b) => b.vencido - a.vencido || b.saldo - a.saldo);
+}
+function conciliacion(fecha) {
+  const mayor = S.cierreLineas.filter(l => l.Fecha === fecha && l.Destino === 'Mayor').reduce((s, l) => s + Number(l.MontoUSD || 0), 0);
+  const cob = S.cobros.filter(c => c.Fecha === fecha && String(c.PorLocal).toUpperCase() === 'SI').reduce((s, c) => s + Number(c.MontoUSD || 0), 0);
+  return { mayor: r2(mayor), cobros: r2(cob), dif: r2(mayor - cob) };
+}
+function concPill(c) {
+  const tol = S.tolerancia || 1;
+  if (!c.mayor && !c.cobros) return '<span class="pill p-local">Sin mayor</span>';
+  if (Math.abs(c.dif) <= tol) return '<span class="pill p-ok">Cuadra</span>';
+  return `<span class="pill p-bad">${c.dif > 0 ? 'Faltan cobros ' : 'Sobran cobros '}${usd(Math.abs(c.dif))}</span>`;
+}
+
+/* ===== INICIO ===== */
+function vInicio() {
+  const h = hoy(), mes = mesDe(h);
+  const deudas = deudasPorCliente();
+  const porCobrar = deudas.reduce((s, d) => s + d.saldo, 0), vencido = deudas.reduce((s, d) => s + d.vencido, 0);
+  const vm = ventasActivas().filter(v => mesDe(v.Fecha) === mes);
+  const ventasMes = vm.reduce((s, v) => s + Number(v.Total), 0), utilMes = vm.reduce((s, v) => s + Number(v.Utilidad), 0);
+  const cierreHoy = S.cierres.find(c => c.Fecha === h), cierreAyer = S.cierres.find(c => c.Fecha === addDays(h, -1));
+  const dias = [...Array(7)].map((_, i) => addDays(h, -i));
+  const avisos = [];
+  if (!S.tasaHoy.tasa || S.tasaHoy.fecha < addDays(h, -1)) avisos.push('La tasa BCV no está al día. Cárgala en Ajustes.');
+  if (!cierreAyer) avisos.push('Falta el cierre del local de ayer.');
+  const np = pendientesAdmin(); if (np) avisos.push(`Hay ${np} pedido(s)/pago(s) de clientes por confirmar en la pestaña Pedidos.`);
+  const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
+  if (bajos.length) avisos.push('Inventario bajo: ' + bajos.map(p => p.Nombre + ' (' + n2(p.Stock) + ' kg)').join(', '));
+  $('#main').innerHTML = `
+    ${avisos.map(a => `<div class="banner warn">⚠️ ${esc(a)}</div>`).join('')}
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="kpi"><small>Ventas al mayor · ${mesNombre(mes)}</small><b>${usd(ventasMes)}</b></div>
+      <div class="kpi ok"><small>Utilidad del mes</small><b>${usd(utilMes)}</b></div>
+      <div class="kpi"><small>Por cobrar</small><b>${usd(porCobrar)}</b></div>
+      <div class="kpi ${vencido > 0 ? 'bad' : ''}"><small>Vencido</small><b>${usd(vencido)}</b></div>
+    </div>
+    <div class="grid g2 st">
+      <div class="card"><h2>Local — últimos 7 días</h2><div class="tbl"><table>
+        <tr><th>Día</th><th class="r">Local</th><th class="r">Mayor</th><th style="padding-left:12px">Conciliación</th></tr>
+        ${dias.map(d => { const c = S.cierres.find(x => x.Fecha === d); const k = conciliacion(d);
+          const t = c && tasaCierre(c), dos = (u, q) => `<div class="num">${usd(u)}</div>${t ? `<div class="num small muted">${bs(bsCierre(c, q))}</div>` : ''}`;
+          return `<tr><td>${fdate(d)}</td>${c ? `<td class="r">${dos(c.Total_Local_USD, 'Local')}</td><td class="r">${dos(c.Total_Mayor_USD, 'Mayor')}</td><td style="padding-left:12px">${concPill(k)}</td>` : `<td class="r muted">—</td><td class="r muted">—</td><td style="padding-left:12px"><span class="pill p-warn">Sin cierre</span>${k.cobros ? `<div class="small muted">${usd(k.cobros)} en cobros</div>` : ''}</td>`}</tr>`; }).join('')}
+      </table></div></div>
+      <div class="card"><h2>Clientes con deuda vencida</h2>
+        ${deudas.filter(d => d.vencido > 0).slice(0, 8).map(d => `<div class="cli"><div><b>${esc(d.cliente)}</b><div class="small muted">${d.notas.length} nota(s) · desde ${fdate(d.venceMin)}</div></div><div class="right"><b class="num" style="color:var(--bad)">${usd(d.vencido)}</b><br><button class="btn sm sec" data-cobrar="${esc(d.cliente)}">Cobrar</button></div></div>`).join('') || '<div class="empty">✅ Nadie tiene deuda vencida</div>'}
+      </div>
+    </div>`;
+  bindCobrar();
+}
+function bindCobrar() { document.querySelectorAll('[data-cobrar]').forEach(b => b.onclick = () => { COBRO = nuevoCobro(b.dataset.cobrar); TAB = 'cobrar'; render(); }); }
+
+/* ===== CIERRE DEL LOCAL ===== */
+function nuevoCierre() {
+  return { fecha: hoy(), moneda: 'USD', notas: '', lineas: [{ tipo: 'PDV', destino: 'Local', monto: '' }, { tipo: 'PM', destino: 'Local', monto: '' }] };
+}
+function vCierre() {
+  if (!CIERRE) CIERRE = nuevoCierre();
+  const C = CIERRE, tasa = tasaPara(C.fecha) || (S.tasaHoy && S.tasaHoy.tasa);
+  const toU = m => C.moneda === 'Bs' ? (tasa ? num(m) / tasa : 0) : num(m);
+  const sum = f => C.lineas.filter(f).reduce((s, l) => s + num(l.monto), 0);
+  const sec = tipo => `<h3>${TIPOS[tipo]}</h3>
+    ${C.lineas.map((l, i) => l.tipo !== tipo ? '' : `<div class="linea">
+      <input class="num" inputmode="decimal" placeholder="0,00" value="${esc(l.monto)}" data-l="${i}" data-k="monto">
+      <div class="seg"><button class="${l.destino === 'Local' ? 'on local' : ''}" data-l="${i}" data-dest="Local">Local</button><button class="${l.destino === 'Mayor' ? 'on mayor' : ''}" data-l="${i}" data-dest="Mayor">Mayor</button></div>
+      <button class="x" data-del="${i}" title="Quitar">×</button>
+      ${l.destino === 'Mayor' ? `<input class="quien" placeholder="¿De qué cliente es? (opcional)" value="${esc(l.cliente || '')}" data-l="${i}" data-k="cliente">` : ''}
+    </div>`).join('')}
+    <button class="btn sm sec" data-add="${tipo}">+ Agregar ${TIPOS[tipo].toLowerCase()}</button>`;
+  const sym = C.moneda === 'Bs' ? bs : usd;
+  const otra = m => C.moneda === 'Bs' ? usd(tasa ? m / tasa : 0) : bs(tasa ? m * tasa : 0);
+  const esAdmin = USER.rol === 'admin';
+  $('#main').innerHTML = `<div class="card" style="max-width:620px;margin:0 auto 14px">
+    <h2>Cierre del día</h2>
+    <p class="small muted" style="margin-top:-6px">Anota cada cobro y márcalo <span class="pill p-local">Local</span> si es una venta del local, o <span class="pill p-mayor">Mayor</span> si es un cliente al mayor que pagó por la cuenta del local.</p>
+    <div class="row">
+      <div><label>Fecha</label>${esAdmin ? `<input type="date" id="cf" value="${C.fecha}">` : `<select id="cf"><option value="${hoy()}" ${C.fecha === hoy() ? 'selected' : ''}>Hoy ${fdate(hoy())}</option><option value="${addDays(hoy(), -1)}" ${C.fecha !== hoy() ? 'selected' : ''}>Ayer ${fdate(addDays(hoy(), -1))}</option></select>`}</div>
+      <div><label>Montos en</label><div class="seg"><button class="${C.moneda === 'USD' ? 'on plain' : ''}" data-mon="USD">Dólares $</button><button class="${C.moneda === 'Bs' ? 'on plain' : ''}" data-mon="Bs">Bolívares</button></div></div>
+    </div>
+    <p class="small muted">Tasa del ${fdate(C.fecha)}: <b class="mono">${tasa ? n2(tasa) : 'sin tasa'}</b></p>
+    <div id="aviso"></div>
+    ${sec('PDV')}${sec('PM')}${sec('EFE')}
+    <h3>Notas</h3><textarea id="cn" rows="2" placeholder="Algo que debamos saber (opcional)">${esc(C.notas)}</textarea>
+    <div style="margin-top:14px" id="ctot"></div>
+    <button class="btn acc full" style="margin-top:14px" id="cg">Guardar cierre</button>
+  </div>`;
+  const pintarTot = () => {
+    const lo = sum(l => l.destino === 'Local'), ma = sum(l => l.destino === 'Mayor');
+    $('#ctot').innerHTML = `<div class="tot"><span>Total local</span><b class="num" style="color:var(--local)">${sym(lo)}</b></div>
+      <div class="tot"><span>Total pagos del mayor</span><b class="num" style="color:var(--mayor)">${sym(ma)}</b></div>
+      <div class="tot big"><span>Gran total</span><span class="num">${sym(lo + ma)}</span></div>
+      ${C.moneda === 'USD' && lo + ma > LIMITE_USD ? `<div class="banner warn" style="margin-top:8px">⚠️ <b>¿Seguro que son dólares?</b> ${usd(lo + ma)} es mucho para un día; parece un monto en bolívares.
+        <button class="btn sm" id="cabs" style="margin-top:8px;display:block">Son bolívares: cambiar</button></div>` : ''}
+      ${tasa ? `<div class="banner ok" style="margin-top:8px"><div class="small" style="margin-bottom:4px">En ${C.moneda === 'Bs' ? 'dólares' : 'bolívares'} (tasa ${n2(tasa)})</div>
+        <div class="tot" style="padding:2px 0"><span>Local</span><b class="num">${otra(lo)}</b></div>
+        <div class="tot" style="padding:2px 0"><span>Mayor</span><b class="num">${otra(ma)}</b></div>
+        <div class="tot" style="padding:2px 0"><span>Total</span><b class="num">${otra(lo + ma)}</b></div></div>` : ''}`;
+  };
+  const pinta = () => { pintarTot(); const cb = $('#cabs'); if (cb) cb.onclick = () => { C.moneda = 'Bs'; rer(); }; };
+  pinta();
+  const rer = () => { const y = window.scrollY; vCierre(); window.scrollTo(0, y); };
+  document.querySelectorAll('[data-k]').forEach(el => el.oninput = () => { C.lineas[el.dataset.l][el.dataset.k] = el.value; pinta(); });
+  document.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => { C.lineas[b.dataset.l].destino = b.dataset.dest; rer(); });
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { C.lineas.splice(b.dataset.del, 1); rer(); });
+  document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { C.lineas.push({ tipo: b.dataset.add, destino: 'Local', monto: '' }); rer(); const e2 = document.querySelector(`[data-l="${C.lineas.length - 1}"][data-k="monto"]`); if (e2) e2.focus(); });
+  document.querySelectorAll('[data-mon]').forEach(b => b.onclick = () => { C.moneda = b.dataset.mon; rer(); });
+  $('#cf').onchange = e => { C.fecha = e.target.value; rer(); };
+  $('#cn').oninput = e => C.notas = e.target.value;
+  $('#cg').onclick = e => busy(e.target, async () => {
+    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: l.destino, monto: num(l.monto), cliente: l.cliente || '' })).filter(l => l.monto > 0);
+    if (!lineas.length) throw new Error('Escribe al menos un monto');
+    const totalCierre = lineas.reduce((a, l) => a + l.monto, 0);
+    if (C.moneda === 'USD' && totalCierre > LIMITE_USD && !e.target.dataset.okusd) {
+      e.target.dataset.okusd = 1;
+      throw new Error('¿Seguro que son dólares (' + usd(totalCierre) + ')? Si sí, toca Guardar otra vez. Si son bolívares, cambia arriba a "Bolívares".');
+    }
+    const r = await call('guardarCierre', { fecha: C.fecha, moneda: C.moneda, notas: C.notas, lineas });
+    toast('Cierre guardado ✓');
+    CIERRE = null;
+    if (esAdmin) { TAB = 'local'; await recargar(); }
+    else $('#main').innerHTML = `<div class="card login" style="margin-top:8vh"><div class="logo" style="background:var(--ok-bg)">✅</div><h2>Cierre del ${fdate(r.fecha)} guardado</h2><p class="muted">Si te equivocaste, vuelve a registrarlo y se reemplaza.</p><button class="btn sec full" id="otro">Registrar de nuevo</button></div>`, $('#otro').onclick = () => vCierre();
+  });
+  // aviso si ya existe
+  call('cierreDelDia', { fecha: C.fecha }).then(r => { const a = $('#aviso'); if (a && r && r.existe) a.innerHTML = `<div class="banner warn">Ya hay un cierre para este día${r.empleado ? ' (de ' + esc(r.empleado) + ')' : ''}. Si guardas, se reemplaza.</div>`; }).catch(() => {});
+}
+
+/* ===== VENDER ===== */
+function nuevaVenta() {
+  return { fecha: hoy(), cliente: '', nota: '', notas: '', lineas: [], verCostos: false, verOtros: false, actualizarPrecios: false, direccion: null, buscando: false,
+    pago: { activo: false, metodo: 'Pago móvil', banco: 'Venezuela', moneda: 'Bs', monto: '', referencia: '' } };
+}
+function siguienteNota() { return S.ventas.filter(v => Number(v.Nota) > 0).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1).slice(0, 20).reduce((m, v) => Math.max(m, Number(v.Nota)), 0) + 1; }
+function productosPorUso() {
+  const f = {}; S.detalle.forEach(d => f[d.Codigo] = (f[d.Codigo] || 0) + 1);
+  return S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO').sort((a, b) => (f[b.Codigo] || 0) - (f[a.Codigo] || 0));
+}
+function ultimaVenta(cliente) {
+  return S.ventas.filter(v => v.Cliente === cliente && v.Estado !== 'Anulada' && S.detalle.some(d => d.VentaID === v.ID))
+    .sort((a, b) => (b.Fecha + String(b.Nota).padStart(6, '0')) > (a.Fecha + String(a.Nota).padStart(6, '0')) ? 1 : -1)[0];
+}
+function agregarLinea(V, codigo, kg, previo) {
+  if (V.lineas.some(l => l.codigo === codigo)) return;
+  const p = S.productos.find(x => x.Codigo === codigo) || {};
+  V.lineas.push({ codigo, nombre: p.Nombre || codigo, kg: kg == null ? '' : String(kg), precio: String(Number(p.Precio) || ''), costo: String(Number(p.Costo) || ''), previo: previo || null });
+}
+function vVender() {
+  if (!VENTA) VENTA = nuevaVenta();
+  const V = VENTA;
+  const cli = S.clientes.find(c => c.Nombre === V.cliente);
+  if (cli && V.direccion === null) V.direccion = cli.Direccion || '';
+  const deuda = deudasPorCliente().find(d => d.cliente === V.cliente);
+  const dias = Number(cli && cli.DiasCredito) || 7;
+  const tasa = tasaPara(V.fecha);
+  const prods = productosPorUso(), usados = new Set(V.lineas.map(l => l.codigo));
+  const top = prods.slice(0, 8), otros = prods.slice(8);
+  const ult = V.cliente ? ultimaVenta(V.cliente) : null;
+  const disp = c => Number((S.disponible || {})[c] || 0);
+  const chip = p => `<button class="chip ${usados.has(p.Codigo) ? 'on' : ''}" data-add="${p.Codigo}">${usados.has(p.Codigo) ? '✓ ' : '+ '}${esc(p.Nombre)} <small class="${disp(p.Codigo) > 0 ? 'muted' : ''}" style="${disp(p.Codigo) > 0 ? '' : 'color:var(--bad)'}">${n2(disp(p.Codigo))} kg</small></button>`;
+  $('#main').innerHTML = `<div class="card">
+    <h2>Nueva venta al mayor</h2>
+    ${V.pedidoId ? `<div class="banner ok">🛒 Confirmando el pedido de <b>${esc(V.cliente)}</b>. Ajusta los kilos reales que pesaste y guarda. <a href="#" id="vcanped">Cancelar</a></div>` : ''}
+    <div class="row">
+      <div style="flex:2;min-width:200px"><label>Cliente</label><input id="vc" list="dl-cli" value="${esc(V.cliente)}" placeholder="Escribe o elige" autocomplete="off"><datalist id="dl-cli">${S.clientes.filter(c => String(c.Activo).toUpperCase() !== 'NO').map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist></div>
+      <div><label>Fecha</label><input type="date" id="vf" value="${V.fecha}"></div>
+      <div><label>N° nota (talonario)</label><input id="vn" class="num" inputmode="numeric" value="${esc(V.nota)}" placeholder="${siguienteNota()}"></div>
+    </div>
+    ${V.cliente && !cli ? '<p class="small" style="color:var(--warn)">Cliente nuevo: se agregará a la lista.</p>' : ''}
+    ${V.cliente ? `<div style="margin-top:10px"><label>Dirección (opcional)</label><input id="vdir" value="${esc(V.direccion || '')}" placeholder="Dirección de entrega"></div>` : ''}
+    ${deuda ? `<p class="small">Este cliente debe <b class="num">${usd(deuda.saldo)}</b>${deuda.vencido ? ` (<b style="color:var(--bad)">${usd(deuda.vencido)} vencido</b>)` : ''}.</p>` : ''}
+    ${V.cliente && cli ? `<div style="margin-top:10px">${ult ? `<button class="btn sec full" id="vrep">↻ Repetir último pedido · nota ${esc(ult.Nota || '-')} del ${fdate(ult.Fecha)} (${usd(ult.Total)})</button>`
+      : `<button class="btn sec full" id="vbus">${V.buscando ? '<span class="spin"></span>' : '↻ Buscar su último pedido en el historial'}</button>`}</div>` : ''}
+    <div class="row" style="margin:14px 0 8px;justify-content:space-between"><h3 style="margin:0;flex:none">Productos</h3>
+      <label style="flex:none;white-space:nowrap;display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="vcos" style="width:auto" ${V.verCostos ? 'checked' : ''}> Ver costos</label></div>
+    <div class="chips">${top.map(chip).join('')}${otros.length ? `<button class="chip ghost" id="votros">${V.verOtros ? '− Menos' : '+ Otros (' + otros.length + ')'}</button>` : ''}</div>
+    ${V.verOtros ? `<div class="chips" style="margin-top:8px">${otros.map(chip).join('')}</div>` : ''}
+    <div class="pcards" style="margin-top:12px">${V.lineas.map((l, i) => `<div class="pcard">
+      <div class="top"><b>${esc(l.nombre)}</b><span><span class="num" data-st="${i}"></span><button class="x" data-rm="${i}" title="Quitar">×</button></span></div>
+      <div class="flds ${V.verCostos ? 'c3' : ''}">
+        <div><label>Kg</label><input class="num big" inputmode="decimal" data-i="${i}" data-f="kg" value="${esc(l.kg)}" placeholder="0"></div>
+        ${V.verCostos ? `<div><label>Costo</label><input class="num big" inputmode="decimal" data-i="${i}" data-f="costo" value="${esc(l.costo)}"></div>` : ''}
+        <div><label>Precio $/kg</label><input class="num big" inputmode="decimal" data-i="${i}" data-f="precio" value="${esc(l.precio)}"></div>
+      </div>
+      ${S.movimientos && S.movimientos.length && num(l.kg) > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) ? `<div class="small" style="color:var(--bad);margin-top:4px">⚠️ En inventario hay ${n2((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock)} kg</div>` : ''}
+      ${l.previo && num(l.previo) !== num(l.precio) ? `<div class="small muted" style="margin-top:4px">La vez pasada: ${n2(l.previo)} · <a href="#" data-prev="${i}">usar ese precio</a></div>` : ''}
+    </div>`).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos que lleva el cliente o usa "Repetir último pedido".</div>'}</div>
+    ${V.lineas.length ? `<label style="display:flex;gap:6px;align-items:center;margin-top:10px"><input type="checkbox" id="vap" style="width:auto" ${V.actualizarPrecios ? 'checked' : ''}> Guardar estos precios como precios de lista</label>` : ''}
+    <div style="margin-top:10px" id="vtot"></div>
+    <h3>Pago</h3>
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="vpa" style="width:auto" ${V.pago.activo ? 'checked' : ''}> El cliente ya pagó (total o una parte)</label>
+    ${V.pago.activo ? pagoCampos(V.pago, tasa, 'vp') : `<p class="small muted">Queda a crédito, vence el ${fdate(addDays(V.fecha, dias))} (${dias} días).</p>`}
+    <div class="row" style="margin-top:12px"><div style="flex:3"><label>Notas</label><input id="vno" value="${esc(V.notas)}"></div></div>
+    <div class="row" style="margin-top:14px"><button class="btn sec" id="vlimpiar" style="flex:none">Limpiar</button><button class="btn acc" id="vg">Guardar venta</button></div>
+  </div>`;
+  const pintarTot = () => {
+    let t = 0, c = 0, k = 0;
+    V.lineas.forEach((l, i) => { const kg = num(l.kg); t += kg * num(l.precio); c += kg * num(l.costo); k += kg; const el = document.querySelector(`[data-st="${i}"]`); if (el) el.textContent = kg ? usd(kg * num(l.precio)) : ''; });
+    $('#vtot').innerHTML = !V.lineas.length ? '' : `<div class="tot"><span>Kilos</span><span class="num">${n2(k)} kg</span></div>
+      <div class="tot"><span>Utilidad</span><span class="num" style="color:var(--ok)">${usd(t - c)} ${t ? `<small class="muted">(${Math.round((t - c) / t * 100)}%)</small>` : ''}</span></div>
+      <div class="tot big"><span>Total</span><span class="num">${usd(t)}${tasa ? `<br><small class="muted">${bs(t * tasa)}</small>` : ''}</span></div>`;
+  };
+  pintarTot();
+  const rer = (focoCod) => { const y = window.scrollY; vVender(); window.scrollTo(0, y); if (focoCod) { const i = V.lineas.findIndex(l => l.codigo === focoCod); const el = document.querySelector(`[data-i="${i}"][data-f="kg"]`); if (el) el.focus(); } };
+  document.querySelectorAll('[data-i]').forEach(el => el.oninput = () => { V.lineas[el.dataset.i][el.dataset.f] = el.value; pintarTot(); });
+  document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { agregarLinea(V, b.dataset.add); rer(b.dataset.add); });
+  document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { V.lineas.splice(b.dataset.rm, 1); rer(); });
+  document.querySelectorAll('[data-prev]').forEach(a => a.onclick = e => { e.preventDefault(); const l = V.lineas[a.dataset.prev]; l.precio = String(l.previo); rer(); });
+  const ov = $('#votros'); if (ov) ov.onclick = () => { V.verOtros = !V.verOtros; rer(); };
+  const repetir = (venta) => {
+    S.detalle.filter(d => d.VentaID === venta.ID).forEach(d => { V.lineas = V.lineas.filter(l => l.codigo !== d.Codigo); agregarLinea(V, d.Codigo, d.Kg, d.Precio); });
+    toast('Pedido cargado: ajusta los kilos si cambió algo'); rer();
+  };
+  const rp = $('#vrep'); if (rp) rp.onclick = () => repetir(ult);
+  const bu = $('#vbus'); if (bu) bu.onclick = async () => {
+    V.buscando = true; rer();
+    try { mergeS(await call('historial', { cliente: V.cliente })); const u = ultimaVenta(V.cliente); V.buscando = false; if (u) repetir(u); else { toast('Este cliente no tiene pedidos anteriores'); rer(); } }
+    catch (e) { V.buscando = false; toast(e.message, true); rer(); }
+  };
+  $('#vc').onchange = e => { V.cliente = e.target.value.trim(); V.direccion = null; setTimeout(vVender); };
+  $('#vf').onchange = e => { V.fecha = e.target.value; rer(); };
+  $('#vn').oninput = e => V.nota = e.target.value;
+  const vd = $('#vdir'); if (vd) vd.oninput = e => V.direccion = e.target.value;
+  $('#vno').oninput = e => V.notas = e.target.value;
+  $('#vcos').onchange = e => { V.verCostos = e.target.checked; rer(); };
+  const ap = $('#vap'); if (ap) ap.onchange = e => V.actualizarPrecios = e.target.checked;
+  $('#vpa').onchange = e => { V.pago.activo = e.target.checked; rer(); };
+  if (V.pago.activo) bindPago(V.pago, 'vp', rer);
+  $('#vlimpiar').onclick = () => { VENTA = null; vVender(); };
+  const cp = $('#vcanped'); if (cp) cp.onclick = ev => { ev.preventDefault(); VENTA = null; TAB = 'pedidos'; render(); };
+  $('#vg').onclick = e => busy(e.target, async () => {
+    const lineas = V.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), precio: num(l.precio), costo: num(l.costo) }));
+    if (!V.cliente) throw new Error('Elige el cliente');
+    if (!lineas.length) throw new Error('Escribe los kilos de al menos un producto');
+    const sinStock = lineas.filter(l => l.kg > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) + 0.001);
+    if (sinStock.length && S.movimientos && S.movimientos.length && !e.target.dataset.okst) { e.target.dataset.okst = 1; throw new Error('El inventario no alcanza para: ' + sinStock.map(l => nombreProd(l.codigo)).join(', ') + '. Si igual lo despachaste, toca Guardar otra vez.'); }
+    const r = await call('guardarVenta', { fecha: V.fecha, cliente: V.cliente, nota: V.nota ? num(V.nota) : null, lineas, notas: V.notas, actualizarPrecios: V.actualizarPrecios, pedidoId: V.pedidoId || '' });
+    const c2 = S.clientes.find(c => c.Nombre === V.cliente) || { Nombre: V.cliente, DiasCredito: 7 };
+    if ((V.direccion || '') !== (c2.Direccion || '')) await call('guardarCliente', Object.assign({}, c2, { original: V.cliente, Direccion: V.direccion || '' }));
+    if (V.pago.activo && num(V.pago.monto) > 0) await call('guardarCobro', cobroPayload(V.pago, V.cliente, V.fecha, r.id));
+    toast(`Venta nota ${r.nota} guardada · ${usd(r.total)}`);
+    VENTA = null; await recargar();
+  });
+}
+
+function pagoCampos(P, tasa, px) {
+  const m = num(P.monto), eq = P.moneda === 'Bs' ? (num(P.tasa || tasa) ? m / num(P.tasa || tasa) : 0) : m;
+  return `<div class="grid g3" style="margin-top:8px">
+    <div><label>Método</label><select id="${px}m">${METODOS.map(x => `<option ${x === P.metodo ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+    <div><label>Banco</label><select id="${px}b"><option value="">—</option>${BANCOS.map(x => `<option ${x === P.banco ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+    <div><label>Moneda</label><div class="seg"><button class="${P.moneda === 'Bs' ? 'on plain' : ''}" data-${px}mon="Bs">Bs</button><button class="${P.moneda === 'USD' ? 'on plain' : ''}" data-${px}mon="USD">$</button></div></div>
+    <div><label>Monto ${P.moneda === 'Bs' ? 'Bs' : '$'}</label><input id="${px}v" class="num" inputmode="decimal" value="${esc(P.monto)}" placeholder="0,00"></div>
+    ${P.moneda === 'Bs' ? `<div><label>Tasa</label><input id="${px}t" class="num" inputmode="decimal" value="${esc(P.tasa || (tasa ? tasa : ''))}"></div><div><label>Equivale</label><div class="num" id="${px}eq" style="padding:10px 0;font-weight:700">${usd(eq)}</div></div>` : '<div></div><div></div>'}
+    <div><label>Referencia (opcional)</label><input id="${px}r" value="${esc(P.referencia)}" placeholder="últimos 4"></div>
+    <div style="grid-column:span 2"><label>&nbsp;</label><label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px"><input type="checkbox" id="${px}pl" style="width:auto" ${porLocalDe(P) ? 'checked' : ''}> Entró por las cuentas del local (punto o pago móvil del local)</label></div>
+  </div>`;
+}
+function porLocalDe(P) { return P.porLocal != null ? P.porLocal : /móvil|Punto/.test(P.metodo); }
+function bindPago(P, px, rer) {
+  $('#' + px + 'm').onchange = e => { P.metodo = e.target.value; P.porLocal = null; if (/Efectivo \$|Zelle/.test(P.metodo)) P.moneda = 'USD'; rer(); };
+  $('#' + px + 'b').onchange = e => P.banco = e.target.value;
+  document.querySelectorAll(`[data-${px}mon]`).forEach(b => b.onclick = () => { P.moneda = b.getAttribute('data-' + px + 'mon'); rer(); });
+  const upd = () => { const eqEl = $('#' + px + 'eq'); if (eqEl) { const t = num(P.tasa || ($('#' + px + 't') || {}).value); eqEl.textContent = usd(t ? num(P.monto) / t : 0); } };
+  $('#' + px + 'v').oninput = e => { P.monto = e.target.value; upd(); };
+  const t = $('#' + px + 't'); if (t) t.oninput = e => { P.tasa = e.target.value; upd(); };
+  $('#' + px + 'r').oninput = e => P.referencia = e.target.value;
+  $('#' + px + 'pl').onchange = e => P.porLocal = e.target.checked;
+}
+function cobroPayload(P, cliente, fecha, ventaId) {
+  const tasa = P.moneda === 'Bs' ? num(P.tasa || tasaPara(fecha)) : null;
+  return { fecha, cliente, ventaId: ventaId || '', metodo: P.metodo, banco: P.banco, referencia: P.referencia, notas: P.notas || '',
+    montoBs: P.moneda === 'Bs' ? num(P.monto) : 0, montoUSD: P.moneda === 'USD' ? num(P.monto) : 0, tasa, porLocal: porLocalDe(P) };
+}
+
+/* ===== COBRAR ===== */
+function nuevoCobro(cliente) { return { fecha: hoy(), cliente: cliente || '', ventaId: '', metodo: 'Pago móvil', banco: 'Venezuela', moneda: 'Bs', monto: '', referencia: '', notas: '' }; }
+function vCobrar() {
+  if (!COBRO) COBRO = nuevoCobro();
+  const P = COBRO, tasa = tasaPara(P.fecha);
+  const pend = ventasActivas().filter(v => v.Cliente === P.cliente && Number(v.Saldo) > 0.01).sort((a, b) => a.Fecha < b.Fecha ? -1 : 1);
+  const saldo = pend.reduce((s, v) => s + Number(v.Saldo), 0);
+  const recientes = S.cobros.slice().sort((a, b) => (b.CreadoEn || b.Fecha) > (a.CreadoEn || a.Fecha) ? 1 : -1).slice(0, 25);
+  $('#main').innerHTML = `<div class="card">
+    <h2>Registrar cobro al mayor</h2>
+    <div class="row">
+      <div style="flex:2;min-width:200px"><label>Cliente</label><input id="pc" list="dl-cli2" value="${esc(P.cliente)}" placeholder="Escribe o elige"><datalist id="dl-cli2">${deudasPorCliente().map(d => `<option value="${esc(d.cliente)}">${usd(d.saldo)}</option>`).join('')}${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist></div>
+      <div><label>Fecha del pago</label><input type="date" id="pf" value="${P.fecha}"></div>
+    </div>
+    ${P.cliente ? (pend.length ? `<h3>Notas pendientes · debe ${usd(saldo)}</h3><div class="tbl"><table>
+      <tr><th></th><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
+      <tr><td><input type="radio" name="pv" value="" ${!P.ventaId ? 'checked' : ''} style="width:auto"></td><td colspan="4"><b>Aplicar a las más viejas primero</b></td></tr>
+      ${pend.map(v => `<tr><td><input type="radio" name="pv" value="${v.ID}" ${P.ventaId === v.ID ? 'checked' : ''} style="width:auto"></td><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < hoy() ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num">${usd(v.Saldo)}</td></tr>`).join('')}
+      </table></div>` : '<p class="small muted">Este cliente no tiene deudas; el pago quedará como saldo a favor.</p>') : ''}
+    ${pagoCampos(P, tasa, 'pp')}
+    <div style="margin-top:10px"><label>Notas</label><input id="pn" value="${esc(P.notas)}"></div>
+    <button class="btn acc full" style="margin-top:14px" id="pg">Guardar cobro</button>
+  </div>
+  <div class="card"><h2>Últimos cobros</h2><div class="tbl"><table>
+    <tr><th>Fecha</th><th>Cliente</th><th>Método</th><th class="r">Bs</th><th class="r">$</th><th></th><th></th></tr>
+    ${recientes.map(c => `<tr><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}</td><td class="small">${esc(c.Metodo)}${c.Banco ? ' · ' + esc(c.Banco) : ''}</td><td class="r num small">${c.MontoBs ? n2(c.MontoBs) : ''}</td><td class="r num">${usd(c.MontoUSD)}</td><td>${String(c.PorLocal).toUpperCase() === 'SI' ? '<span class="pill p-mayor" title="Entró por cuentas del local">Local</span>' : ''}</td><td><button class="x" data-dc="${c.ID}" title="Eliminar">×</button></td></tr>`).join('')}
+  </table></div></div>`;
+  $('#pc').onchange = e => { P.cliente = e.target.value.trim(); P.ventaId = ''; setTimeout(vCobrar); };
+  $('#pf').onchange = e => { P.fecha = e.target.value; P.tasa = ''; vCobrar(); };
+  $('#pn').oninput = e => P.notas = e.target.value;
+  document.querySelectorAll('[name=pv]').forEach(r => r.onchange = () => P.ventaId = r.value);
+  bindPago(P, 'pp', vCobrar);
+  $('#pg').onclick = e => busy(e.target, async () => {
+    if (!P.cliente) throw new Error('Elige el cliente');
+    if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
+    const r = await call('guardarCobro', cobroPayload(P, P.cliente, P.fecha, P.ventaId));
+    toast('Cobro guardado' + (r.aplicado.length > 1 ? ` · repartido en ${r.aplicado.length} notas` : ''));
+    COBRO = nuevoCobro(); await recargar();
+  });
+  document.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { await call('eliminarCobro', { id: b.dataset.dc }); toast('Cobro eliminado'); await recargar(); }); });
+}
+function confirmar(btn, txt) { if (btn.dataset.ok) return true; btn.dataset.ok = 1; const o = btn.innerHTML; btn.innerHTML = txt; btn.style.color = 'var(--bad)'; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.ok; btn.innerHTML = o; btn.style.color = ''; } }, 2500); return false; }
+
+/* ===== DEUDAS ===== */
+function vDeudas() {
+  const d = deudasPorCliente(), h = hoy();
+  const tot = d.reduce((s, x) => s + x.saldo, 0), ven = d.reduce((s, x) => s + x.vencido, 0);
+  $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
+      <div class="kpi"><small>Total por cobrar</small><b>${usd(tot)}</b></div>
+      <div class="kpi bad"><small>Vencido</small><b>${usd(ven)}</b></div>
+      <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
+    <div class="card"><h2>Por cliente</h2>
+    ${d.map(c => { const tel = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Telefono;
+      const msg = `Hola, le recordamos que tiene un saldo pendiente de ${usd(c.saldo)} (${c.notas.map(n => 'nota ' + (n.Nota || '-') + ': ' + usd(n.Saldo)).join(', ')}). ¡Gracias!`;
+      const wa = 'https://wa.me/' + String(tel || '').replace(/\D/g, '').replace(/^0/, '58') + '?text=' + encodeURIComponent(msg);
+      const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
+      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
+        <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
+        ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
+        <div class="row" style="margin:10px 0 14px"><button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button><button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button><a class="btn sm sec" style="flex:none;text-decoration:none;white-space:nowrap" target="_blank" href="${wa}">Recordar por WhatsApp</a></div>
+      </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
+    </div>`;
+  bindCobrar(); bindHist();
+}
+function bindHist() {
+  document.querySelectorAll('[data-hist]').forEach(b => b.onclick = () => busy(b, async () => {
+    mergeS(await call('historial', { cliente: b.dataset.hist }));
+    FILTRO.q = b.dataset.hist; FILTRO.exacto = true; FILTRO.estado = ''; TAB = 'ventas'; render();
+  }));
+}
+
+/* ===== LOCAL ===== */
+function vLocal() {
+  const fechas = [...new Set([...S.cierres.map(c => c.Fecha), ...S.cobros.filter(c => String(c.PorLocal).toUpperCase() === 'SI').map(c => c.Fecha)])].sort().reverse().slice(0, 45);
+  const mes = mesDe(hoy());
+  const cm = S.cierres.filter(c => mesDe(c.Fecha) === mes);
+  $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
+      <div class="kpi"><small>Ventas del local · ${mesNombre(mes)}</small><b>${usd(cm.reduce((s, c) => s + Number(c.Total_Local_USD), 0))}</b></div>
+      <div class="kpi"><small>Pagos del mayor por el local</small><b>${usd(cm.reduce((s, c) => s + Number(c.Total_Mayor_USD), 0))}</b></div>
+      <div class="kpi"><small>Cierres registrados</small><b>${cm.length}</b></div></div>
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0;flex:none;white-space:nowrap">Cierres y conciliación</h2><button class="btn acc" style="flex:none;white-space:nowrap" id="nc">+ Registrar cierre</button></div>
+    <p class="small muted">"Conciliación" compara lo que el local marcó como <span class="pill p-mayor">Mayor</span> con los cobros que registraste como "entró por las cuentas del local" ese mismo día.</p>
+    <div class="tbl"><table><tr><th>Fecha</th><th>Por</th><th class="r">Local</th><th class="r">Local Bs</th><th class="r">Mayor (local)</th><th class="r">Cobros mayor</th><th>Conciliación</th><th></th></tr>
+    ${fechas.map(f => { const c = S.cierres.find(x => x.Fecha === f); const k = conciliacion(f);
+      return `<tr><td>${fdate(f)}</td><td class="small">${c ? esc(c.Empleado) : '<span class="pill p-warn">sin cierre</span>'}</td><td class="r num">${c ? usd(c.Total_Local_USD) : ''}</td><td class="r num small muted">${c && tasaCierre(c) ? bs(bsCierre(c, 'Local')) : ''}</td><td class="r num">${usd(k.mayor)}</td><td class="r num">${usd(k.cobros)}</td><td>${c ? concPill(k) : ''}</td><td>${c ? `<button class="btn sm sec" data-ver="${c.ID}">Ver</button>` : ''}</td></tr>
+      <tr class="hide" id="d-${c ? c.ID : f}"><td colspan="8"></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">Aún no hay cierres</td></tr>'}
+    </table></div></div>`;
+  $('#nc').onclick = () => { CIERRE = nuevoCierre(); TAB = 'cierre'; render(); };
+  document.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => {
+    const c = S.cierres.find(x => x.ID === b.dataset.ver), tr = $('#d-' + c.ID);
+    if (!tr.classList.contains('hide')) return tr.classList.add('hide');
+    const ls = S.cierreLineas.filter(l => l.CierreID === c.ID), cob = S.cobros.filter(x => x.Fecha === c.Fecha && String(x.PorLocal).toUpperCase() === 'SI');
+    tr.firstElementChild.innerHTML = `<div class="grid g2 st" style="padding:6px 0">
+      <div><b class="small">Lo que anotó el local (${c.Moneda === 'Bs' ? 'en Bs' : 'en $'}${tasaCierre(c) ? ' · tasa ' + n2(tasaCierre(c)) : ''})</b><table><tr><th></th><th></th><th class="r">$</th><th class="r">Bs</th></tr>${ls.map(l => `<tr><td class="small">${TIPOS[l.Tipo] || l.Tipo}</td><td><span class="pill ${l.Destino === 'Mayor' ? 'p-mayor' : 'p-local'}">${l.Destino}</span> <span class="small muted">${esc(l.Cliente)}</span></td><td class="r num">${usd(l.MontoUSD)}</td><td class="r num small">${c.Moneda === 'Bs' ? bs(l.Monto) : (tasaCierre(c) ? bs(l.MontoUSD * tasaCierre(c)) : '')}</td></tr>`).join('')}
+      <tr><td colspan="2"><b>Total</b></td><td class="r num"><b>${usd(c.Total_USD)}</b></td><td class="r num small"><b>${tasaCierre(c) ? bs(bsCierre(c, 'Total')) : ''}</b></td></tr></table>${c.Notas ? `<p class="small">📝 ${esc(c.Notas)}</p>` : ''}</div>
+      <div><b class="small">Cobros al mayor de ese día (por cuentas del local)</b><table>${cob.map(x => `<tr><td class="small">${esc(x.Cliente)}</td><td class="small">${esc(x.Metodo)}</td><td class="r num">${usd(x.MontoUSD)}</td></tr>`).join('') || '<tr><td class="muted small">Ninguno registrado</td></tr>'}</table>
+      <div class="row" style="margin-top:8px"><button class="btn sm sec" data-edit="${c.ID}" style="flex:none">Corregir</button><button class="btn sm bad" data-delc="${c.ID}" style="flex:none">Eliminar</button></div></div></div>`;
+    tr.classList.remove('hide');
+    tr.querySelector('[data-edit]').onclick = () => { CIERRE = { fecha: c.Fecha, moneda: c.Moneda === 'Bs' ? 'Bs' : 'USD', notas: c.Notas || '', lineas: ls.map(l => ({ tipo: l.Tipo, destino: l.Destino, monto: String(l.Monto), cliente: l.Cliente })) }; TAB = 'cierre'; render(); };
+    tr.querySelector('[data-delc]').onclick = e => { if (confirmar(e.target, '¿Seguro?')) busy(e.target, async () => { await call('eliminarCierre', { id: c.ID }); toast('Cierre eliminado'); await recargar(); }); };
+  });
+}
+
+/* ===== VENTAS (historial) ===== */
+function vVentas() {
+  const q = (FILTRO.q || '').toLowerCase(), est = FILTRO.estado || '';
+  const det = {}; S.detalle.forEach(d => (det[d.VentaID] = det[d.VentaID] || []).push(d));
+  const list = S.ventas.filter(v => (!q || (FILTRO.exacto ? mismoCliente(v.Cliente, q) : String(v.Cliente).toLowerCase().includes(q)) || String(v.Nota) === q) && (!est || v.Estado === est))
+    .sort((a, b) => (b.Fecha + String(b.Nota).padStart(6, '0')) > (a.Fecha + String(a.Nota).padStart(6, '0')) ? 1 : -1).slice(0, 150);
+  const pill = e => ({ Pagada: 'p-ok', Abonada: 'p-warn', Pendiente: 'p-warn', Anulada: 'p-bad' }[e] || '');
+  $('#main').innerHTML = `<div class="card"><div class="row" style="margin-bottom:10px">
+      <div style="flex:2"><input id="fq" placeholder="Buscar cliente o N° de nota" value="${esc(FILTRO.q || '')}"></div>
+      <div><select id="fe"><option value="">Todas</option>${['Pendiente', 'Abonada', 'Pagada', 'Anulada'].map(x => `<option ${x === est ? 'selected' : ''}>${x}</option>`).join('')}</select></div></div>
+    <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Cliente</th><th class="r">Total</th><th class="r">Saldo</th><th>Estado</th></tr>
+    ${list.map(v => `<tr style="cursor:pointer" data-v="${v.ID}"><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${esc(v.Cliente)}</td><td class="r num">${usd(v.Total)}</td><td class="r num">${Number(v.Saldo) > 0.01 ? usd(v.Saldo) : ''}</td><td><span class="pill ${pill(v.Estado)}">${v.Estado}</span></td></tr>
+      <tr class="hide" id="vd-${v.ID}"><td colspan="6"><table>${(det[v.ID] || []).map(d => `<tr><td class="small">${esc(d.Producto)}</td><td class="r num small">${n2(d.Kg)} kg</td><td class="r num small">× ${n2(d.Precio)}</td><td class="r num small">${usd(d.Subtotal)}</td><td class="r num small" style="color:var(--ok)">${usd(d.Utilidad)}</td></tr>`).join('')}</table>
+      ${S.cobros.filter(c => c.VentaID === v.ID).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} ${esc(c.Banco)} · ${usd(c.MontoUSD)}${c.MontoBs ? ' (' + bs(c.MontoBs) + ')' : ''}${c.Notas ? ' · ' + esc(c.Notas) : ''}</div>`).join('')}
+      ${v.Notas ? `<div class="small">📝 ${esc(v.Notas)}</div>` : ''}
+      ${v.Estado !== 'Anulada' ? `<div class="row" style="margin-top:8px"><button class="btn sm sec" data-cob="${esc(v.Cliente)}|${v.ID}" style="flex:none">Cobrar</button><button class="btn sm bad" data-anular="${v.ID}" style="flex:none">Anular</button></div>` : ''}</td></tr>`).join('')}
+    </table></div>${list.length === 150 ? '<p class="small muted">Mostrando las 150 más recientes. Usa el buscador.</p>' : ''}
+    <div class="banner ok" style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span class="small">La app muestra los últimos 12 meses y todo lo pendiente.${q ? ' Para ver ventas más viejas de este cliente:' : ' Escribe un cliente para buscar en años anteriores.'}</span>${q ? '<button class="btn sm" id="fh" style="flex:none">Buscar en todo el historial</button>' : ''}</div></div>`;
+  const fh = $('#fh'); if (fh) fh.onclick = e => busy(e.target, async () => { const r = await call('historial', { cliente: FILTRO.q }); FILTRO.exacto = true; mergeS(r); toast(r.ventas.length + ' venta(s) en el historial'); vVentas(); });
+  $('#fq').oninput = e => { FILTRO.q = e.target.value; FILTRO.exacto = false; clearTimeout(window._fq); window._fq = setTimeout(() => { vVentas(); const i = $('#fq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 350); };
+  $('#fe').onchange = e => { FILTRO.estado = e.target.value; vVentas(); };
+  document.querySelectorAll('[data-v]').forEach(tr => tr.onclick = () => $('#vd-' + tr.dataset.v).classList.toggle('hide'));
+  document.querySelectorAll('[data-cob]').forEach(b => b.onclick = () => { const [c, id] = b.dataset.cob.split('|'); COBRO = nuevoCobro(c); COBRO.ventaId = id; TAB = 'cobrar'; render(); });
+  document.querySelectorAll('[data-anular]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Anular?')) busy(b, async () => { await call('anularVenta', { id: b.dataset.anular }); toast('Venta anulada'); await recargar(); }); });
+}
+
+/* ===== REPORTES ===== */
+function vReportes() {
+  const meses = [...new Set((S.meses || []).concat(S.ventas.map(v => mesDe(v.Fecha)), S.cierres.map(c => mesDe(c.Fecha))))].sort().reverse();
+  S.mesesCargados = S.mesesCargados || {};
+  const mes = FILTRO.mes || meses[0] || mesDe(hoy());
+  const vm = ventasActivas().filter(v => mesDe(v.Fecha) === mes), ids = new Set(vm.map(v => v.ID));
+  const tot = vm.reduce((s, v) => s + Number(v.Total), 0), uti = vm.reduce((s, v) => s + Number(v.Utilidad), 0);
+  const cob = S.cobros.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.MontoUSD), 0);
+  const local = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.Total_Local_USD), 0);
+  const prod = {}; S.detalle.filter(d => ids.has(d.VentaID)).forEach(d => { const p = prod[d.Producto] = prod[d.Producto] || { kg: 0, v: 0, u: 0 }; p.kg += Number(d.Kg); p.v += Number(d.Subtotal); p.u += Number(d.Utilidad); });
+  const kg = Object.values(prod).reduce((s, p) => s + p.kg, 0);
+  const cli = {}; vm.forEach(v => { const c = cli[v.Cliente] = cli[v.Cliente] || { n: 0, v: 0, u: 0 }; c.n++; c.v += Number(v.Total); c.u += Number(v.Utilidad); });
+  const ult12 = [...new Set(ventasActivas().map(v => mesDe(v.Fecha)))].sort().slice(-12);
+  $('#main').innerHTML = `<div class="row" style="margin-bottom:12px"><div style="max-width:220px"><label>Mes</label><select id="rm">${meses.map(m => `<option value="${m}" ${m === mes ? 'selected' : ''}>${mesNombre(m)}</option>`).join('')}</select></div></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="kpi"><small>Ventas al mayor</small><b>${usd(tot)}</b></div>
+      <div class="kpi ok"><small>Utilidad · ${tot ? Math.round(uti / tot * 100) : 0}%</small><b>${usd(uti)}</b></div>
+      <div class="kpi"><small>Kilos vendidos</small><b>${n2(kg)}</b></div>
+      <div class="kpi"><small>Cobrado en el mes</small><b>${usd(cob)}</b></div>
+      <div class="kpi"><small>Ventas del local</small><b>${usd(local)}</b></div>
+      <div class="kpi"><small>Notas emitidas</small><b>${vm.length}</b></div>
+      <div class="kpi"><small>Clientes atendidos</small><b>${Object.keys(cli).length}</b></div>
+      <div class="kpi"><small>Venta promedio</small><b>${usd(vm.length ? tot / vm.length : 0)}</b></div>
+    </div>
+    <div class="card"><h2>Ventas y utilidad por mes</h2><div class="chart"><canvas id="ch1"></canvas></div></div>
+    <div class="grid g2 st">
+      <div class="card"><h2>Por producto</h2><div class="tbl"><table><tr><th>Producto</th><th class="r">Kg</th><th class="r">Ventas</th><th class="r">Utilidad</th></tr>
+        ${Object.entries(prod).sort((a, b) => b[1].v - a[1].v).map(([n, p]) => `<tr><td>${esc(n)}</td><td class="r num">${n2(p.kg)}</td><td class="r num">${usd(p.v)}</td><td class="r num" style="color:var(--ok)">${usd(p.u)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ventas</td></tr>'}</table></div></div>
+      <div class="card"><h2>Mejores clientes</h2><div class="tbl"><table><tr><th>Cliente</th><th class="r">Notas</th><th class="r">Ventas</th><th class="r">Utilidad</th></tr>
+        ${Object.entries(cli).sort((a, b) => b[1].v - a[1].v).slice(0, 15).map(([n, c]) => `<tr><td>${esc(n)}</td><td class="r num">${c.n}</td><td class="r num">${usd(c.v)}</td><td class="r num" style="color:var(--ok)">${usd(c.u)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ventas</td></tr>'}</table></div></div>
+    </div>`;
+  $('#rm').onchange = async e => {
+    FILTRO.mes = e.target.value;
+    if (S.corte && FILTRO.mes + '-31' < S.corte && !S.mesesCargados[FILTRO.mes]) {
+      $('#rm').disabled = true; toast('Trayendo ' + mesNombre(FILTRO.mes) + ' del historial…');
+      try { mergeS(await call('historial', { mes: FILTRO.mes })); S.mesesCargados[FILTRO.mes] = 1; } catch (err) { toast(err.message, true); }
+    }
+    vReportes();
+  };
+  if (window.Chart) {
+    const serie = f => ult12.map(m => ventasActivas().filter(v => mesDe(v.Fecha) === m).reduce((s, v) => s + Number(v[f]), 0));
+    const loc = ult12.map(m => S.cierres.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + Number(c.Total_Local_USD), 0));
+    CHARTS.push(new Chart($('#ch1'), { type: 'bar', data: { labels: ult12.map(mesNombre), datasets: [
+      { label: 'Ventas al mayor', data: serie('Total'), backgroundColor: '#2c5282', borderRadius: 4 },
+      { label: 'Utilidad', data: serie('Utilidad'), backgroundColor: '#1a7f4b', borderRadius: 4 },
+      { label: 'Local', data: loc, backgroundColor: '#f2b705', borderRadius: 4 }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + usd(c.raw) } } }, scales: { y: { ticks: { callback: v => '$' + v } }, x: { grid: { display: false } } } } }));
+  }
+}
+
+/* ===== PRODUCTOS ===== */
+let PROD_CACHE = {};
+function vProductos() {
+  const prods = productosPorUso();
+  const cod = FILTRO.prod || (prods[0] && prods[0].Codigo);
+  const rango = FILTRO.rango || '12';
+  const p = S.productos.find(x => x.Codigo === cod) || {};
+  const D = PROD_CACHE[cod];
+  $('#main').innerHTML = `<div class="card"><h2>Historial por producto</h2>
+      <div class="chips">${prods.map(x => `<button class="chip ${x.Codigo === cod ? 'on' : ''}" data-pr="${x.Codigo}">${esc(x.Nombre)}</button>`).join('')}</div>
+      <div class="row" style="margin-top:12px;align-items:center"><div class="seg" style="flex:none"><button class="${rango === '12' ? 'on plain' : ''}" data-rg="12">Últimos 12 meses</button><button class="${rango === 'todo' ? 'on plain' : ''}" data-rg="todo">Todo desde 2023</button></div>
+      <span class="small muted">Precio de lista hoy: <b class="num">${usd(p.Precio)}</b> · costo <b class="num">${usd(p.Costo)}</b></span></div></div>
+    <div id="pbody">${D ? '' : '<div class="empty"><span class="spin"></span> Trayendo historial…</div>'}</div>`;
+  document.querySelectorAll('[data-pr]').forEach(b => b.onclick = () => { FILTRO.prod = b.dataset.pr; vProductos(); });
+  document.querySelectorAll('[data-rg]').forEach(b => b.onclick = () => { FILTRO.rango = b.dataset.rg; vProductos(); });
+  if (!D) {
+    call('producto', { codigo: cod }).then(r => { PROD_CACHE[cod] = r; if (TAB === 'productos' && (FILTRO.prod || prods[0].Codigo) === cod) vProductos(); })
+      .catch(e => { const pb = $('#pbody'); if (pb) pb.innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+    return;
+  }
+  const meses = D.meses.filter(m => rango === 'todo' || m.mes >= D.corte.slice(0, 7));
+  const tot = meses.reduce((a, m) => ({ kg: a.kg + m.kg, v: a.v + m.ventas, c: a.c + m.costo, n: a.n + m.notas }), { kg: 0, v: 0, c: 0, n: 0 });
+  const cli = D.clientes.map(c => rango === 'todo' ? c : Object.assign({}, c, { kg: c.kg12, ventas: c.ventas12 })).filter(c => c.kg > 0).sort((a, b) => b.kg - a.kg).slice(0, 12);
+  const ult = meses[meses.length - 1];
+  $('#pbody').innerHTML = !meses.length ? '<div class="card empty">No hay ventas de este producto en ese periodo.</div>' : `
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="kpi"><small>Kilos vendidos</small><b>${n2(tot.kg)}</b></div>
+      <div class="kpi"><small>Ventas</small><b>${usd(tot.v)}</b></div>
+      <div class="kpi ok"><small>Utilidad · ${tot.v ? Math.round((tot.v - tot.c) / tot.v * 100) : 0}%</small><b>${usd(tot.v - tot.c)}</b></div>
+      <div class="kpi"><small>Precio prom. ${mesNombre(ult.mes)}</small><b>${usd(ult.kg ? ult.ventas / ult.kg : 0)}</b></div>
+    </div>
+    <div class="card"><h2>Kilos y precio por mes</h2><div class="chart"><canvas id="pch"></canvas></div></div>
+    <div class="grid g2 st">
+      <div class="card"><h2>Mes a mes</h2><div class="tbl" style="max-height:420px;overflow:auto"><table>
+        <tr><th>Mes</th><th class="r">Kg</th><th class="r">Ventas</th><th class="r">Precio</th><th class="r">Costo</th><th class="r">Margen</th></tr>
+        ${meses.slice().reverse().map(m => `<tr><td>${mesNombre(m.mes)}</td><td class="r num">${n2(m.kg)}</td><td class="r num">${usd(m.ventas)}</td><td class="r num">${n2(m.kg ? m.ventas / m.kg : 0)}</td><td class="r num muted">${n2(m.kg ? m.costo / m.kg : 0)}</td><td class="r num" style="color:var(--ok)">${m.ventas ? Math.round((m.ventas - m.costo) / m.ventas * 100) : 0}%</td></tr>`).join('')}
+      </table></div></div>
+      <div class="card"><h2>Clientes que más lo compran</h2><div class="tbl"><table>
+        <tr><th>Cliente</th><th class="r">Kg</th><th class="r">Ventas</th><th>Última</th></tr>
+        ${cli.map(c => `<tr><td>${esc(c.cliente)}</td><td class="r num">${n2(c.kg)}</td><td class="r num">${usd(c.ventas)}</td><td class="small muted">${fdate(c.ultima)}</td></tr>`).join('')}
+      </table></div></div>
+    </div>
+    <div class="card"><h2>Últimas ventas</h2><div class="tbl"><table>
+      <tr><th>Fecha</th><th>Cliente</th><th>Nota</th><th class="r">Kg</th><th class="r">Precio</th><th class="r">Costo</th></tr>
+      ${D.ultimas.map(u => `<tr><td>${fdate(u.fecha)}</td><td>${esc(u.cliente)}</td><td>${esc(u.nota || '-')}</td><td class="r num">${n2(u.kg)}</td><td class="r num">${n2(u.precio)}</td><td class="r num muted">${n2(u.costo)}</td></tr>`).join('')}
+    </table></div></div>`;
+  if (window.Chart && meses.length) {
+    CHARTS.push(new Chart($('#pch'), { data: { labels: meses.map(m => mesNombre(m.mes)), datasets: [
+      { type: 'bar', label: 'Kilos', data: meses.map(m => m.kg), backgroundColor: '#2c5282', borderRadius: 4, yAxisID: 'y' },
+      { type: 'line', label: 'Precio $/kg', data: meses.map(m => m.kg ? r2(m.ventas / m.kg) : null), borderColor: '#f2b705', backgroundColor: '#f2b705', tension: .3, yAxisID: 'y1' },
+      { type: 'line', label: 'Costo $/kg', data: meses.map(m => m.kg ? r2(m.costo / m.kg) : null), borderColor: '#9aa4b2', backgroundColor: '#9aa4b2', borderDash: [4, 4], tension: .3, yAxisID: 'y1' }] },
+      options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } },
+        scales: { y: { position: 'left', title: { display: true, text: 'kg' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => '$' + v } }, x: { grid: { display: false } } } } }));
+  }
+}
+
+/* ===== Selector de productos con kg (compartido) ===== */
+// lineas: [{codigo, kg, ...}] · opts: { stock: bool, agotados: {codigo:true}, precio: fn(p) }
+function chipsProductos(lineas, opts) {
+  opts = opts || {};
+  const usados = new Set(lineas.map(l => l.codigo));
+  const prods = (opts.productos || productosPorUso());
+  return `<div class="chips">${prods.map(p => {
+    const off = opts.agotados && opts.agotados[p.Codigo];
+    const st = opts.stock ? ` <small class="muted">${n2(Number(S.disponible ? S.disponible[p.Codigo] : p.Stock) || 0)} kg</small>` : '';
+    return `<button class="chip ${usados.has(p.Codigo) ? 'on' : ''} ${off ? 'off' : ''}" data-pk="${p.Codigo}" ${off ? 'disabled title="Agotado"' : ''}>${usados.has(p.Codigo) ? '✓ ' : '+ '}${esc(p.Nombre)}${off ? ' · agotado' : st}</button>`;
+  }).join('')}</div>`;
+}
+function nombreProd(cod) { const p = (S.productos || []).find(x => x.Codigo === cod); return p ? p.Nombre : cod; }
+
+/* ===== PEDIDOS (admin) ===== */
+function vPedidos() {
+  const pend = S.pedidos.filter(p => p.Estado === 'Pendiente').sort((a, b) => a.CreadoEn < b.CreadoEn ? -1 : 1);
+  const pagos = S.pagosReportados.filter(p => p.Estado === 'Pendiente').sort((a, b) => a.CreadoEn < b.CreadoEn ? -1 : 1);
+  const lin = id => S.pedidoLineas.filter(l => l.PedidoID === id);
+  const atendidos = S.pedidos.filter(p => p.Estado !== 'Pendiente').concat(S.pagosReportados.filter(p => p.Estado !== 'Pendiente').map(p => Object.assign({ pago: true }, p)))
+    .sort((a, b) => (b.CreadoEn || '') > (a.CreadoEn || '') ? 1 : -1).slice(0, 20);
+  const pill = e => `<span class="pill ${e === 'Confirmado' ? 'p-ok' : e === 'Pendiente' ? 'p-warn' : 'p-bad'}">${e}</span>`;
+  $('#main').innerHTML = `
+    <div class="card"><h2>Pedidos de clientes por confirmar (${pend.length})</h2>
+      ${pend.map(p => { const ls = lin(p.ID); const falta = ls.filter(l => Number(S.disponible[l.Codigo] || 0) < 0);
+        return `<div class="pcard" style="margin-bottom:10px;background:#fff">
+        <div class="top"><div><b>${esc(p.Cliente)}</b><div class="small muted">${fdate(p.Fecha)} · ${new Date(p.CreadoEn).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })} · por ${esc(p.Usuario)}</div></div><b class="num">≈ ${usd(p.TotalRef)}</b></div>
+        <table style="margin-top:6px">${ls.map(l => `<tr><td>${esc(l.Producto)}</td><td class="r num">${n2(l.Kg)} kg</td><td class="r num small muted">${usd(l.PrecioRef)}/kg</td><td class="r small">stock ${n2(S.productos.find(x => x.Codigo === l.Codigo)?.Stock || 0)}</td></tr>`).join('')}</table>
+        ${p.Notas ? `<p class="small">📝 ${esc(p.Notas)}</p>` : ''}
+        ${falta.length ? `<div class="banner warn small">⚠️ Con los pedidos pendientes, el inventario no alcanza para: ${falta.map(l => esc(l.Producto)).join(', ')}</div>` : ''}
+        <div class="row" style="margin-top:8px"><button class="btn acc" data-conf="${p.ID}">Confirmar y despachar</button><input data-motp="${p.ID}" placeholder="Motivo si lo rechazas" style="flex:2"><button class="btn bad" data-rech="${p.ID}" style="flex:none">Rechazar</button></div>
+      </div>`; }).join('') || '<div class="empty">✅ No hay pedidos por confirmar</div>'}
+    </div>
+    <div class="card"><h2>Pagos reportados por confirmar (${pagos.length})</h2>
+      <p class="small muted" style="margin-top:-6px">Revisa en el banco que el dinero llegó antes de confirmar. Al confirmar se registra como cobro y rebaja la deuda (más vieja primero).</p>
+      ${pagos.map(p => `<div class="pcard" style="margin-bottom:10px;background:#fff">
+        <div class="top"><div><b>${esc(p.Cliente)}</b><div class="small muted">pagó el ${fdate(p.Fecha)} · ${esc(p.Metodo)}${p.Banco ? ' · ' + esc(p.Banco) : ''}${p.Referencia ? ' · ref. <b>' + esc(p.Referencia) + '</b>' : ''}</div></div>
+          <div class="right"><b class="num">${p.MontoBs ? bs(p.MontoBs) : usd(p.MontoUSD)}</b>${p.MontoBs && Number(p.MontoUSD) ? `<div class="small muted num">≈ ${usd(p.MontoUSD)}</div>` : ''}</div></div>
+        <div class="row" style="margin-top:8px">
+          ${p.MontoBs ? `<div style="max-width:140px"><label>Tasa</label><input class="num" data-ptasa="${p.ID}" value="${(Number(p.Tasa) || tasaPara(p.Fecha) || 0) ? (Number(p.Tasa) || tasaPara(p.Fecha)).toFixed(2) : ''}"></div>` : ''}
+          <label style="display:flex;gap:6px;align-items:center;flex:2;color:var(--ink)"><input type="checkbox" data-plocal="${p.ID}" style="width:auto" ${/móvil|punto/i.test(p.Metodo) ? 'checked' : ''}> Entró por las cuentas del local</label></div>
+        <div class="row" style="margin-top:8px"><button class="btn acc" data-pconf="${p.ID}">Confirmar pago</button><input data-pmot="${p.ID}" placeholder="Motivo si lo rechazas" style="flex:2"><button class="btn bad" data-prech="${p.ID}" style="flex:none">Rechazar</button></div>
+      </div>`).join('') || '<div class="empty">✅ No hay pagos por confirmar</div>'}
+    </div>
+    <div class="card"><h2>Atendidos (últimos 30 días)</h2><div class="tbl"><table>
+      <tr><th>Fecha</th><th>Cliente</th><th>Qué</th><th class="r">Monto</th><th>Estado</th></tr>
+      ${atendidos.map(x => `<tr><td>${fdate(x.Fecha)}</td><td>${esc(x.Cliente)}</td><td class="small">${x.pago ? '💵 Pago · ' + esc(String(x.Metodo).replace(/^Pago\s*/i, '')) : '🛒 Pedido'}</td><td class="r num">${x.pago ? usd(x.MontoUSD) : usd(x.TotalRef)}</td><td>${pill(x.Estado)}${x.Motivo ? ` <span class="small muted">${esc(x.Motivo)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nada todavía</td></tr>'}
+    </table></div></div>`;
+  document.querySelectorAll('[data-conf]').forEach(b => b.onclick = () => {
+    const p = S.pedidos.find(x => x.ID === b.dataset.conf);
+    VENTA = nuevaVenta(); VENTA.cliente = p.Cliente; VENTA.pedidoId = p.ID; VENTA.notas = p.Notas || '';
+    lin(p.ID).forEach(l => agregarLinea(VENTA, l.Codigo, l.Kg));
+    TAB = 'vender'; render(); toast('Ajusta los kilos reales y guarda la venta');
+  });
+  document.querySelectorAll('[data-rech]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Rechazar?')) busy(b, async () => { await call('rechazarPedido', { id: b.dataset.rech, motivo: $(`[data-motp="${b.dataset.rech}"]`).value }); toast('Pedido rechazado'); await recargar(); }); });
+  document.querySelectorAll('[data-pconf]').forEach(b => b.onclick = () => busy(b, async () => {
+    const id = b.dataset.pconf, t = $(`[data-ptasa="${id}"]`);
+    const r = await call('confirmarPago', { id, tasa: t ? num(t.value) : null, porLocal: $(`[data-plocal="${id}"]`).checked });
+    toast('Pago confirmado' + (r.aplicado && r.aplicado.length > 1 ? ' · repartido en ' + r.aplicado.length + ' notas' : '')); await recargar();
+  }));
+  document.querySelectorAll('[data-prech]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Rechazar?')) busy(b, async () => { await call('rechazarPago', { id: b.dataset.prech, motivo: $(`[data-pmot="${b.dataset.prech}"]`).value }); toast('Pago rechazado'); await recargar(); }); });
+}
+
+/* ===== INVENTARIO (admin) ===== */
+let ENTRADA = null, TRASLADO = null;
+function margenDe(costo, precio) { return precio > 0 ? (precio - costo) / precio : 0; }
+function precioCon(costo, margen) { return margen < 1 ? costo / (1 - margen) : 0; }
+const pct = m => (Math.round(m * 1000) / 10).toLocaleString('es-VE') + '%';
+function vInventario() {
+  const sub = FILTRO.inv || 'stock';
+  const tabs = [['stock', 'Stock'], ['entrada', 'Entrada de mercancía'], ['traslado', 'Traslado al local'], ['conteo', 'Conteo'], ['proveedores', 'Proveedores'], ['movs', 'Movimientos']];
+  $('#main').innerHTML = `<div class="chips" style="margin-bottom:12px">${tabs.map(([k, l]) => `<button class="chip ${sub === k ? 'on' : ''}" data-sub="${k}">${l}</button>`).join('')}</div><div id="inv"></div>`;
+  document.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { FILTRO.inv = b.dataset.sub; vInventario(); });
+  ({ stock: invStock, entrada: invEntrada, traslado: invTraslado, conteo: invConteo, proveedores: invProveedores, movs: invMovs }[sub])();
+}
+function invStock() {
+  const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO');
+  const reservado = c => r2(Number(S.productos.find(p => p.Codigo === c).Stock || 0) - Number(S.disponible[c] || 0));
+  const valor = prods.reduce((s, p) => s + Math.max(0, Number(p.Stock) || 0) * (Number(p.Costo) || 0), 0);
+  const bajos = prods.filter(p => Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
+  const sinConteo = !S.movimientos.some(m => m.Tipo === 'Inventario inicial') && prods.every(p => !Number(p.Stock));
+  $('#inv').innerHTML = `${sinConteo ? '<div class="banner warn">📦 Todavía no hay inventario cargado. Empieza por <b>Conteo</b>: pesa lo que hay y escribe los kg de cada producto.</div>' : ''}
+    <div class="grid g3" style="margin-bottom:14px">
+      <div class="kpi"><small>Kilos en inventario</small><b>${n2(prods.reduce((s, p) => s + Math.max(0, Number(p.Stock) || 0), 0))}</b></div>
+      <div class="kpi"><small>Valor al costo</small><b>${usd(valor)}</b></div>
+      <div class="kpi ${bajos.length ? 'bad' : ''}"><small>Bajo el mínimo</small><b>${bajos.length}</b></div></div>
+    <div class="card"><div class="tbl"><table>
+      <tr><th>Producto</th><th class="r">Stock kg</th><th class="r">Reservado</th><th class="r">Disponible</th><th class="r">Mínimo</th><th class="r">Costo</th><th class="r">Precio</th><th class="r">Margen</th></tr>
+      ${prods.map(p => { const st = Number(p.Stock) || 0, mi = Number(p.Minimo) || 0, m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0;
+        return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}</td><td class="r num"><b>${n2(st)}</b></td><td class="r num muted">${reservado(p.Codigo) ? n2(reservado(p.Codigo)) : ''}</td><td class="r num">${n2(S.disponible[p.Codigo])}</td>
+          <td class="r num muted">${mi ? n2(mi) : ''}</td><td class="r num">${n2(p.Costo)}</td><td class="r num">${n2(p.Precio)}</td>
+          <td class="r num" style="color:${m < obj - 0.03 ? 'var(--bad)' : 'var(--ok)'}" title="Objetivo ${pct(obj)}">${pct(m)}</td></tr>`; }).join('')}
+    </table></div><p class="small muted">"Reservado" son kg de pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
+    <div class="card"><h2>Ajuste rápido (merma, queso dañado, devolución)</h2>
+      <div class="row"><div><label>Producto</label><select id="ajp">${prods.map(p => `<option value="${p.Codigo}">${esc(p.Nombre)}</option>`).join('')}</select></div>
+        <div><label>Kg (− resta, + suma)</label><input id="ajk" class="num" inputmode="decimal" placeholder="-1,5"></div>
+        <div style="flex:2"><label>Motivo</label><input id="ajm" placeholder="Ej: queso dañado"></div><button class="btn" id="ajg" style="flex:none">Guardar</button></div></div>`;
+  $('#ajg').onclick = e => busy(e.target, async () => { const kg = num($('#ajk').value); if (!kg) throw new Error('Escribe los kg'); await call('guardarAjuste', { lineas: [{ codigo: $('#ajp').value, kg, motivo: $('#ajm').value }] }); toast('Ajuste guardado'); await recargar(); });
+}
+function invEntrada() {
+  if (!ENTRADA) ENTRADA = { fecha: hoy(), proveedor: '', condicion: 'Contado', dias: 15, notas: '', lineas: [] };
+  const E = ENTRADA;
+  const total = E.lineas.reduce((s, l) => s + num(l.kg) * num(l.costo), 0);
+  $('#inv').innerHTML = `<div class="card"><h2>Entrada de mercancía</h2>
+    <div class="row">
+      <div style="flex:2;min-width:200px"><label>Proveedor</label><input id="ep" list="dl-prov" value="${esc(E.proveedor)}" placeholder="Escribe o elige"><datalist id="dl-prov">${S.proveedores.map(p => `<option value="${esc(p.Nombre)}">`).join('')}</datalist></div>
+      <div><label>Fecha</label><input type="date" id="ef" value="${E.fecha}"></div>
+      <div><label>Pago</label><div class="seg"><button class="${E.condicion === 'Contado' ? 'on plain' : ''}" data-cond="Contado">Contado</button><button class="${E.condicion === 'Crédito' ? 'on plain' : ''}" data-cond="Crédito">Crédito</button></div></div>
+      ${E.condicion === 'Crédito' ? `<div style="max-width:120px"><label>Días</label><input id="ed" class="num" inputmode="numeric" value="${esc(E.dias)}"></div>` : ''}
+    </div>
+    <h3>Productos</h3>${chipsProductos(E.lineas, { productos: S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO') })}
+    <div class="pcards" style="margin-top:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${E.lineas.map((l, i) => { const p = S.productos.find(x => x.Codigo === l.codigo) || {};
+      const actual = Number(p.Precio) || 0, mAct = margenDe(num(l.costo), actual);
+      return `<div class="pcard"><div class="top"><b>${esc(p.Nombre)}</b><button class="x" data-erm="${i}">×</button></div>
+        <div class="flds"><div><label>Kg</label><input class="num big" inputmode="decimal" data-ei="${i}" data-ef="kg" value="${esc(l.kg)}" placeholder="0"></div>
+          <div><label>Costo $/kg</label><input class="num big" inputmode="decimal" data-ei="${i}" data-ef="costo" value="${esc(l.costo)}" placeholder="${n2(p.Costo)}"></div>
+          <div><label>Margen %</label><input class="num big" inputmode="decimal" data-ei="${i}" data-ef="margen" value="${esc(l.margen)}"></div>
+          <div><label>Precio venta</label><input class="num big" inputmode="decimal" data-ei="${i}" data-ef="precio" value="${esc(l.precio)}"></div></div>
+        <div class="small" style="margin-top:6px" data-einfo="${i}">${num(l.costo) ? `Precio actual ${n2(actual)} → con este costo deja <b style="color:${mAct < num(l.margen) / 100 - 0.03 ? 'var(--bad)' : 'var(--ok)'}">${pct(mAct)}</b> de margen` : `Costo anterior ${n2(p.Costo)}`}</div>
+        <label style="display:flex;gap:6px;align-items:center;margin-top:6px;color:var(--ink)"><input type="checkbox" data-eap="${i}" style="width:auto" ${l.actualizarPrecio ? 'checked' : ''}> Usar este precio como nuevo precio de lista</label>
+      </div>`; }).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos que llegaron.</div>'}</div>
+    <div class="row" style="margin-top:12px"><div style="flex:3"><label>Notas (n° factura, etc.)</label><input id="en" value="${esc(E.notas)}"></div></div>
+    <div class="tot big"><span>Total de la compra</span><span class="num" id="etot">${usd(total)}</span></div>
+    <div class="row" style="margin-top:12px"><button class="btn sec" id="elimp" style="flex:none">Limpiar</button><button class="btn acc" id="eg">Guardar entrada</button></div></div>`;
+  const rer = () => { const y = window.scrollY; invEntrada(); window.scrollTo(0, y); };
+  document.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => {
+    if (E.lineas.some(l => l.codigo === b.dataset.pk)) return;
+    const p = S.productos.find(x => x.Codigo === b.dataset.pk);
+    E.lineas.push({ codigo: p.Codigo, kg: '', costo: '', margen: String(Math.round((Number(p.Margen) || 0.18) * 1000) / 10), precio: '', actualizarPrecio: true }); rer();
+    const el = document.querySelector(`[data-ei="${E.lineas.length - 1}"][data-ef="kg"]`); if (el) el.focus();
+  });
+  document.querySelectorAll('[data-erm]').forEach(b => b.onclick = () => { E.lineas.splice(b.dataset.erm, 1); rer(); });
+  document.querySelectorAll('[data-eap]').forEach(c => c.onchange = () => E.lineas[c.dataset.eap].actualizarPrecio = c.checked);
+  document.querySelectorAll('[data-ei]').forEach(el => el.oninput = () => {
+    const i = el.dataset.ei, l = E.lineas[i], f = el.dataset.ef; l[f] = el.value;
+    const set = (k, v) => { l[k] = v; const x = document.querySelector(`[data-ei="${i}"][data-ef="${k}"]`); if (x) x.value = v; };
+    if ((f === 'costo' || f === 'margen') && num(l.costo)) set('precio', String(r2(precioCon(num(l.costo), num(l.margen) / 100))));
+    if (f === 'precio' && num(l.costo) && num(l.precio)) set('margen', String(Math.round(margenDe(num(l.costo), num(l.precio)) * 1000) / 10));
+    const p = S.productos.find(x => x.Codigo === l.codigo), mAct = margenDe(num(l.costo), Number(p.Precio));
+    const info = document.querySelector(`[data-einfo="${i}"]`); if (info && num(l.costo)) info.innerHTML = `Precio actual ${n2(p.Precio)} → con este costo deja <b style="color:${mAct < num(l.margen) / 100 - 0.03 ? 'var(--bad)' : 'var(--ok)'}">${pct(mAct)}</b> de margen`;
+    $('#etot').textContent = usd(E.lineas.reduce((s, x) => s + num(x.kg) * num(x.costo), 0));
+  });
+  document.querySelectorAll('[data-cond]').forEach(b => b.onclick = () => { E.condicion = b.dataset.cond; rer(); });
+  $('#ep').oninput = e => E.proveedor = e.target.value; $('#ef').onchange = e => E.fecha = e.target.value; $('#en').oninput = e => E.notas = e.target.value;
+  const ed = $('#ed'); if (ed) ed.oninput = e => E.dias = e.target.value;
+  $('#elimp').onclick = () => { ENTRADA = null; invEntrada(); };
+  $('#eg').onclick = e => busy(e.target, async () => {
+    if (!E.proveedor.trim()) throw new Error('Escribe el proveedor');
+    const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio }));
+    const r = await call('guardarEntrada', { fecha: E.fecha, proveedor: E.proveedor.trim(), condicion: E.condicion, dias: num(E.dias), notas: E.notas, lineas });
+    toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; FILTRO.inv = 'stock'; await recargar(); TAB = 'inventario'; render();
+  });
+}
+function formTraslado(T, cont, onSave, titulo, ayuda, prods) {
+  cont.innerHTML = `<div class="card"><h2>${titulo}</h2><p class="small muted" style="margin-top:-6px">${ayuda}</p>
+    <div class="row"><div style="max-width:200px"><label>Fecha</label><input type="date" id="tf" value="${T.fecha}"></div></div>
+    <h3>Productos</h3>${chipsProductos(T.lineas, { productos: prods, stock: USER.rol === 'admin' })}
+    <div class="pcards" style="margin-top:12px">${T.lineas.map((l, i) => `<div class="pcard"><div class="top"><b>${esc(nombreProd(l.codigo))}</b><button class="x" data-trm="${i}">×</button></div>
+      <div class="flds" style="grid-template-columns:1fr"><div><label>Kg</label><input class="num big" inputmode="decimal" data-ti="${i}" value="${esc(l.kg)}" placeholder="0"></div></div></div>`).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos.</div>'}</div>
+    <div style="margin-top:10px"><label>Notas</label><input id="tn" value="${esc(T.notas)}"></div>
+    <button class="btn acc full" style="margin-top:12px" id="tg">Guardar</button></div>`;
+  const rer = () => formTraslado(T, cont, onSave, titulo, ayuda, prods);
+  cont.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => { if (!T.lineas.some(l => l.codigo === b.dataset.pk)) T.lineas.push({ codigo: b.dataset.pk, kg: '' }); rer(); const el = cont.querySelector(`[data-ti="${T.lineas.length - 1}"]`); if (el) el.focus(); });
+  cont.querySelectorAll('[data-trm]').forEach(b => b.onclick = () => { T.lineas.splice(b.dataset.trm, 1); rer(); });
+  cont.querySelectorAll('[data-ti]').forEach(el => el.oninput = () => T.lineas[el.dataset.ti].kg = el.value);
+  cont.querySelector('#tf').onchange = e => T.fecha = e.target.value; cont.querySelector('#tn').oninput = e => T.notas = e.target.value;
+  cont.querySelector('#tg').onclick = e => busy(e.target, async () => {
+    const lineas = T.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg) }));
+    if (!lineas.length) throw new Error('Escribe los kg de al menos un producto');
+    await onSave({ fecha: T.fecha, notas: T.notas, lineas });
+  });
+}
+function listaTraslados(tras, lineas, conBoton) {
+  return `<div class="tbl"><table><tr><th>Fecha</th><th>Productos</th><th>Estado</th><th></th></tr>
+    ${tras.map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="small">${lineas.filter(x => x.Ref === t.ID).map(x => esc(x.Producto) + ' ' + n2(x.Kg) + ' kg').join(' · ')}${t.Notas ? `<div class="muted">📝 ${esc(t.Notas)}</div>` : ''}</td>
+      <td><span class="pill ${t.Estado === 'Recibido' ? 'p-ok' : 'p-warn'}">${t.Estado}</span><div class="small muted">${t.Estado === 'Recibido' ? 'por ' + esc(t.RecibidoPor) : 'enviado por ' + esc(t.EnviadoPor)}</div></td>
+      <td>${conBoton && t.Estado === 'Enviado' ? `<button class="btn sm acc" data-recib="${t.ID}">Ya llegó</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sin traslados recientes</td></tr>'}</table></div>`;
+}
+function invTraslado() {
+  if (!TRASLADO) TRASLADO = { fecha: hoy(), notas: '', lineas: [] };
+  $('#inv').innerHTML = '<div id="tform"></div><div class="card"><h2>Traslados recientes</h2><div id="tlist"></div></div>';
+  formTraslado(TRASLADO, $('#tform'), async (d) => { await call('guardarTraslado', d); toast('Traslado registrado: el local lo confirmará al recibir'); TRASLADO = null; await recargar(); TAB = 'inventario'; FILTRO.inv = 'traslado'; render(); },
+    'Enviar mercancía al local', 'Se descuenta del inventario ahora y queda "Enviado" hasta que el local confirme que llegó.', S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO'));
+  const lineas = S.movimientos.filter(m => m.Tipo === 'Traslado').map(m => ({ Ref: m.Ref, Producto: m.Producto, Kg: -Number(m.Kg) }));
+  $('#tlist').innerHTML = listaTraslados(S.traslados.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1), lineas, false);
+}
+function invConteo() {
+  const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO');
+  FILTRO.conteo = FILTRO.conteo || {};
+  const C = FILTRO.conteo;
+  const primera = !S.movimientos.some(m => m.Tipo === 'Inventario inicial' || m.Tipo === 'Conteo');
+  $('#inv').innerHTML = `<div class="card"><h2>${primera ? 'Inventario inicial' : 'Conteo físico'}</h2>
+    <p class="small muted" style="margin-top:-6px">Pesa lo que hay y escribe los kg reales. Deja vacío lo que no contaste. La diferencia con el sistema queda registrada (si falta, como merma).</p>
+    <div class="row" style="max-width:220px"><div><label>Fecha</label><input type="date" id="cf2" value="${C.fecha || hoy()}"></div></div>
+    <div class="tbl"><table class="prodtbl"><tr><th>Producto</th><th class="r">Sistema</th><th class="r" style="width:120px">Real (kg)</th><th class="r">Diferencia</th></tr>
+      ${prods.map(p => `<tr><td>${esc(p.Nombre)}</td><td class="r num muted">${n2(p.Stock)}</td><td><input class="num" inputmode="decimal" data-cc="${p.Codigo}" value="${esc(C[p.Codigo] || '')}"></td><td class="r num" data-cd="${p.Codigo}"></td></tr>`).join('')}
+    </table></div>
+    <div class="tot"><span>Merma total</span><b class="num" id="cmer" style="color:var(--bad)"></b></div>
+    <button class="btn acc full" style="margin-top:12px" id="cg2">Guardar conteo</button></div>`;
+  const pinta = () => { let mer = 0; prods.forEach(p => { const v = C[p.Codigo], el = document.querySelector(`[data-cd="${p.Codigo}"]`); if (v === undefined || v === '') { el.textContent = ''; return; } const d = r2(num(v) - Number(p.Stock || 0)); if (d < 0) mer += d; el.innerHTML = d ? `<span style="color:${d < 0 ? 'var(--bad)' : 'var(--ok)'}">${d > 0 ? '+' : ''}${n2(d)}</span>` : '✓'; }); $('#cmer').textContent = n2(mer) + ' kg'; };
+  pinta();
+  document.querySelectorAll('[data-cc]').forEach(el => el.oninput = () => { C[el.dataset.cc] = el.value; pinta(); });
+  $('#cf2').onchange = e => C.fecha = e.target.value;
+  $('#cg2').onclick = e => busy(e.target, async () => {
+    const conteos = prods.filter(p => C[p.Codigo] !== undefined && C[p.Codigo] !== '').map(p => ({ codigo: p.Codigo, kg: num(C[p.Codigo]) }));
+    if (!conteos.length) throw new Error('Escribe al menos un conteo');
+    const r = await call('guardarConteo', { fecha: C.fecha || hoy(), conteos });
+    toast('Conteo guardado' + (r.merma ? ' · merma ' + n2(r.merma) + ' kg' : '')); FILTRO.conteo = {}; FILTRO.inv = 'stock'; await recargar(); TAB = 'inventario'; render();
+  });
+}
+function invProveedores() {
+  const corte = addDays(hoy(), -365);
+  const info = S.proveedores.map(p => { const en = S.entradas.filter(e => e.Proveedor === p.Nombre);
+    return Object.assign({}, p, { comprado: en.filter(e => e.Fecha >= corte).reduce((s, e) => s + Number(e.Total), 0), deuda: en.reduce((s, e) => s + Math.max(0, Number(e.Saldo)), 0),
+      vencido: en.filter(e => Number(e.Saldo) > 0.01 && e.Vence < hoy()).reduce((s, e) => s + Number(e.Saldo), 0), ultima: en.reduce((m, e) => e.Fecha > m ? e.Fecha : m, ''), entradas: en }); })
+    .sort((a, b) => b.deuda - a.deuda || b.comprado - a.comprado);
+  const deuda = info.reduce((s, p) => s + p.deuda, 0);
+  $('#inv').innerHTML = `<div class="grid g3" style="margin-bottom:14px"><div class="kpi"><small>Le debemos a proveedores</small><b>${usd(deuda)}</b></div>
+      <div class="kpi ${info.some(p => p.vencido) ? 'bad' : ''}"><small>Vencido</small><b>${usd(info.reduce((s, p) => s + p.vencido, 0))}</b></div><div class="kpi"><small>Proveedores</small><b>${info.length}</b></div></div>
+    <div class="card"><h2>Proveedores</h2>
+    ${info.map((p, i) => `<details><summary class="cli"><div><b>${esc(p.Nombre)}</b><div class="small muted">${p.Telefono ? '📞 ' + esc(p.Telefono) + ' · ' : ''}compras 12 meses ${usd(p.comprado)}${p.ultima ? ' · última ' + fdate(p.ultima) : ''}</div></div>
+        <div class="right">${p.deuda > 0.01 ? `<b class="num" style="color:${p.vencido ? 'var(--bad)' : 'var(--ink)'}">${usd(p.deuda)}</b><div class="small muted">por pagar</div>` : '<span class="pill p-ok">al día</span>'}</div></summary>
+      <div class="tbl"><table><tr><th>Fecha</th><th class="r">Total</th><th>Pago</th><th>Vence</th><th class="r">Saldo</th></tr>
+        ${p.entradas.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1).slice(0, 10).map(e => `<tr><td>${fdate(e.Fecha)}</td><td class="r num">${usd(e.Total)}</td><td class="small">${esc(e.Condicion)}</td><td>${Number(e.Saldo) > 0.01 ? (e.Vence < hoy() ? `<span class="pill p-bad">${fdate(e.Vence)}</span>` : fdate(e.Vence)) : ''}</td><td class="r num">${Number(e.Saldo) > 0.01 ? usd(e.Saldo) : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Sin compras registradas</td></tr>'}</table></div>
+      ${p.deuda > 0.01 ? `<div class="row" style="margin:10px 0"><div><label>Pagar $</label><input class="num" data-ppm="${i}" inputmode="decimal" value="${n2(p.deuda)}"></div><div><label>Método</label><select data-ppx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-ppg="${i}" style="flex:none">Registrar pago</button></div>` : ''}
+      <div class="row" style="margin:10px 0 16px"><div><label>Teléfono</label><input data-pvt="${i}" value="${esc(p.Telefono || '')}"></div><div style="flex:2"><label>Notas</label><input data-pvn="${i}" value="${esc(p.Notas || '')}"></div><button class="btn sm sec" data-pvg="${i}" style="flex:none">Guardar datos</button></div>
+    </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo aquí.</div>'}
+    <div class="row" style="margin-top:12px"><div style="flex:2"><label>Nuevo proveedor</label><input id="npv" placeholder="Nombre"></div><div><label>Teléfono</label><input id="npt"></div><button class="btn" id="npg2" style="flex:none">Agregar</button></div></div>`;
+  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: num($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); }));
+  document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); }));
+  $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); });
+}
+function invMovs() {
+  const f = FILTRO.mp || '';
+  const list = S.movimientos.filter(m => !f || m.Codigo === f).sort((a, b) => (b.CreadoEn || b.Fecha) > (a.CreadoEn || a.Fecha) ? 1 : -1).slice(0, 200);
+  const color = { Entrada: 'p-ok', Venta: 'p-local', Traslado: 'p-mayor', Conteo: 'p-warn', Ajuste: 'p-warn', 'Inventario inicial': 'p-ok', 'Anulación': 'p-ok' };
+  $('#inv').innerHTML = `<div class="card"><div class="row" style="margin-bottom:8px;max-width:300px"><div><label>Producto</label><select id="mpf"><option value="">Todos</option>${S.productos.map(p => `<option value="${p.Codigo}" ${p.Codigo === f ? 'selected' : ''}>${esc(p.Nombre)}</option>`).join('')}</select></div></div>
+    <div class="tbl"><table><tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="r">Kg</th><th>Detalle</th><th>Quién</th></tr>
+    ${list.map(m => `<tr><td>${fdate(m.Fecha)}</td><td><span class="pill ${color[m.Tipo] || ''}">${esc(m.Tipo)}</span></td><td>${esc(m.Producto)}</td><td class="r num" style="color:${Number(m.Kg) < 0 ? 'var(--bad)' : 'var(--ok)'}">${Number(m.Kg) > 0 ? '+' : ''}${n2(m.Kg)}</td><td class="small muted">${esc(m.Proveedor || m.Notas || '')}</td><td class="small muted">${esc(m.Usuario)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Sin movimientos en los últimos 90 días</td></tr>'}
+    </table></div></div>`;
+  $('#mpf').onchange = e => { FILTRO.mp = e.target.value; invMovs(); };
+}
+
+/* ===== MERCANCÍA (local) ===== */
+let RECIBO = null;
+function vMercancia() {
+  const pend = S.traslados.filter(t => t.Estado === 'Enviado');
+  $('#main').innerHTML = `<div class="card" style="max-width:720px;margin:0 auto 14px"><h2>Mercancía por recibir (${pend.length})</h2>
+      ${pend.length ? '<p class="small muted" style="margin-top:-6px">Revisa que llegó lo que dice y toca "Ya llegó". Si algo no cuadra, escríbelo en la nota.</p>' : ''}
+      ${pend.map(t => `<div class="pcard" style="margin-bottom:10px;background:#fff"><div class="top"><b>Enviado el ${fdate(t.Fecha)}</b><span class="small muted">por ${esc(t.EnviadoPor)}</span></div>
+        <table>${S.trasladoLineas.filter(l => l.Ref === t.ID).map(l => `<tr><td>${esc(l.Producto)}</td><td class="r num"><b>${n2(l.Kg)} kg</b></td></tr>`).join('')}</table>
+        <div class="row" style="margin-top:8px"><input data-rn="${t.ID}" placeholder="Nota (opcional): ej. faltó 1 kg" style="flex:2"><button class="btn acc" data-recib="${t.ID}" style="flex:none">Ya llegó</button></div></div>`).join('') || '<div class="empty">No hay mercancía pendiente por recibir.</div>'}
+    </div><div id="rform" style="max-width:720px;margin:0 auto"></div>
+    <div class="card" style="max-width:720px;margin:14px auto"><h2>Recibido últimamente</h2>${listaTraslados(S.traslados.filter(t => t.Estado === 'Recibido'), S.trasladoLineas, false)}</div>`;
+  document.querySelectorAll('[data-recib]').forEach(b => b.onclick = () => busy(b, async () => { await call('recibirTraslado', { id: b.dataset.recib, notas: $(`[data-rn="${b.dataset.recib}"]`).value }); toast('Recibido ✓'); await recargar(); }));
+  if (!RECIBO) RECIBO = { fecha: hoy(), notas: '', lineas: [] };
+  formTraslado(RECIBO, $('#rform'), async (d) => { await call('guardarTraslado', d); toast('Mercancía registrada ✓'); RECIBO = null; await recargar(); },
+    'Registrar mercancía que llegó', '¿Llegó mercancía que no aparece arriba? Anótala aquí con los kg que recibiste.', S.productos);
+}
+
+/* ===== APP DEL CLIENTE ===== */
+let PEDIDO = null;
+function deudaCliente() { const h = hoy(), p = S.ventas.filter(v => Number(v.Saldo) > 0.01); return { saldo: p.reduce((s, v) => s + Number(v.Saldo), 0), vencido: p.filter(v => v.Vence < h).reduce((s, v) => s + Number(v.Saldo), 0), notas: p }; }
+function vPedir() {
+  if (!PEDIDO) PEDIDO = { lineas: [], notas: '', faltantes: null };
+  const P = PEDIDO, prods = S.productos, agot = {};
+  prods.forEach(p => { if (!p.Hay) agot[p.Codigo] = true; });
+  const ult = S.ventas.filter(v => S.detalle.some(d => d.VentaID === v.ID)).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1)[0];
+  const total = P.lineas.reduce((s, l) => s + num(l.kg) * (prods.find(p => p.Codigo === l.codigo) || {}).Precio, 0);
+  const pend = S.pedidos.filter(p => p.Estado === 'Pendiente');
+  const d = deudaCliente();
+  $('#main').innerHTML = `<div style="max-width:720px;margin:0 auto">
+    ${d.vencido > 0.01 ? `<div class="banner warn">Tienes <b>${usd(d.vencido)}</b> vencido. <a href="#" id="irc">Ver mis cuentas</a></div>` : ''}
+    <div class="card"><h2>Hacer pedido</h2>
+      ${ult ? `<button class="btn sec full" id="rep" style="margin-bottom:12px">↻ Repetir mi último pedido (nota ${esc(ult.Nota || '-')} del ${fdate(ult.Fecha)})</button>` : ''}
+      ${chipsProductos(P.lineas, { productos: prods, agotados: agot })}
+      ${P.faltantes ? P.faltantes.map(f => `<div class="banner warn" style="margin-top:10px">😕 <b>No tenemos suficiente ${esc(f.nombre)} para ${n2(f.pedido)} kg.</b> Prueba con menos kilos o elige un parecido.
+          <div class="row" style="margin-top:8px;gap:6px">
+          ${f.sugerencias.map(s => `<button class="btn sm sec" data-fs="${f.codigo}" data-por="${s.codigo}" style="flex:none">Cambiar por ${esc(s.nombre)}</button>`).join('')}
+          <button class="btn sm bad" data-fq="${f.codigo}" style="flex:none">Quitar</button></div></div>`).join('') : ''}
+      <div class="pcards" style="margin-top:12px">${P.lineas.map((l, i) => { const p = prods.find(x => x.Codigo === l.codigo) || {};
+        return `<div class="pcard"><div class="top"><b>${esc(p.Nombre)}</b><span><span class="num small" data-cst="${i}">${num(l.kg) ? usd(num(l.kg) * p.Precio) : ''}</span><button class="x" data-crm="${i}">×</button></span></div>
+          <div class="flds"><div><label>Kg</label><input class="num big" inputmode="decimal" data-ci="${i}" value="${esc(l.kg)}" placeholder="0"></div><div><label>Precio ref.</label><div class="num" style="padding:12px 0">${usd(p.Precio)}/kg</div></div></div></div>`; }).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos que quieres.</div>'}</div>
+      <div style="margin-top:10px"><label>Nota para el pedido (opcional)</label><input id="pn2" value="${esc(P.notas)}" placeholder="Ej: para el jueves en la mañana"></div>
+      <div class="tot big"><span>Total referencial</span><span class="num" id="ptot">${usd(total)}</span></div>
+      <p class="small muted">Precios referenciales. El total final queda en tu nota cuando pesemos y despachemos.</p>
+      <button class="btn acc full" id="penv">Enviar pedido</button></div>
+    ${pend.length ? `<div class="card"><h2>Mis pedidos en espera</h2>${pend.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b><div class="small muted">${S.pedidoLineas.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div></div><div class="right"><span class="pill p-warn">Por confirmar</span><br><button class="btn sm bad" data-pcan="${p.ID}" style="margin-top:4px">Cancelar</button></div></div>`).join('')}</div>` : ''}
+    </div>`;
+  const rer = () => { const y = window.scrollY; vPedir(); window.scrollTo(0, y); };
+  const irc = $('#irc'); if (irc) irc.onclick = e => { e.preventDefault(); TAB = 'cuentas'; render(); };
+  document.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => { if (!P.lineas.some(l => l.codigo === b.dataset.pk)) P.lineas.push({ codigo: b.dataset.pk, kg: '' }); P.faltantes = null; rer(); const el = document.querySelector(`[data-ci="${P.lineas.length - 1}"]`); if (el) el.focus(); });
+  document.querySelectorAll('[data-crm]').forEach(b => b.onclick = () => { P.lineas.splice(b.dataset.crm, 1); rer(); });
+  document.querySelectorAll('[data-ci]').forEach(el => el.oninput = () => { const l = P.lineas[el.dataset.ci]; l.kg = el.value; if (P.faltantes && P.faltantes.some(f => f.codigo === l.codigo)) { P.faltantes = P.faltantes.filter(f => f.codigo !== l.codigo); const y = window.scrollY; vPedir(); window.scrollTo(0, y); const e2 = document.querySelector(`[data-ci="${el.dataset.ci}"]`); if (e2) { e2.focus(); e2.setSelectionRange(e2.value.length, e2.value.length); } return; } const p = prods.find(x => x.Codigo === l.codigo); document.querySelector(`[data-cst="${el.dataset.ci}"]`).textContent = num(l.kg) ? usd(num(l.kg) * p.Precio) : ''; $('#ptot').textContent = usd(P.lineas.reduce((s, x) => s + num(x.kg) * (prods.find(q => q.Codigo === x.codigo) || {}).Precio, 0)); });
+  const rp = $('#rep'); if (rp) rp.onclick = () => { P.lineas = S.detalle.filter(x => x.VentaID === ult.ID).filter(x => prods.some(p => p.Codigo === x.Codigo)).map(x => ({ codigo: x.Codigo, kg: String(x.Kg) })); P.faltantes = null; toast('Revisa los kilos y envía'); rer(); };
+  document.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { const l = P.lineas.find(x => x.codigo === b.dataset.fs); const otra = P.lineas.find(x => x.codigo === b.dataset.por);
+    if (otra) { otra.kg = String(num(otra.kg) + num(l.kg)); P.lineas = P.lineas.filter(x => x !== l); } else l.codigo = b.dataset.por; P.faltantes = P.faltantes.filter(f => f.codigo !== b.dataset.fs); rer(); });
+  document.querySelectorAll('[data-fq]').forEach(b => b.onclick = () => { P.lineas = P.lineas.filter(x => x.codigo !== b.dataset.fq); P.faltantes = P.faltantes.filter(f => f.codigo !== b.dataset.fq); rer(); });
+  $('#pn2').oninput = e => P.notas = e.target.value;
+  $('#penv').onclick = e => busy(e.target, async () => {
+    const lineas = P.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg) }));
+    if (!lineas.length) throw new Error('Escribe los kilos de al menos un producto');
+    const r = await call('cliPedido', { lineas, notas: P.notas });
+    if (!r.guardado) { P.faltantes = r.faltantes; toast('Revisa: no tenemos todo lo que pediste', true); return rer(); }
+    PEDIDO = null; toast('¡Pedido enviado! Te avisaremos al despacharlo'); await recargar();
+  });
+  document.querySelectorAll('[data-pcan]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { await call('cliCancelarPedido', { id: b.dataset.pcan }); toast('Pedido cancelado'); await recargar(); }); });
+}
+function vCuentas() {
+  const d = deudaCliente(), h = hoy();
+  const det = {}; S.detalle.forEach(x => (det[x.VentaID] = det[x.VentaID] || []).push(x));
+  const cob = {}; S.cobros.forEach(x => (cob[x.VentaID] = cob[x.VentaID] || []).push(x));
+  const vs = S.ventas.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
+  const pedAt = S.pedidos.filter(p => p.Estado !== 'Pendiente');
+  $('#main').innerHTML = `<div style="max-width:720px;margin:0 auto">
+    <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b></div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
+    ${d.notas.length ? `<div class="card"><h2>Notas pendientes</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
+      ${d.notas.sort((a, b) => a.Vence < b.Vence ? -1 : 1).map(v => `<tr><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < h ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num"><b>${usd(v.Saldo)}</b></td></tr>`).join('')}</table></div>
+      <button class="btn acc full" style="margin-top:10px" id="irpag">Reportar un pago</button></div>` : '<div class="banner ok">✅ Estás al día. ¡Gracias!</div>'}
+    ${pedAt.length ? `<div class="card"><h2>Mis pedidos recientes</h2>${pedAt.map(p => { const desp = (S.despachos || []).filter(x => x.VentaID === p.VentaID);
+      return `<div class="cli"><div><b>${fdate(p.Fecha)}</b>${p.Nota ? ` · nota <b>${esc(p.Nota)}</b>` : ''}
+        <div class="small muted">Pediste: ${S.pedidoLineas.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div>
+        ${desp.length ? `<div class="small">Despachado: ${desp.map(x => esc(x.Producto) + ' <b>' + n2(x.Kg) + ' kg</b>').join(' · ')}${p.TotalVenta ? ' · <b class="num">' + usd(p.TotalVenta) + '</b>' : ''}</div>` : ''}
+        ${p.Motivo ? `<div class="small">${esc(p.Motivo)}</div>` : ''}</div><span class="pill ${p.Estado === 'Confirmado' ? 'p-ok' : 'p-bad'}">${p.Estado === 'Confirmado' ? 'Despachado' : esc(p.Estado)}</span></div>`; }).join('')}</div>` : ''}
+    <div class="card"><h2>Mis compras</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th class="r">Total</th><th>Estado</th></tr>
+      ${vs.map(v => `<tr style="cursor:pointer" data-cv="${v.ID}"><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td class="r num">${usd(v.Total)}</td><td><span class="pill ${v.Estado === 'Pagada' ? 'p-ok' : 'p-warn'}">${esc(v.Estado)}</span></td></tr>
+        <tr class="hide" id="cvd-${v.ID}"><td colspan="4"><table>${(det[v.ID] || []).map(x => `<tr><td class="small">${esc(x.Producto)}</td><td class="r num small">${n2(x.Kg)} kg × ${n2(x.Precio)}</td><td class="r num small">${usd(x.Subtotal)}</td></tr>`).join('')}</table>
+        ${(cob[v.ID] || []).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} · ${usd(c.MontoUSD)}</div>`).join('')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sin compras en el último año</td></tr>'}
+    </table></div>${S.historialCompleto ? '' : '<button class="btn sec full" style="margin-top:10px" id="vtodo">Ver todas mis compras (años anteriores)</button>'}</div></div>`;
+  document.querySelectorAll('[data-cv]').forEach(tr => tr.onclick = () => $('#cvd-' + tr.dataset.cv).classList.toggle('hide'));
+  const ip = $('#irpag'); if (ip) ip.onclick = () => { TAB = 'pagar'; render(); };
+  const vt = $('#vtodo'); if (vt) vt.onclick = e => busy(e.target, async () => { const r = await call('cliHistorial'); const have = new Set(S.ventas.map(v => v.ID)); r.ventas.forEach(v => { if (!have.has(v.ID)) S.ventas.push(v); });
+    const hd = new Set(S.detalle.map(x => x.VentaID)); r.detalle.forEach(x => { if (!hd.has(x.VentaID)) S.detalle.push(x); }); S.historialCompleto = true; vCuentas(); });
+}
+let PAGO_CLI = null;
+function vPagar() {
+  if (!PAGO_CLI) PAGO_CLI = { fecha: hoy(), metodo: 'Pago móvil', banco: 'Venezuela', moneda: 'Bs', monto: '', referencia: '' };
+  const P = PAGO_CLI, t = S.tasaHoy && S.tasaHoy.tasa, d = deudaCliente();
+  const pill = e => `<span class="pill ${e === 'Confirmado' ? 'p-ok' : e === 'Pendiente' ? 'p-warn' : 'p-bad'}">${e === 'Pendiente' ? 'Por verificar' : e}</span>`;
+  $('#main').innerHTML = `<div style="max-width:620px;margin:0 auto"><div class="card"><h2>Reportar un pago</h2>
+    <p class="small muted" style="margin-top:-6px">Debes ${usd(d.saldo)}. Cuando verifiquemos tu pago, lo aplicamos a tus notas más viejas.</p>
+    <div class="grid g2">
+      <div><label>Fecha del pago</label><input type="date" id="rpf" value="${P.fecha}"></div>
+      <div><label>Cómo pagaste</label><select id="rpm">${['Pago móvil', 'Transferencia', 'Punto de venta', 'Efectivo $', 'Efectivo Bs', 'Zelle'].map(x => `<option ${x === P.metodo ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <div><label>Banco</label><select id="rpb"><option value="">—</option>${BANCOS.map(x => `<option ${x === P.banco ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+      <div><label>Moneda</label><div class="seg"><button class="${P.moneda === 'Bs' ? 'on plain' : ''}" data-rpmon="Bs">Bolívares</button><button class="${P.moneda === 'USD' ? 'on plain' : ''}" data-rpmon="USD">Dólares</button></div></div>
+      <div><label>Monto ${P.moneda === 'Bs' ? 'Bs' : '$'}</label><input id="rpv" class="num big" inputmode="decimal" value="${esc(P.monto)}" placeholder="0,00"></div>
+      <div><label>Referencia</label><input id="rpr" value="${esc(P.referencia)}" placeholder="últimos 4 o 6 dígitos"></div>
+    </div>
+    ${P.moneda === 'Bs' && t ? `<p class="small muted" id="rpeq">≈ ${usd(num(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})</p>` : ''}
+    <button class="btn acc full" style="margin-top:12px" id="rpg">Enviar reporte de pago</button></div>
+    <div class="card"><h2>Mis pagos reportados</h2>${S.pagos.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b> · ${esc(p.Metodo)}${p.Referencia ? ' · ref. ' + esc(p.Referencia) : ''}${p.Motivo ? `<div class="small" style="color:var(--bad)">${esc(p.Motivo)}</div>` : ''}</div><div class="right"><b class="num">${p.MontoBs ? bs(p.MontoBs) : usd(p.MontoUSD)}</b><br>${pill(p.Estado)}</div></div>`).join('') || '<div class="empty small">Todavía no has reportado pagos.</div>'}</div></div>`;
+  $('#rpf').onchange = e => P.fecha = e.target.value; $('#rpm').onchange = e => { P.metodo = e.target.value; if (/\$|Zelle/.test(P.metodo)) { P.moneda = 'USD'; vPagar(); } };
+  $('#rpb').onchange = e => P.banco = e.target.value; $('#rpr').oninput = e => P.referencia = e.target.value;
+  $('#rpv').oninput = e => { P.monto = e.target.value; const q = $('#rpeq'); if (q && t) q.textContent = `≈ ${usd(num(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})`; };
+  document.querySelectorAll('[data-rpmon]').forEach(b => b.onclick = () => { P.moneda = b.dataset.rpmon; vPagar(); });
+  $('#rpg').onclick = e => busy(e.target, async () => {
+    if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
+    await call('cliReportarPago', { fecha: P.fecha, metodo: P.metodo, banco: P.banco, referencia: P.referencia, montoBs: P.moneda === 'Bs' ? num(P.monto) : 0, montoUSD: P.moneda === 'USD' ? num(P.monto) : 0 });
+    PAGO_CLI = null; toast('Pago reportado. Lo verificaremos pronto'); await recargar();
+  });
+}
+
+/* ===== AJUSTES ===== */
+function vAjustes() {
+  $('#main').innerHTML = `<div class="grid g2 st">
+    <div class="card"><h2>Tasa BCV</h2>
+      <p class="small muted">Se busca sola todos los días a las 9 a.m. y 5 p.m. Si falla, o quieres usar otra, cárgala aquí (la manual tiene prioridad).</p>
+      <div class="row"><div><label>Fecha</label><input type="date" id="tf" value="${hoy()}"></div><div><label>Tasa Bs/$</label><input id="tv" class="num" inputmode="decimal" placeholder="0,00"></div></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="tg">Guardar tasa</button><button class="btn sec" id="tb">Buscar BCV ahora</button></div>
+      <h3>Historial</h3><div class="tbl" style="max-height:260px;overflow:auto"><table>${S.tasas.map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="r num">${n2(t.Tasa)}</td><td class="small muted">${esc(t.Fuente)}</td></tr>`).join('') || '<tr><td class="muted">Sin tasas aún</td></tr>'}</table></div>
+    </div>
+    <div class="card" style="grid-column:1/-1"><h2>Productos, precios y margen</h2>
+      <p class="small muted" style="margin-top:-6px">Margen objetivo = % de ganancia sobre el precio de venta (precio = costo ÷ (1 − margen)). Mínimo = avisa cuando el inventario baja de ahí. Parecidos = qué sugerirle al cliente si se agota (escribe los nombres separados por coma).</p>
+      <div class="tbl"><table class="prodtbl"><tr><th>Producto</th><th>Costo</th><th>Precio</th><th>Margen obj. %</th><th>Mínimo kg</th><th>Parecidos (si se agota)</th><th></th></tr>
+      ${S.productos.map(p => `<tr><td><input value="${esc(p.Nombre)}" data-pn="${p.Codigo}" style="min-width:110px"></td><td><input class="num" style="width:76px" value="${esc(p.Costo)}" data-pc="${p.Codigo}"></td><td><input class="num" style="width:76px" value="${esc(p.Precio)}" data-pp="${p.Codigo}"></td>
+        <td><input class="num" style="width:70px" value="${p.Margen !== '' && p.Margen != null ? Math.round(Number(p.Margen) * 1000) / 10 : ''}" data-pm="${p.Codigo}"></td><td><input class="num" style="width:70px" value="${esc(p.Minimo)}" data-pmin="${p.Codigo}"></td>
+        <td><input value="${esc((String(p.Sustitutos || '')).split(/[,;]/).map(x => x.trim()).filter(Boolean).map(x => nombreProd(x.toUpperCase()) || x).join(', '))}" data-psu="${p.Codigo}" placeholder="Ej: Mozarella, Mano" style="min-width:150px"></td><td><button class="btn sm sec" data-ps="${p.Codigo}">✓</button></td></tr>`).join('')}
+      <tr><td><input id="npn" placeholder="Nuevo producto"></td><td><input id="npc" class="num" placeholder="costo"></td><td><input id="npp" class="num" placeholder="precio"></td><td colspan="3"></td><td><button class="btn sm" id="npg">+</button></td></tr>
+    </table></div></div>
+    <div class="card" style="grid-column:1/-1"><h2>Usuarios</h2>
+      <p class="small muted" style="margin-top:-6px">Cada persona entra con su usuario (único) y su PIN (4 a 8 números). Rol: admin (todo), empleado (cierre y mercancía del local) o cliente (sus pedidos y su cuenta). Para un cliente, elige a qué cliente corresponde. Deja el PIN vacío para no cambiarlo.</p>
+      <div class="tbl"><table id="utab"></table></div></div>
+    <div class="card" style="grid-column:1/-1"><h2>Clientes</h2><input id="cq" placeholder="Buscar cliente" style="margin-bottom:8px">
+      <div class="tbl" style="max-height:380px;overflow:auto"><table id="ctab"></table></div></div>
+    <div class="card"><h2>Alertas y cuenta</h2>
+      <p class="small muted">Todos los días a las 7 a.m. llega un correo a los administradores que tengan correo en Usuarios: deudas vencidas, cierre faltante, conciliación, inventario bajo, pedidos por confirmar y pagos a proveedores por vencer. Los pedidos y pagos de clientes avisan al momento.</p>
+      <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div></div>
+  </div>`;
+  $('#tg').onclick = e => busy(e.target, async () => { await call('guardarTasa', { fecha: $('#tf').value, tasa: num($('#tv').value) }); toast('Tasa guardada'); await recargar(); });
+  $('#tb').onclick = e => busy(e.target, async () => { const r = await call('buscarTasa'); toast(r.sinCambio ? 'Hay una tasa manual para ese día; se mantiene' : 'Tasa BCV: ' + n2(r.tasa)); await recargar(); });
+  const codDe = t => { t = t.trim(); const p = S.productos.find(x => x.Nombre.toLowerCase() === t.toLowerCase() || x.Codigo === t.toUpperCase()); return p ? p.Codigo : t; };
+  document.querySelectorAll('[data-ps]').forEach(b => b.onclick = () => busy(b, async () => { const c = b.dataset.ps; await call('guardarProducto', { Codigo: c, Nombre: $(`[data-pn="${c}"]`).value, Costo: num($(`[data-pc="${c}"]`).value), Precio: num($(`[data-pp="${c}"]`).value),
+    Margen: $(`[data-pm="${c}"]`).value === '' ? '' : num($(`[data-pm="${c}"]`).value) / 100, Minimo: num($(`[data-pmin="${c}"]`).value), Sustitutos: $(`[data-psu="${c}"]`).value.split(',').map(codDe).filter(Boolean).join(',') }); toast('Producto actualizado'); await recargar(); }));
+  const pintarUs = () => {
+    const rows = S.usuarios.concat([{ nuevo: true, Nombre: '', Usuario: '', Rol: 'empleado', Email: '', Activo: 'SI', Cliente: '' }]);
+    $('#utab').innerHTML = '<tr><th>Nombre</th><th>Usuario</th><th>PIN</th><th>Rol</th><th>Cliente</th><th>Correo</th><th>Activo</th><th></th></tr>' + rows.map((u, i) => `<tr>
+      <td><input data-un="${i}" value="${esc(u.Nombre)}" placeholder="${u.nuevo ? 'Nuevo usuario' : ''}" style="min-width:110px"></td><td><input data-uu="${i}" value="${esc(u.Usuario)}" autocapitalize="none" style="min-width:90px"></td>
+      <td><input data-up="${i}" class="mono" inputmode="numeric" maxlength="8" placeholder="${u.nuevo ? 'PIN' : '••••'}" style="width:80px"></td>
+      <td><select data-ur="${i}" style="min-width:112px">${['admin', 'empleado', 'cliente'].map(r => `<option ${String(u.Rol).toLowerCase() === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
+      <td><input data-uc="${i}" list="dl-cli3" value="${esc(u.Cliente)}" style="min-width:150px"></td><td><input data-ue="${i}" value="${esc(u.Email)}" style="min-width:150px"></td>
+      <td><select data-ua="${i}" style="min-width:70px"><option ${String(u.Activo).toUpperCase() !== 'NO' ? 'selected' : ''}>SI</option><option ${String(u.Activo).toUpperCase() === 'NO' ? 'selected' : ''}>NO</option></select></td>
+      <td><button class="btn sm ${u.nuevo ? '' : 'sec'}" data-ug="${i}" data-orig="${esc(u.Usuario || '')}">${u.nuevo ? '+' : '✓'}</button></td></tr>`).join('') + `<datalist id="dl-cli3">${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist>`;
+    document.querySelectorAll('[data-ug]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ug, v = k => $(`[data-${k}="${i}"]`).value;
+      const propio = b.dataset.orig && b.dataset.orig === USR, nuevoPin = v('up').trim();
+      await call('guardarUsuario', { original: b.dataset.orig, Nombre: v('un'), Usuario: v('uu'), PIN: nuevoPin, Rol: v('ur'), Cliente: v('uc'), Email: v('ue'), Activo: v('ua') });
+      if (propio) { if (nuevoPin) { PIN = nuevoPin; store('pin', PIN); } USR = v('uu').trim().toLowerCase(); store('usr', USR); } // tu propio usuario: la app sigue entrando con el PIN nuevo
+      toast(propio && nuevoPin ? 'Tu PIN quedó cambiado' : 'Usuario guardado'); await recargar(); TAB = 'ajustes'; render(); }));
+  };
+  pintarUs();
+  $('#npg').onclick = e => busy(e.target, async () => { const n = $('#npn').value.trim(); if (!n) throw new Error('Escribe el nombre'); const cod = n.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() + (S.productos.length + 1); await call('guardarProducto', { Codigo: cod, Nombre: n, Costo: num($('#npc').value), Precio: num($('#npp').value) }); toast('Producto agregado'); VENTA = null; await recargar(); });
+  const pintarCli = () => { const q = $('#cq').value.toLowerCase(); $('#ctab').innerHTML = '<tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Zona</th><th class="r">Días</th><th></th></tr>' + S.clientes.filter(c => !q || String(c.Nombre).toLowerCase().includes(q)).map((c, i) => `<tr><td><input value="${esc(c.Nombre)}" data-cn="${i}" style="min-width:200px"></td><td><input value="${esc(c.Telefono)}" data-ct="${i}" inputmode="tel" style="min-width:110px"></td><td><input value="${esc(c.Direccion || '')}" data-cdir="${i}" style="min-width:160px"></td><td><input value="${esc(c.Zona)}" data-cz="${i}"></td><td><input class="num" style="width:56px" value="${esc(c.DiasCredito)}" data-cd="${i}"></td><td><button class="btn sm sec" data-cs="${i}" data-orig="${esc(c.Nombre)}">✓</button></td></tr>`).join('');
+    document.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.cs; await call('guardarCliente', { original: b.dataset.orig, Nombre: $(`[data-cn="${i}"]`).value.trim(), Telefono: $(`[data-ct="${i}"]`).value, Zona: $(`[data-cz="${i}"]`).value, Direccion: $(`[data-cdir="${i}"]`).value, DiasCredito: num($(`[data-cd="${i}"]`).value) }); toast('Cliente guardado'); await recargar(); })); };
+  $('#cq').oninput = pintarCli; pintarCli();
+  $('#al').onclick = e => busy(e.target, async () => { const r = await call('enviarAlertas'); toast(r.enviado ? 'Correo enviado a ' + r.para.join(', ') : r.motivo, !r.enviado); });
+  $('#lo').onclick = salir;
+}
+
+start();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !/googleusercontent|script\.google/.test(location.host)) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
