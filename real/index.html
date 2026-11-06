@@ -34,7 +34,7 @@ header{background:var(--brand);color:#fff;padding:14px 16px 0;position:sticky;to
 @media(max-width:760px){body.adm .brand small{display:none}}
 .tasa{margin-left:auto;text-align:right;font-size:12px;opacity:.95}
 .tasa b{font-size:15px;display:block}
-.hsalir{flex:none;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:15px;line-height:1.1}
+.hsalir{flex:none;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.1}
 .hsalir span{font-size:10.5px;font-weight:600;opacity:.9}
 nav{display:flex;gap:2px;overflow-x:auto;max-width:1100px;margin:10px auto 0;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
@@ -256,7 +256,7 @@ function render() {
   const np = USER.rol === 'admin' ? pendientesAdmin() : 0;
   $('#app').innerHTML = `<header><div class="hrow">
       <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small><span class="tabname">${esc((TABS().find(x => x[0] === TAB) || [])[1] || '')}</span></div>
-      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div><button class="hsalir" data-salir title="Cerrar sesión">⏻<span>Salir</span></button>
+      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div><button class="hsalir" data-salir title="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg><span>Salir</span></button>
     </div><nav>${TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}${k === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')}
 </nav></header><main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
   document.body.classList.toggle('adm', USER.rol === 'admin');
