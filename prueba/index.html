@@ -156,6 +156,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
+const PANTALLA = 'V8b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -235,7 +236,7 @@ function renderLogin(err) {
     <label style="text-align:left">Usuario</label><input id="usr" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(USR)}" placeholder="tu usuario">
     <label style="text-align:left;margin-top:10px">PIN</label><input id="pin" class="pin mono" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8">
     ${err ? `<p style="color:var(--bad)" class="small">${esc(err)}</p>` : ''}
-    <button class="btn full" style="margin-top:12px" id="entrar">Entrar</button></div>`;
+    <button class="btn full" style="margin-top:12px" id="entrar">Entrar</button><p class="small muted" style="margin-top:14px">Pantalla ${PANTALLA}</p></div>`;
   const go = () => { USR = $('#usr').value.trim().toLowerCase(); PIN = $('#pin').value.trim(); if (!USR || !PIN) return toast('Escribe usuario y PIN', true); store('usr', USR); store('pin', PIN); start(); };
   $('#entrar').onclick = go; $('#pin').onkeydown = e => { if (e.key === 'Enter') go(); }; $('#usr').onkeydown = e => { if (e.key === 'Enter') $('#pin').focus(); };
   (USR ? $('#pin') : $('#usr')).focus();
@@ -1378,7 +1379,7 @@ function vAjustes() {
       <div class="tbl" style="max-height:380px;overflow:auto"><table id="ctab"></table></div></div>
     <div class="card"><h2>Alertas y cuenta</h2>
       <p class="small muted">Todos los días a las 7 a.m. llega un correo a los administradores que tengan correo en Usuarios: deudas vencidas, cierre faltante, conciliación, inventario bajo, pedidos por confirmar y pagos a proveedores por vencer. Los pedidos y pagos de clientes avisan al momento.</p>
-      <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div></div>
+      <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div><p class="small muted" style="margin:10px 0 0">Pantalla ${PANTALLA} · servidor V${USER.version || '?'}</p></div>
   </div>`;
   $('#tg').onclick = e => busy(e.target, async () => { await call('guardarTasa', { fecha: $('#tf').value, tasa: num($('#tv').value) }); toast('Tasa guardada'); await recargar(); });
   $('#tb').onclick = e => busy(e.target, async () => { const r = await call('buscarTasa'); toast(r.sinCambio ? 'Hay una tasa manual para ese día; se mantiene' : 'Tasa BCV: ' + n2(r.tasa)); await recargar(); });
@@ -1413,7 +1414,7 @@ start();
 </script>
 <script>
 if ('serviceWorker' in navigator && location.protocol === 'https:' && !/googleusercontent|script\.google/.test(location.host)) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {}));
 }
 </script>
 </body>
