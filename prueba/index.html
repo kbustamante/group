@@ -151,6 +151,68 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 .banner{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}.banner.ok{background:var(--ok-bg);color:var(--ok)}
+
+/* ===== V11: cabecera ===== */
+.topbar{position:sticky;top:0;z-index:20}
+header{padding:10px 16px}
+header .hrow{gap:12px}
+.hsearch{flex:1;max-width:420px;margin-left:14px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;color:rgba(255,255,255,.78);font-size:14px;cursor:pointer;text-align:left}
+.hsearch:hover{background:rgba(255,255,255,.16)}.hsearch span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hsearch kbd{font-size:11px;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:1px 6px;font-family:inherit}
+.hsp{flex:1}
+.htasa{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:0;border-radius:11px;padding:6px 11px;color:#fff;cursor:pointer;text-align:left;line-height:1.15}
+.htasa i{width:9px;height:9px;border-radius:50%;background:#4ade80;flex:none}.htasa.warn i{background:#fbbf24}.htasa.bad i{background:#f87171}
+.htasa small{display:block;font-size:11px;opacity:.8}.htasa b{font-size:15px}
+.hnew{display:flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:11px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.hnew:hover{filter:brightness(1.05)}
+.hicon{position:relative;width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.1);border:0;color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.hb{position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;font:700 10.5px/1 inherit;font-style:normal;border-radius:10px;padding:3px 6px;border:2px solid var(--brand)}
+.hav{width:40px;height:40px;border-radius:50%;background:#fff;color:var(--brand);border:0;font-weight:800;font-size:14px;cursor:pointer;flex:none}
+.mainnav{background:#fff;border-bottom:1px solid var(--line)}
+.mainnav .nin{display:flex;gap:2px;max-width:1100px;margin:0 auto;padding:0 10px;overflow-x:auto;scrollbar-width:none}.mainnav .nin::-webkit-scrollbar{display:none}
+.mainnav button{display:flex;align-items:center;gap:6px;background:none;border:0;border-bottom:3px solid transparent;padding:12px 11px 10px;color:#4b5563;font-weight:600;font-size:14px;white-space:nowrap;cursor:pointer}
+.mainnav button:hover{color:var(--brand)}.mainnav button.on{color:var(--brand);border-bottom-color:var(--accent)}.mainnav button.der{margin-left:auto}
+.mainnav .ni{font-size:15px}.mainnav .badge{margin-left:2px}
+.subnav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 16px 2px}
+.mtit{font-size:21px;margin:0;color:var(--brand)}
+.seg2{display:flex;flex-wrap:wrap;background:#ece5d4;border-radius:11px;padding:3px;gap:2px}
+.seg2 button{border:0;background:none;border-radius:8px;padding:7px 12px;font-size:13.5px;color:#4b5563;cursor:pointer;white-space:nowrap}
+.seg2 button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.velo{position:fixed;inset:0;z-index:19}.velo.osc{background:rgba(29,36,51,.4);z-index:40}
+.pop{position:fixed;z-index:41;background:#fff;border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.2);padding:6px;min-width:250px;max-width:340px}
+.pop.hoja{left:0;right:0;bottom:0;max-width:none;border-radius:20px 20px 0 0;padding:10px 10px calc(16px + env(safe-area-inset-bottom))}
+.ph{padding:8px 10px 6px;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pi{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:10px;border-radius:9px;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}
+.pi:hover{background:#f7f3ea}.pi span:first-child{font-size:17px;width:22px;text-align:center;flex:none}.pi .pt{font-size:13.5px}.pi.rojo{color:#b91c1c}
+.pv{padding:8px 10px}
+.fab{display:none}
+.buscador{position:fixed;z-index:41;top:70px;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 24px));background:#fff;border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.25);overflow:hidden}
+.bin{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);color:var(--muted)}
+.bin input{border:0;outline:0;font-size:16px;padding:4px 0;flex:1;background:none;box-shadow:none}
+.bres{max-height:min(65vh,520px);overflow:auto;padding:6px}
+.bi{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left;font-size:14px;color:var(--ink)}
+.bi:hover{background:#f7f3ea}.bi .bt{flex:1;min-width:0}.bi small{display:block;color:var(--muted);font-size:12px}.bi .r{text-align:right}
+.bav{display:flex;width:100%;text-align:left;cursor:pointer;border:0;font:inherit;align-items:center;gap:6px}.bav span{margin-left:auto;font-weight:700;white-space:nowrap}
+@media(max-width:760px){
+  body.adm .mainnav{display:none}
+  .hsearch{flex:none;margin-left:auto;width:40px;height:40px;padding:0;justify-content:center;border-radius:11px}.hsearch span,.hsearch kbd{display:none}
+  .hnew{display:none}
+  .hsp{order:1}.htasa{order:2}.hsearch{order:3;margin-left:0}.hicon{order:4}.hav{order:5}
+  .htasa{padding:6px 9px}.htasa small{display:none}
+  body.adm .fab{display:grid;place-items:center;position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:16;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:0;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .subnav{padding:12px 12px 0}.mtit{font-size:18px;width:100%}
+  .seg2{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none}.seg2::-webkit-scrollbar{display:none}
+  .buscador{top:12px}
+}
+@media(max-width:420px){header .hrow{gap:8px}.brand small{display:none}.brand b{font-size:15px}}
+.modal{position:fixed;z-index:41;left:50%;top:4vh;transform:translateX(-50%);width:min(620px,calc(100vw - 20px));max-height:92vh;overflow:auto;background:var(--card);border-radius:16px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal .mx{position:absolute;top:10px;right:10px;font-size:22px}
+.ftab td.c,.ftab th.c{text-align:center;width:74px}.ftab tr.fg td{background:#f3eee2;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.ftab tr.off td:first-child{color:var(--muted)}.fchk{width:18px;height:18px;accent-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:40px;height:22px;cursor:pointer}.sw input{opacity:0;width:0;height:0}.sw i{position:absolute;inset:0;background:#d1cbbd;border-radius:22px;transition:.2s}
+.sw i:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.sw input:checked+i{background:var(--ok)}.sw input:checked+i:before{transform:translateX(18px)}.sw input:disabled+i{opacity:.55;cursor:default}
+.xcols{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;margin-top:6px}.xcols label{display:flex;gap:6px;align-items:center;color:var(--ink);font-weight:400;margin:0}.xcols input{width:auto}
+.seg.wrap{flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -160,7 +222,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V10'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V11'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -215,7 +277,7 @@ function tasaPara(fecha) {
 /* ===== Arranque ===== */
 const CARGANDO = '<div class="login card" style="margin-top:20vh"><div class="logo">🧀</div><p><span class="spin"></span> Cargando…</p><p class="small muted">Trayendo la información del día</p></div>';
 async function cargarDatos() {
-  if (USER.rol === 'admin') { S = await call('datos'); PROD_CACHE = {}; }
+  if (AL()) { S = await call('datos'); PROD_CACHE = {}; USER.funciones = S.funciones || USER.funciones; }
   else if (USER.rol === 'cliente') { S = await call('cliDatos'); S.tasas = []; }
   else { const [t, l] = await Promise.all([call('tasa'), call('local')]); S = Object.assign({ tasaHoy: t, tasas: [] }, l); S.hoy = l.hoy || t.pedido; }
 }
@@ -253,57 +315,192 @@ const GRUPOS = [
   ['cobros', 'Cobros', '💵', [['cobrar', 'Registrar cobro'], ['deudas', 'Quién me debe']]],
   ['pedidos', 'Pedidos', '🛒', [['pedidos', '']]],
   ['local', 'Local', '🏪', [['cierre', 'Cierre del día'], ['local', 'Conciliación'], ['subirl', 'Subir Excel']]],
-  ['compras', 'Compras', '🚚', [['entrada', 'Entrada'], ['debo', 'Lo que debo'], ['proveedores', 'Proveedores']]],
-  ['inventario', 'Inventario', '📦', [['stock', 'Stock'], ['traslado', 'Traslado'], ['conteo', 'Conteo'], ['movs', 'Movimientos']]],
-  ['reportes', 'Reportes', '📈', [['r_mes', 'Del mes'], ['reportes', 'Ventas'], ['productos', 'Productos'], ['r_cobranza', 'Cobranza'], ['r_prov', 'Proveedores'], ['r_local', 'Local'], ['r_inv', 'Inventario']]],
-  ['ajustes', 'Ajustes', '⚙️', [['ajustes', '']]],
+  ['compras', 'Compras', '🚚', [['entrada', 'Entrada'], ['debo', 'Lo que debo'], ['gastos', 'Gastos'], ['proveedores', 'Proveedores']]],
+  ['inventario', 'Inventario', '📦', [['stock', 'Stock'], ['vencer', 'Por vencer'], ['traslado', 'Traslado'], ['conteo', 'Conteo'], ['movs', 'Movimientos']]],
+  ['reportes', 'Reportes', '📈', [['r_mes', 'Del mes'], ['reportes', 'Ventas'], ['productos', 'Productos'], ['r_cobranza', 'Cobranza'], ['r_prov', 'Proveedores'], ['r_local', 'Local'], ['r_inv', 'Inventario'], ['excel', '⬇ Excel']]],
+  ['ajustes', 'Ajustes', '⚙️', [['ajustes', 'General'], ['funciones', 'Funciones'], ['registro', 'Registro de cambios']]],
 ];
-const BARRA = ['inicio', 'mayor', 'cobros', 'pedidos']; // en el celular; el resto va en "Más"
+/* V11: cada pantalla pide una función (Ajustes → Funciones decide quién la usa). */
+const LEGADO = { admin: null, empleado: ['cierre', 'mercancia'], cliente: ['cliPedidos', 'cliPagos'], otro: [] }; // servidor viejo (sin funciones): como antes
+const F = k => { if (!USER) return false; if (!USER.funciones) { const l = LEGADO[USER.rol]; return l === null ? !/^cli|lotes|cierreMes/.test(k) : (l || []).includes(k); } return !!USER.funciones[k]; };
+const FS = (...ks) => ks.some(F);
+const AL = () => USER && (USER.rol === 'admin' || USER.rol === 'otro'); // admin y el 4.º perfil usan el menú grande
+const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['venta', 'corregir', 'cobros'], subirv: ['subir'], cobrar: ['cobros'], deudas: ['cobros', 'whatsapp'],
+  pedidos: ['pedidos'], cierre: ['cierre'], local: ['conciliacion'], subirl: ['subir'], entrada: ['compras'], debo: ['compras'], gastos: ['gastos'], proveedores: ['compras'],
+  stock: ['inventario'], vencer: ['lotes'], traslado: ['inventario'], conteo: ['inventario'], movs: ['inventario'],
+  r_mes: ['reportes'], reportes: ['reportes'], productos: ['reportes'], r_cobranza: ['reportes'], r_prov: ['reportes'], r_local: ['reportes'], r_inv: ['reportes'], ajustes: ['ajustes'], funciones: ['ajustes'], registro: ['ajustes'], excel: ['excel'],
+  mercancia: ['mercancia'], wa: ['whatsapp'], pedir: ['cliPedidos'], pagar: ['cliPagos'], cuentas: [] };
+const puedeVer = k => !VISTA_F[k] || !VISTA_F[k].length || FS(...VISTA_F[k]);
+const NOMBRE_ROL = r => ({ admin: 'Administrador', empleado: 'Local', cliente: 'Cliente', otro: (USER && USER.perfilOtro) || (S && S.perfilOtro) || 'Otro perfil' }[r] || r);
 const ULTIMA = {}; // última sub-pestaña usada de cada módulo
-const grupoDe = tab => GRUPOS.find(g => g[3].some(v => v[0] === tab)) || GRUPOS[0];
-const TABS_ADMIN = GRUPOS.flatMap(g => g[3].map(([k, l]) => [k, l ? g[1] + ' · ' + l : g[1]]));
-const TABS_LOCAL = [['cierre', 'Cierre del día'], ['mercancia', 'Mercancía']];
+function GV() { return GRUPOS.map(g => [g[0], g[1], g[2], g[3].filter(v => puedeVer(v[0])), g[4]]).filter(g => g[3].length); } // menú con lo permitido
+function BARRA() { const ks = GV().map(g => g[0]); return ['inicio', 'mayor', 'cobros', 'pedidos', 'local', 'compras', 'reportes'].filter(k => ks.includes(k)).slice(0, 4); }
+const grupoDe = tab => { const gv = GV(); return gv.find(g => g[3].some(v => v[0] === tab)) || gv[0] || GRUPOS[0]; };
+const TABS_LOCAL = [['cierre', 'Cierre del día'], ['mercancia', 'Mercancía'], ['wa', 'Cobrar']];
 const TABS_CLIENTE = [['pedir', 'Hacer pedido'], ['cuentas', 'Mis cuentas'], ['pagar', 'Reportar pago']];
-function TABS() { return USER.rol === 'admin' ? TABS_ADMIN : USER.rol === 'cliente' ? TABS_CLIENTE : TABS_LOCAL; }
-function pendientesAdmin() { return S.pedidos ? S.pedidos.filter(p => p.Estado === 'Pendiente').length + S.pagosReportados.filter(p => p.Estado === 'Pendiente').length : 0; }
+function TABS() {
+  const t = AL() ? GV().flatMap(g => g[3].map(([k, l]) => [k, l ? g[1] + ' · ' + l : g[1]])) : (USER.rol === 'cliente' ? TABS_CLIENTE : TABS_LOCAL).filter(([k]) => puedeVer(k));
+  return t.length ? t : [['nada', 'Sin acceso']];
+}
+function pendientesAdmin() { return S.pedidos && F('pedidos') ? S.pedidos.filter(p => p.Estado === 'Pendiente').length + S.pagosReportados.filter(p => p.Estado === 'Pendiente').length : 0; }
+function vNada() { $('#main').innerHTML = `<div class="card login" style="margin-top:8vh"><div class="logo">🔒</div><h2>Todavía no tienes funciones activas</h2><p class="muted">Pídele al administrador que te las active en Ajustes → Funciones.</p></div>`; }
 
 function render() {
-  CHARTS.forEach(c => c.destroy()); CHARTS = [];
-  const t = S.tasaHoy || {};
-  const rolTxt = { admin: 'Administrador', empleado: 'Local', cliente: 'Cliente' }[USER.rol];
-  const np = USER.rol === 'admin' ? pendientesAdmin() : 0;
-  $('#app').innerHTML = `<header><div class="hrow">
-      <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small><span class="tabname">${esc(USER.rol === 'admin' ? grupoDe(TAB)[1] : '')}</span></div>
-      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div><button class="hsalir" data-salir title="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg><span>Salir</span></button>
-    </div><nav>${USER.rol === 'admin' ? GRUPOS.map(g => `<button data-grupo="${g[0]}" class="${grupoDe(TAB) === g ? 'on' : ''}">${g[1]}${g[0] === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')
-      : TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}</button>`).join('')}
-</nav></header>${USER.rol === 'admin' ? subnav() : ''}<main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
-  document.body.classList.toggle('adm', USER.rol === 'admin');
-  const ir = tab => { if (grupoDe(tab) !== grupoDe(TAB)) FILTRO = {}; TAB = tab; ULTIMA[grupoDe(tab)[0]] = tab; render(); };
+  CHARTS.forEach(c => c.destroy()); CHARTS = []; cerrarPop(); cerrarBus();
+  if (!TABS().some(t => t[0] === TAB)) TAB = TABS()[0][0];
+  const np = AL() ? pendientesAdmin() : 0;
+  $('#app').innerHTML = `${cabecera()}${AL() ? subnav() : ''}<main id="main"></main>${AL() ? barraMovil(np) : ''}`;
+  bindCabecera();
+  document.body.classList.toggle('adm', AL());
+  const ir = tab => { if (grupoDe(tab)[0] !== grupoDe(TAB)[0]) FILTRO = {}; TAB = tab; ULTIMA[grupoDe(tab)[0]] = tab; render(); };
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => ir(b.dataset.tab));
-  document.querySelectorAll('[data-grupo]').forEach(b => b.onclick = () => { const g = GRUPOS.find(x => x[0] === b.dataset.grupo); ir(ULTIMA[g[0]] || g[3][0][0]); });
+  document.querySelectorAll('[data-grupo]').forEach(b => b.onclick = () => { const g = GV().find(x => x[0] === b.dataset.grupo); ir(g[3].some(v => v[0] === ULTIMA[g[0]]) ? ULTIMA[g[0]] : g[3][0][0]); });
   ULTIMA[grupoDe(TAB)[0]] = TAB;
   const mas = $('#mas'); if (mas) { const sh = $('#sheet'); mas.onclick = () => sh.classList.add('on'); sh.onclick = e => { if (e.target === sh) sh.classList.remove('on'); }; }
-  const s = document.querySelector('[data-salir]'); if (s) s.onclick = salir;
   const inv = f => () => { $('#main').innerHTML = '<div id="inv"></div>'; f(); };
   ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, subirv: vSubirVentas, subirl: vSubirCierres, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
      pedidos: vPedidos, stock: inv(invStock), entrada: inv(invEntrada), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
      r_mes: vResumenMes, r_cobranza: vCobranza, r_prov: vRepProveedores, r_local: vRepLocal, r_inv: vRepInventario,
+     gastos: vGastos, vencer: vVencer, wa: vCobrarLocal, nada: vNada, funciones: vFunciones, registro: vRegistro, excel: vExcel,
      mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
   window.scrollTo(0, 0);
 }
-/** Sub-pestañas del módulo actual (debajo de la cabecera). */
+/* ===== CABECERA: buscador, ＋ Nuevo, avisos, tasa y menú de usuario ===== */
+const ICO = { buscar: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  campana: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>',
+  mas: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' };
+const NUEVO_T = [['vender', '🧾', 'Nueva venta al mayor'], ['cobrar', '💵', 'Registrar cobro'], ['cierre', '🏪', 'Cierre del día'], ['entrada', '🚚', 'Entrada de mercancía'], ['gastos', '🧾', 'Registrar gasto']];
+const NUEVO = () => NUEVO_T.filter(n => puedeVer(n[0]));
+const iniciales = n => { const p = String(n || '?').trim().split(/\s+/); if (p.length > 1) return (p[0][0] + p[1][0]).toUpperCase(); const may = p[0].replace(/[^A-ZÁÉÍÓÚÑ]/g, ''); return (may.length >= 2 ? may : p[0]).slice(0, 2).toUpperCase(); }; // "KarolB" → KB, "Marlo" → MA
+function estadoTasa() {
+  const t = S.tasaHoy || {}, h = hoy();
+  if (!t.tasa) return { cls: 'bad', txt: 'Sin tasa', det: 'No hay tasa cargada' };
+  const manual = /manual/i.test(String(t.fuente || ''));
+  if (t.fecha === h) return { cls: 'ok', txt: manual ? 'Tasa BCV hoy · M' : 'Tasa BCV hoy', det: (manual ? 'Escrita a mano' : 'Automática del BCV') + ' · ' + fdate(t.fecha) };
+  return { cls: 'warn', txt: 'Tasa del ' + fdate(t.fecha), det: 'No es la de hoy' };
+}
+/** Todo lo que necesita atención del admin (campanita e Inicio). */
+function avisosAdmin() {
+  if (!AL() || !S.productos) return [];
+  const h = hoy(), out = [], t = S.tasaHoy || {};
+  if (F('ajustes') && (!t.tasa || t.fecha < addDays(h, -1))) out.push({ i: '💱', txt: 'La tasa BCV no está al día', tab: 'ajustes' });
+  const np = pendientesAdmin(); if (np) out.push({ i: '🛒', txt: `${np} pedido(s) o pago(s) de clientes por confirmar`, tab: 'pedidos' });
+  if (F('conciliacion') && !S.cierres.find(c => c.Fecha === addDays(h, -1))) out.push({ i: '🏪', txt: 'Falta el cierre del local de ayer', tab: 'local' });
+  const dp = deudaProveedores(), vp = dp.lista.filter(e => e.Vence <= addDays(h, 3));
+  if (F('compras') && vp.length) out.push({ i: '🚚', txt: `${vp.length} factura(s) de proveedor ${vp.some(e => e.Vence < h) ? 'vencida(s) o ' : ''}por vencer (${usd(vp.reduce((s, e) => s + Number(e.Saldo), 0))})`, tab: 'debo' });
+  const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
+  if (F('inventario') && bajos.length) out.push({ i: '📦', txt: 'Inventario bajo: ' + bajos.slice(0, 3).map(p => p.Nombre).join(', ') + (bajos.length > 3 ? ` y ${bajos.length - 3} más` : ''), tab: 'stock' });
+  const pv = porVencer(7); if (F('lotes') && pv.length) out.push({ i: '📅', txt: `${pv.length} lote(s) vencen en 7 días o menos (${n2(pv.reduce((s, l) => s + Number(l.Restante), 0))} kg)`, tab: 'vencer' });
+  const ven = deudasPorCliente().filter(d => d.vencido > 0.01);
+  if (FS('cobros', 'reportes') && ven.length) out.push({ i: '⏰', txt: `${ven.length} cliente(s) con deuda vencida (${usd(ven.reduce((s, d) => s + d.vencido, 0))})`, tab: F('reportes') ? 'r_cobranza' : 'deudas', suave: true });
+  return out;
+}
+function cabecera() {
+  const et = estadoTasa(), t = S.tasaHoy || {}, adm = AL(), avs = adm ? avisosAdmin().filter(a => !a.suave) : [], bus = adm && FS('cobros', 'venta', 'reportes'), nuevo = adm && NUEVO().length;
+  const rolTxt = NOMBRE_ROL(USER.rol);
+  return `<div class="topbar"><header><div class="hrow">
+      <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.rol === 'admin' ? 'Ventas y cobranza' : USER.nombre + ' · ' + rolTxt)}</small></div>
+      ${bus ? `<button class="hsearch" id="hbus" title="Buscar (tecla /)">${ICO.buscar}<span>Buscar cliente o N° de nota…</span><kbd>/</kbd></button>` : ''}
+      <div class="hsp"></div>
+      <button class="htasa ${et.cls}" id="htasa" title="${esc(et.det)}"><i></i><span><small>${esc(et.txt)}</small><b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b></span></button>
+      ${adm ? `${nuevo ? `<button class="hnew" id="hnew">${ICO.mas}<span>Nuevo</span></button>` : ''}
+      <button class="hicon" id="hbell" title="Avisos">${ICO.campana}${avs.length ? `<i class="hb">${avs.length}</i>` : ''}</button>` : ''}
+      <button class="hav" id="hav" title="${esc(USER.nombre)}">${esc(iniciales(USER.nombre))}</button>
+    </div></header>
+    <nav class="mainnav"><div class="nin">${adm ? GV().map(g => `<button data-grupo="${g[0]}" class="${grupoDe(TAB)[0] === g[0] ? 'on' : ''} ${g[0] === 'ajustes' ? 'der' : ''}"><span class="ni">${g[2]}</span>${g[4] || g[1]}${g[0] === 'pedidos' && pendientesAdmin() ? ` <span class="badge">${pendientesAdmin()}</span>` : ''}</button>`).join('')
+      : TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}</button>`).join('')}</div></nav></div>
+    ${nuevo ? `<button class="fab" id="fab" title="Nuevo">${ICO.mas}</button>` : ''}`;
+}
+function cerrarPop() { document.querySelectorAll('.pop,.velo').forEach(x => x.remove()); document.removeEventListener('keydown', escPop); }
+function escPop(e) { if (e.key === 'Escape') cerrarPop(); }
+/** Menú flotante bajo un botón; en celular sale como hoja desde abajo. */
+function popover(anchor, html, bind) {
+  cerrarPop();
+  const movil = window.innerWidth < 640, velo = document.createElement('div'), d = document.createElement('div');
+  velo.className = 'velo' + (movil ? ' osc' : ''); d.className = 'pop' + (movil ? ' hoja' : ''); d.innerHTML = html;
+  document.body.append(velo, d); velo.onclick = cerrarPop; document.addEventListener('keydown', escPop);
+  if (!movil) { const r = anchor.getBoundingClientRect(); d.style.top = (r.bottom + 8) + 'px'; d.style.left = Math.max(8, Math.min(window.innerWidth - d.offsetWidth - 8, r.right - d.offsetWidth)) + 'px'; }
+  if (bind) bind(d);
+  d.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => { cerrarPop(); const k = b.dataset.ir; if (k === 'cobrar') COBRO = nuevoCobro(''); TAB = k; render(); });
+}
+function bindCabecera() {
+  const nuevo = a => popover(a, `<div class="ph">Nuevo</div>${NUEVO().map(([k, i, l]) => `<button class="pi" data-ir="${k}"><span>${i}</span>${l}</button>`).join('')}`);
+  const hn = $('#hnew'); if (hn) hn.onclick = () => nuevo(hn);
+  const fab = $('#fab'); if (fab) fab.onclick = () => nuevo(fab);
+  const hb = $('#hbell'); if (hb) hb.onclick = () => { const a = avisosAdmin();
+    popover(hb, `<div class="ph">Avisos</div>${a.map(x => `<button class="pi" data-ir="${x.tab}"><span>${x.i}</span><span class="pt">${esc(x.txt)}</span></button>`).join('') || '<div class="pv">✅ Todo al día</div>'}`); };
+  $('#htasa').onclick = () => { const et = estadoTasa(), t = S.tasaHoy || {};
+    popover($('#htasa'), `<div class="ph">Tasa BCV</div><div class="pv"><b class="mono" style="font-size:22px">${t.tasa ? n2(t.tasa) : '—'}</b><div class="small muted">${esc(et.det)}</div></div>
+      ${F('ajustes') ? `<button class="pi" id="ptb"><span>🔄</span>Buscar la tasa del BCV ahora</button><button class="pi" data-ir="ajustes"><span>✏️</span>Escribirla a mano (Ajustes)</button>` : ''}`,
+      d => { const b = d.querySelector('#ptb'); if (b) b.onclick = () => busy(b, async () => { const r = await call('buscarTasa'); S.tasaHoy = await call('tasa', {}); cerrarPop(); toast(r.sinCambio ? 'Se mantiene la tasa manual de hoy' : 'Tasa actualizada'); render(); }); }); };
+  $('#hav').onclick = () => popover($('#hav'), `<div class="ph"><b style="font-size:15px;color:var(--ink)">${esc(USER.nombre)}</b><div class="small muted" style="font-weight:400;text-transform:none;letter-spacing:0">${esc(NOMBRE_ROL(USER.rol))} · ${esc(USR)}</div></div>
+      <button class="pi" id="pmp"><span>🔑</span>Cambiar mi PIN</button><div class="pv small muted">Versión: pantalla ${PANTALLA}${USER.version ? ' · servidor V' + USER.version : ''}</div>
+      <button class="pi rojo" id="psal"><span>⏻</span>Cerrar sesión</button>`, d => { d.querySelector('#psal').onclick = () => { cerrarPop(); salir(); }; d.querySelector('#pmp').onclick = cambiarMiPin; });
+  const hs = $('#hbus'); if (hs) hs.onclick = abrirBuscador;
+}
+document.addEventListener('keydown', e => { if (e.key === '/' && USER && AL() && $('#hbus') && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); abrirBuscador(); } });
+function cambiarMiPin() {
+  popover($('#hav'), `<div class="ph">Cambiar mi PIN</div><div style="padding:4px 10px 10px"><label>PIN nuevo (4 a 8 números)</label><input id="np1" type="password" inputmode="numeric" maxlength="8"><label style="margin-top:8px">Repítelo</label><input id="np2" type="password" inputmode="numeric" maxlength="8">
+    <button class="btn full" id="npg" style="margin-top:10px">Guardar</button></div>`, d => { d.querySelector('#np1').focus(); d.querySelector('#npg').onclick = e => busy(e.target, async () => {
+      const a = d.querySelector('#np1').value.trim(), b = d.querySelector('#np2').value.trim();
+      if (!/^\d{4,8}$/.test(a)) throw new Error('El PIN debe tener de 4 a 8 números'); if (a !== b) throw new Error('Los dos PIN no coinciden');
+      await call('cambiarMiPin', { nuevo: a }); PIN = a; store('pin', PIN); cerrarPop(); toast('Tu PIN quedó cambiado'); }); });
+}
+/** Buscador: clientes (lo que deben, última compra) y notas por número. */
+function abrirBuscador() {
+  cerrarPop();
+  const velo = document.createElement('div'), d = document.createElement('div'); velo.className = 'velo osc'; d.className = 'buscador';
+  d.innerHTML = `<div class="bin">${ICO.buscar}<input id="bq" placeholder="Nombre del cliente o N° de nota" autocomplete="off"><button class="x" id="bx">×</button></div><div id="bres" class="bres"></div>`;
+  document.body.append(velo, d); velo.onclick = cerrarBus; document.addEventListener('keydown', escBus);
+  const q = d.querySelector('#bq'); q.focus(); q.oninput = () => pintarBusqueda(q.value); d.querySelector('#bx').onclick = cerrarBus; pintarBusqueda('');
+}
+function cerrarBus() { document.querySelectorAll('.buscador,.velo').forEach(x => x.remove()); document.removeEventListener('keydown', escBus); }
+function escBus(e) { if (e.key === 'Escape') cerrarBus(); }
+function pintarBusqueda(txt) {
+  const box = $('#bres'), t = normTxt(txt), deudas = Object.fromEntries(deudasPorCliente().map(c => [c.cliente, c]));
+  if (!t) { const top = deudasPorCliente().slice(0, 5); box.innerHTML = `<div class="ph">Los que más deben</div>${top.map(c => filaCli(c.cliente, deudas)).join('')}`; bindBus(); return; }
+  const notas = /^\d+$/.test(t) ? S.ventas.filter(v => String(v.Nota) === t).slice(0, 5) : [];
+  const ult = {}; S.ventas.forEach(v => { if (v.Estado !== 'Anulada' && (!ult[v.Cliente] || v.Fecha > ult[v.Cliente])) ult[v.Cliente] = v.Fecha; });
+  const nombres = [...new Set(S.clientes.map(c => c.Nombre).concat(Object.keys(ult)))].filter(n => normTxt(n).includes(t))
+    .sort((a, b) => (deudas[b] ? deudas[b].saldo : 0) - (deudas[a] ? deudas[a].saldo : 0) || ((ult[b] || '') > (ult[a] || '') ? 1 : -1)).slice(0, 8);
+  box.innerHTML = (notas.length ? `<div class="ph">Notas</div>${notas.map(v => `<button class="bi" data-nota="${esc(v.Nota)}"><span class="bt"><b>Nota ${esc(v.Nota)}</b> · ${esc(v.Cliente)}<small>${fdate(v.Fecha)} · ${esc(v.Estado)}</small></span><b class="num">${usd(v.Total)}</b></button>`).join('')}` : '')
+    + (nombres.length ? `<div class="ph">Clientes</div>${nombres.map(n => filaCli(n, deudas, ult[n])).join('')}` : '')
+    || '<div class="pv">No encontré nada con eso.</div>';
+  bindBus();
+}
+function filaCli(n, deudas, ult) { const d = deudas[n];
+  return `<button class="bi" data-cli="${esc(n)}"><span class="bt"><b>${esc(n)}</b><small>${ult ? 'última compra ' + fdate(ult) : ''}</small></span>${d ? `<span class="r"><b class="num" style="color:${d.vencido > 0.01 ? 'var(--bad)' : 'var(--ink)'}">${usd(d.saldo)}</b><small>${d.vencido > 0.01 ? 'vencido ' + usd(d.vencido) : 'debe'}</small></span>` : '<small class="muted">al día</small>'}</button>`; }
+function bindBus() {
+  document.querySelectorAll('[data-nota]').forEach(b => b.onclick = () => { cerrarBus(); FILTRO = { q: b.dataset.nota }; TAB = 'ventas'; render(); });
+  document.querySelectorAll('[data-cli]').forEach(b => b.onclick = () => fichaCliente(b.dataset.cli));
+}
+function fichaCliente(n) {
+  const d = deudasPorCliente().find(x => x.cliente === n), vs = ventasActivas().filter(v => v.Cliente === n).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
+  const cl = S.clientes.find(c => c.Nombre === n) || {};
+  $('#bres').innerHTML = `<button class="bi" id="bvol" style="color:var(--brand-2)">‹ Volver</button>
+    <div style="padding:6px 12px 12px"><div style="font-size:18px;font-weight:700">${esc(n)}</div><div class="small muted">${cl.Telefono ? '📞 ' + esc(cl.Telefono) + ' · ' : ''}crédito ${esc(cl.DiasCredito || 7)} días</div>
+      <div class="grid g3" style="margin:12px 0">${kpi('Debe', usd(d ? d.saldo : 0))}${kpi('Vencido', usd(d ? d.vencido : 0), d && d.vencido > 0.01 ? 'bad' : '')}${kpi('Última compra', vs[0] ? fdate(vs[0].Fecha) : '—')}</div>
+      ${d ? `<div class="small" style="margin-bottom:8px">${d.notas.map(x => `Nota ${esc(x.Nota || '-')} · ${fdate(x.Fecha)} · <b>${usd(x.Saldo)}</b>${x.Vence < hoy() ? ' <span class="pill p-bad">vencida</span>' : ''}`).join('<br>')}</div>` : ''}
+      <div class="row">${d ? `${F('cobros') ? '<button class="btn" data-fc="cobrar">💵 Cobrar</button>' : ''}${botonWA(d)}` : ''}${F('venta') ? '<button class="btn sec" data-fc="vender">🧾 Nueva venta</button>' : ''}${puedeVer('ventas') ? '<button class="btn sec" data-fc="ventas">Ver sus notas</button>' : ''}</div>
+      ${cl.Documento ? `<div class="small muted" style="margin-top:8px">Cédula/RIF: ${esc(cl.Documento)}</div>` : ''}</div>`;
+  $('#bvol').onclick = () => pintarBusqueda($('#bq').value);
+  document.querySelectorAll('[data-fc]').forEach(b => b.onclick = () => { cerrarBus(); const k = b.dataset.fc;
+    if (k === 'cobrar') COBRO = nuevoCobro(n); if (k === 'vender') { V = nuevaVenta(); V.cliente = n; } if (k === 'ventas') FILTRO = { q: n.toLowerCase(), exacto: true }; TAB = k; render(); });
+}
+
+/** Título del módulo y sus sub-pestañas (debajo de la cabecera). */
 function subnav() {
-  const g = grupoDe(TAB); if (g[3].length < 2) return '';
-  return `<div class="subnav"><div class="chips">${g[3].map(([k, l]) => `<button class="chip ${TAB === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div></div>`;
+  const g = grupoDe(TAB);
+  return `<div class="subnav"><h1 class="mtit">${g[1]}</h1>${g[3].length > 1 ? `<div class="seg2">${g[3].map(([k, l]) => `<button class="${TAB === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>` : ''}</div>`;
 }
 /** Celular (admin): 4 módulos fijos abajo + "Más" con el resto en cuadritos. */
 function barraMovil(np) {
-  const g = grupoDe(TAB), enBarra = BARRA.includes(g[0]);
-  const resto = GRUPOS.filter(x => !BARRA.includes(x[0]));
-  return `<div class="bnav">${BARRA.map(k => { const x = GRUPOS.find(y => y[0] === k); return `<button data-grupo="${k}" class="${g === x ? 'on' : ''}"><span class="i">${x[2]}</span>${x[4] || x[1]}${k === 'pedidos' && np ? `<span class="badge">${np}</span>` : ''}</button>`; }).join('')}
+  const g = grupoDe(TAB), B = BARRA(), gv = GV(), enBarra = B.includes(g[0]);
+  const resto = gv.filter(x => !B.includes(x[0]));
+  if (!resto.length) return `<div class="bnav">${B.map(k => { const x = gv.find(y => y[0] === k); return `<button data-grupo="${k}" class="${g[0] === x[0] ? 'on' : ''}"><span class="i">${x[2]}</span>${x[4] || x[1]}</button>`; }).join('')}</div>`;
+  return `<div class="bnav">${B.map(k => { const x = gv.find(y => y[0] === k); return `<button data-grupo="${k}" class="${g[0] === x[0] ? 'on' : ''}"><span class="i">${x[2]}</span>${x[4] || x[1]}${k === 'pedidos' && np ? `<span class="badge">${np}</span>` : ''}</button>`; }).join('')}
     <button id="mas" class="${enBarra ? '' : 'on'}"><span class="i">${enBarra ? '☰' : g[2]}</span>${enBarra ? 'Más' : esc(g[1])}</button></div>
-    <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(x => `<button data-grupo="${x[0]}" class="${g === x ? 'on' : ''}"><span class="i">${x[2]}</span>${x[1]}</button>`).join('')}</div></div></div>`;
+    <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(x => `<button data-grupo="${x[0]}" class="${g[0] === x[0] ? 'on' : ''}"><span class="i">${x[2]}</span>${x[1]}</button>`).join('')}</div></div></div>`;
 }
 function salir() { document.body.classList.remove('adm'); CONSULTA = { desde: '', hasta: '', r: null }; IMPORT = null; IMPC = null; PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
 
@@ -333,6 +530,7 @@ function mergeS(r) {
   add(S.cierres, r.cierres, x => x.ID);
   if (r.cierreLineas && S.cierreLineas) { const ya = new Set(S.cierreLineas.map(l => l.CierreID)); r.cierreLineas.forEach(l => { if (!ya.has(l.CierreID)) S.cierreLineas.push(l); }); }
   (r.detalle || []).forEach(d => { if (!conDet.has(d.VentaID)) S.detalle.push(d); });
+  if (r.gastos && S.gastos) add(S.gastos, r.gastos, x => x.ID);
 }
 function ventasActivas() { return S.ventas.filter(v => v.Estado !== 'Anulada'); }
 function deudasPorCliente() {
@@ -367,17 +565,10 @@ function vInicio() {
   const ventasMes = vm.reduce((s, v) => s + Number(v.Total), 0), utilMes = vm.reduce((s, v) => s + Number(v.Utilidad), 0);
   const cierreHoy = S.cierres.find(c => c.Fecha === h), cierreAyer = S.cierres.find(c => c.Fecha === addDays(h, -1));
   const dias = [...Array(7)].map((_, i) => addDays(h, -i));
-  const avisos = [];
-  if (!S.tasaHoy.tasa || S.tasaHoy.fecha < addDays(h, -1)) avisos.push('La tasa BCV no está al día. Cárgala en Ajustes.');
-  if (!cierreAyer) avisos.push('Falta el cierre del local de ayer.');
-  const np = pendientesAdmin(); if (np) avisos.push(`Hay ${np} pedido(s)/pago(s) de clientes por confirmar en la pestaña Pedidos.`);
-  const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
-  const dp = deudaProveedores(), venceProv = dp.lista.filter(e => e.Vence <= addDays(h, 3));
-  if (venceProv.length) avisos.push(`Proveedores: ${venceProv.length} factura(s) ${venceProv.some(e => e.Vence < h) ? 'vencida(s) o ' : ''}por vencer en 3 días (${usd(venceProv.reduce((s, e) => s + Number(e.Saldo), 0))}). Míralas en Compras → Lo que debo.`);
+  const avisos = avisosAdmin(), dp = deudaProveedores();
   const localMes = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + localNeto(c), 0);
-  if (bajos.length) avisos.push('Inventario bajo: ' + bajos.map(p => p.Nombre + ' (' + n2(p.Stock) + ' kg)').join(', '));
   $('#main').innerHTML = `
-    ${avisos.map(a => `<div class="banner warn">⚠️ ${esc(a)}</div>`).join('')}
+    ${avisos.map(a => `<button class="banner warn bav" data-ir="${a.tab}">${a.i} ${esc(a.txt)} <span>Ver ›</span></button>`).join('')}
     <div class="grid g3" style="margin-bottom:14px">
       <div class="kpi"><small>Ventas al mayor · ${mesNombre(mes)}</small><b>${usd(ventasMes)}</b></div>
       <div class="kpi ok"><small>Utilidad al mayor</small><b>${usd(utilMes)}</b></div>
@@ -464,7 +655,7 @@ function vCierre() {
     const r = await call('guardarCierre', { fecha: C.fecha, moneda: C.moneda, notas: C.notas, lineas });
     toast('Cierre guardado ✓');
     CIERRE = null;
-    if (esAdmin) { TAB = 'local'; await recargar(); }
+    if (AL() && puedeVer('local')) { TAB = 'local'; await recargar(); }
     else $('#main').innerHTML = `<div class="card login" style="margin-top:8vh"><div class="logo" style="background:var(--ok-bg)">✅</div><h2>Cierre del ${fdate(r.fecha)} guardado</h2><p class="muted">Si te equivocaste, vuelve a registrarlo y se reemplaza.</p><button class="btn sec full" id="otro">Registrar de nuevo</button></div>`, $('#otro').onclick = () => vCierre();
   });
   // aviso si ya existe
@@ -678,7 +869,7 @@ function vDeudas() {
       return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
-        <div class="row" style="margin:10px 0 14px"><button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button><button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>${botonWA(c, 'Cobrar por WhatsApp')}</div>
+        <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
       </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
     </div>`;
   bindCobrar(); bindHist();
@@ -738,7 +929,7 @@ function vVentas() {
       <tr class="hide" id="vd-${v.ID}"><td colspan="6"><div class="tbl"><table>${(det[v.ID] || []).map(d => `<tr><td class="small">${esc(d.Producto)}</td><td class="r num small">${n2(d.Kg)} kg</td><td class="r num small">× ${n2(d.Precio)}</td><td class="r num small">${usd(d.Subtotal)}</td><td class="r num small" style="color:var(--ok)">${usd(d.Utilidad)}</td></tr>`).join('')}</table></div>
       ${S.cobros.filter(c => c.VentaID === v.ID).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} ${esc(c.Banco)} · ${usd(c.MontoUSD)}${c.MontoBs ? ' (' + bs(c.MontoBs) + ')' : ''}${c.Notas ? ' · ' + esc(c.Notas) : ''}</div>`).join('')}
       ${v.Notas ? `<div class="small">📝 ${esc(v.Notas)}</div>` : ''}
-      ${v.Estado !== 'Anulada' ? `<div class="row" style="margin-top:8px"><button class="btn sm sec" data-cob="${esc(v.Cliente)}|${v.ID}" style="flex:none">Cobrar</button><button class="btn sm bad" data-anular="${v.ID}" style="flex:none">Anular</button></div>` : ''}</td></tr>`).join('')}
+      ${v.Estado !== 'Anulada' && FS('cobros', 'corregir') ? `<div class="row" style="margin-top:8px">${F('cobros') && Number(v.Saldo) > 0.01 ? `<button class="btn sm sec" data-cob="${esc(v.Cliente)}|${v.ID}" style="flex:none">Cobrar</button>` : ''}${F('corregir') ? `<button class="btn sm sec" data-edv="${v.ID}" style="flex:none">✏️ Corregir</button><button class="btn sm sec" data-dev="${v.ID}" style="flex:none">↩ Devolución</button><button class="btn sm bad" data-anular="${v.ID}" style="flex:none">Anular</button>` : ''}</div>` : ''}</td></tr>`).join('')}
     </table></div>${list.length === 150 ? '<p class="small muted">Mostrando las 150 más recientes. Usa el buscador.</p>' : ''}
     <div class="banner ok" style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span class="small">La app muestra los últimos 12 meses y todo lo pendiente.${q ? ' Para ver ventas más viejas de este cliente:' : ' Escribe un cliente para buscar en años anteriores.'}</span>${q ? '<button class="btn sm" id="fh" style="flex:none">Buscar en todo el historial</button>' : ''}</div></div>`;
 
@@ -748,6 +939,8 @@ function vVentas() {
   document.querySelectorAll('[data-v]').forEach(tr => tr.onclick = () => $('#vd-' + tr.dataset.v).classList.toggle('hide'));
   document.querySelectorAll('[data-cob]').forEach(b => b.onclick = () => { const [c, id] = b.dataset.cob.split('|'); COBRO = nuevoCobro(c); COBRO.ventaId = id; TAB = 'cobrar'; render(); });
   document.querySelectorAll('[data-anular]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Anular?')) busy(b, async () => { await call('anularVenta', { id: b.dataset.anular }); toast('Venta anulada'); await recargar(); }); });
+  document.querySelectorAll('[data-edv]').forEach(b => b.onclick = e => { e.stopPropagation(); corregirVenta(b.dataset.edv); });
+  document.querySelectorAll('[data-dev]').forEach(b => b.onclick = e => { e.stopPropagation(); devolucionVenta(b.dataset.dev); });
 }
 
 /* ===== SUBIR VENTAS ANTERIORES (Excel) ===== */
@@ -939,7 +1132,7 @@ function saludo() { const h = new Date().getHours(); return h < 12 ? 'Buenos dí
 const fechaLarga = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '';
 /** Recordatorio de cobro con tono corporativo (sin emojis ni asteriscos: se ven bien en cualquier WhatsApp). */
 function msgCobro(c) {
-  const t = S.tasaHoy && S.tasaHoy.tasa, h = hoy(), neg = USER.negocio || 'Lácteos';
+  const t = S.tasaHoy && S.tasaHoy.tasa, h = hoy(), neg = USER.negocio || S.negocio || 'Lácteos';
   const conApp = (S.usuarios || []).some(u => String(u.Rol).toLowerCase() === 'cliente' && u.Cliente === c.cliente && String(u.Activo).toUpperCase() !== 'NO');
   const notas = c.notas.slice().sort((a, b) => a.Fecha < b.Fecha ? -1 : 1).map(n => {
     const d = diasEntre(n.Vence, h);
@@ -958,8 +1151,9 @@ function msgReactivar(cliente) {
     'Contamos con mercancía fresca disponible y con gusto le preparamos su próximo pedido.', '', 'Atentamente,', neg].join('\n');
 }
 function botonWA(c, txt = 'WhatsApp') {
-  const cl = S.clientes.find(x => x.Nombre === c.cliente) || {};
-  return `<a class="btn sm ${cl.Telefono ? '' : 'sec'}" style="flex:none;text-decoration:none;white-space:nowrap;${cl.Telefono ? 'background:#1f9d55' : ''}" target="_blank" rel="noopener" href="${waLink(cl.Telefono, msgCobro(c))}" title="${cl.Telefono ? 'Abrir WhatsApp con ' + esc(cl.Telefono) : 'Sin teléfono: WhatsApp te pedirá el contacto. Agrégalo en Ajustes → Clientes'}">💬 ${txt}${cl.Telefono ? '' : ' (sin tel.)'}</a>`;
+  if (!F('whatsapp')) return '';
+  const cl = c.telefono !== undefined ? { Telefono: c.telefono } : (S.clientes || []).find(x => x.Nombre === c.cliente) || {};
+  return `<a class="btn sm ${cl.Telefono ? '' : 'sec'}" style="flex:none;text-decoration:none;white-space:nowrap;${cl.Telefono ? 'background:#1f9d55' : ''}" target="_blank" rel="noopener" href="${waLink(cl.Telefono, msgCobro(c))}" title="${cl.Telefono ? 'Abrir WhatsApp con ' + esc(cl.Telefono) : 'Sin teléfono: WhatsApp te pedirá el contacto.' + (F('ajustes') ? ' Agrégalo en Ajustes → Clientes' : '')}">💬 ${txt}${cl.Telefono ? '' : ' (sin tel.)'}</a>`;
 }
 function deudaProveedores() {
   const h = hoy(), en = S.entradas.filter(e => Number(e.Saldo) > 0.01);
@@ -995,12 +1189,13 @@ function numerosMes(m) {
     cobrado: S.cobros.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + Number(c.MontoUSD), 0),
     compras: S.entradas.filter(e => mesDe(e.Fecha) === m).reduce((s, e) => s + Number(e.Total), 0),
     pagadoProv: S.pagosProveedor.filter(p => mesDe(p.Fecha) === m).reduce((s, p) => s + Number(p.Monto), 0),
+    gastos: (S.gastos || []).filter(g => mesDe(g.Fecha) === m).reduce((s, g) => s + Number(g.MontoUSD), 0),
     mermaKg: -merma.reduce((s, x) => s + Number(x.Kg), 0), mermaUsd: -merma.reduce((s, x) => s + Number(x.Kg) * (Number(x.Costo) || 0), 0),
   };
 }
 function vResumenMes() {
   const { mes, html } = selMes(), pm = mesAnterior(mes), a = numerosMes(mes), b = numerosMes(pm);
-  const entra = a.cobrado + a.local, sale = a.pagadoProv;
+  const entra = a.cobrado + a.local, sale = a.pagadoProv + a.gastos;
   const ult = mesesLista().slice(0, 6).reverse();
   $('#main').innerHTML = `${html}
     <div class="grid g3" style="margin-bottom:14px">
@@ -1013,13 +1208,16 @@ function vResumenMes() {
       ${kpi('Compras a proveedores', usd(a.compras), '', delta(a.compras, b.compras, pm, true))}
       ${kpi('Pagado a proveedores', usd(a.pagadoProv), '', delta(a.pagadoProv, b.pagadoProv, pm, true))}
       ${kpi('Merma', usd(a.mermaUsd), a.mermaUsd > 0 ? 'bad' : '', `<div class="small muted">${n2(a.mermaKg)} kg</div>`)}
+      ${kpi('Gastos del negocio', usd(a.gastos), '', delta(a.gastos, b.gastos, pm, true))}
+      ${kpi('Utilidad al mayor − gastos', usd(a.util - a.gastos), a.util - a.gastos >= 0 ? 'ok' : 'bad', '<div class="small muted">no incluye la ganancia del local</div>')}
     </div>
     <div class="card"><h2>Plata que entró y salió en ${mesNombre(mes)}</h2>
       <div class="tot"><span>Entró: cobros al mayor</span><span class="num">${usd(a.cobrado)}</span></div>
       <div class="tot"><span>Entró: ventas del local</span><span class="num">${usd(a.local)}</span></div>
-      <div class="tot"><span>Salió: pagos a proveedores</span><span class="num" style="color:var(--bad)">− ${usd(sale)}</span></div>
+      <div class="tot"><span>Salió: pagos a proveedores</span><span class="num" style="color:var(--bad)">− ${usd(a.pagadoProv)}</span></div>
+      <div class="tot"><span>Salió: gastos (alquiler, sueldos, servicios…)</span><span class="num" style="color:var(--bad)">− ${usd(a.gastos)}</span></div>
       <div class="tot big"><span>Diferencia</span><span class="num" style="color:${entra - sale >= 0 ? 'var(--ok)' : 'var(--bad)'}">${usd(entra - sale)}</span></div>
-      <p class="small muted" style="margin:8px 0 0">No incluye otros gastos (sueldos, alquiler, servicios). La merma solo cuenta lo de los últimos 90 días.</p></div>
+      <p class="small muted" style="margin:8px 0 0">${a.gastos ? 'Los gastos son los que se anotan en Compras → Gastos.' : 'Todavía no hay gastos anotados este mes (Compras → Gastos).'} La merma solo cuenta lo de los últimos 90 días.</p></div>
     <div class="card"><h2>Últimos 6 meses</h2><div class="chart"><canvas id="rch"></canvas></div></div>`;
   bindMes(vResumenMes, true);
   if (window.Chart) { const n = ult.map(numerosMes);
@@ -1041,7 +1239,7 @@ function vCobranza() {
     ${filas.map(c => { const k = tramo(c.atraso || -1);
       return `<div class="cli" style="flex-wrap:wrap"><div style="flex:1;min-width:170px"><b>${esc(c.cliente)}</b><div class="small muted">${c.notas.length} nota(s) · <span class="pill ${TR[k][3]}">${c.atraso > 0 ? c.atraso + ' días de atraso' : 'al día'}</span></div></div>
         <div class="right"><b class="num">${usd(c.saldo)}</b>${c.vencido ? `<div class="small" style="color:var(--bad)">${usd(c.vencido)} vencido</div>` : ''}</div>
-        <div class="row" style="flex-basis:100%;margin-top:6px">${botonWA(c)}<button class="btn sm sec" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button></div></div>`; }).join('') || '<div class="empty">✅ Nadie debe</div>'}</div>`;
+        <div class="row" style="flex-basis:100%;margin-top:6px">${botonWA(c)}${F('cobros') ? `<button class="btn sm sec" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}</div></div>`; }).join('') || '<div class="empty">✅ Nadie debe</div>'}</div>`;
   bindCobrar();
 }
 function vRepProveedores() {
@@ -1416,6 +1614,7 @@ function invEntrada() {
           <div><label>Precio venta</label><input class="num big" inputmode="decimal" data-ei="${i}" data-ef="precio" value="${esc(l.precio)}"></div></div>
         <div class="small" style="margin-top:6px" data-einfo="${i}">${num(l.costo) ? `Precio actual ${n2(actual)} → con este costo deja <b style="color:${mAct < num(l.margen) / 100 - 0.03 ? 'var(--bad)' : 'var(--ok)'}">${pct(mAct)}</b> de margen` : `Costo anterior ${n2(p.Costo)}`}</div>
         <label style="display:flex;gap:6px;align-items:center;margin-top:6px;color:var(--ink)"><input type="checkbox" data-eap="${i}" style="width:auto" ${l.actualizarPrecio ? 'checked' : ''}> Usar este precio como nuevo precio de lista</label>
+        ${F('lotes') ? `<div style="margin-top:6px"><label>Vence (lote)</label><input type="date" data-ei="${i}" data-ef="vence" value="${esc(l.vence || '')}"></div>` : ''}
       </div>`; }).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos que llegaron.</div>'}</div>
     <div class="row" style="margin-top:12px"><div style="flex:3"><label>Notas (n° factura, etc.)</label><input id="en" value="${esc(E.notas)}"></div></div>
     <div class="tot big"><span>Total de la compra</span><span class="num" id="etot">${usd(total)}</span></div>
@@ -1430,7 +1629,7 @@ function invEntrada() {
   document.querySelectorAll('[data-erm]').forEach(b => b.onclick = () => { E.lineas.splice(b.dataset.erm, 1); rer(); });
   document.querySelectorAll('[data-eap]').forEach(c => c.onchange = () => E.lineas[c.dataset.eap].actualizarPrecio = c.checked);
   document.querySelectorAll('[data-ei]').forEach(el => el.oninput = () => {
-    const i = el.dataset.ei, l = E.lineas[i], f = el.dataset.ef; l[f] = el.value;
+    const i = el.dataset.ei, l = E.lineas[i], f = el.dataset.ef; l[f] = el.value; if (f === 'vence') return;
     const set = (k, v) => { l[k] = v; const x = document.querySelector(`[data-ei="${i}"][data-ef="${k}"]`); if (x) x.value = v; };
     if ((f === 'costo' || f === 'margen') && num(l.costo)) set('precio', String(r2(precioCon(num(l.costo), num(l.margen) / 100))));
     if (f === 'precio' && num(l.costo) && num(l.precio)) set('margen', String(Math.round(margenDe(num(l.costo), num(l.precio)) * 1000) / 10));
@@ -1444,7 +1643,7 @@ function invEntrada() {
   $('#elimp').onclick = () => { ENTRADA = null; invEntrada(); };
   $('#eg').onclick = e => busy(e.target, async () => {
     if (!E.proveedor.trim()) throw new Error('Escribe el proveedor');
-    const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio }));
+    const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio, vence: l.vence || '' }));
     const r = await call('guardarEntrada', { fecha: E.fecha, proveedor: E.proveedor.trim(), condicion: E.condicion, dias: num(E.dias), notas: E.notas, lineas });
     toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; await recargar(); TAB = 'stock'; render();
   });
@@ -1452,7 +1651,7 @@ function invEntrada() {
 function formTraslado(T, cont, onSave, titulo, ayuda, prods) {
   cont.innerHTML = `<div class="card"><h2>${titulo}</h2><p class="small muted" style="margin-top:-6px">${ayuda}</p>
     <div class="row"><div style="max-width:200px"><label>Fecha</label><input type="date" id="tf" value="${T.fecha}"></div></div>
-    <h3>Productos</h3>${chipsProductos(T.lineas, { productos: prods, stock: USER.rol === 'admin' })}
+    <h3>Productos</h3>${chipsProductos(T.lineas, { productos: prods, stock: F('inventario') })}
     <div class="pcards" style="margin-top:12px">${T.lineas.map((l, i) => `<div class="pcard"><div class="top"><b>${esc(nombreProd(l.codigo))}</b><button class="x" data-trm="${i}">×</button></div>
       <div class="flds" style="grid-template-columns:1fr"><div><label>Kg</label><input class="num big" inputmode="decimal" data-ti="${i}" value="${esc(l.kg)}" placeholder="0"></div></div></div>`).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos.</div>'}</div>
     <div style="margin-top:10px"><label>Notas</label><input id="tn" value="${esc(T.notas)}"></div>
@@ -1615,7 +1814,7 @@ function vCuentas() {
     <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b></div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
     ${d.notas.length ? `<div class="card"><h2>Notas pendientes</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
       ${d.notas.sort((a, b) => a.Vence < b.Vence ? -1 : 1).map(v => `<tr><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < h ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num"><b>${usd(v.Saldo)}</b></td></tr>`).join('')}</table></div>
-      <button class="btn acc full" style="margin-top:10px" id="irpag">Reportar un pago</button></div>` : '<div class="banner ok">✅ Estás al día. ¡Gracias!</div>'}
+      ${F('cliPagos') ? '<button class="btn acc full" style="margin-top:10px" id="irpag">Reportar un pago</button>' : ''}</div>` : '<div class="banner ok">✅ Estás al día. ¡Gracias!</div>'}
     ${pedAt.length ? `<div class="card"><h2>Mis pedidos recientes</h2>${pedAt.map(p => { const desp = (S.despachos || []).filter(x => x.VentaID === p.VentaID);
       return `<div class="cli"><div><b>${fdate(p.Fecha)}</b>${p.Nota ? ` · nota <b>${esc(p.Nota)}</b>` : ''}
         <div class="small muted">Pediste: ${S.pedidoLineas.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div>
@@ -1674,6 +1873,218 @@ function vPagar() {
 }
 
 /* ===== AJUSTES ===== */
+/* ===== V11: ventana flotante ===== */
+function modal(html, bind) {
+  cerrarModal();
+  const velo = document.createElement('div'), d = document.createElement('div'); velo.className = 'velo osc'; d.className = 'modal';
+  d.innerHTML = `<button class="x mx" id="mx" title="Cerrar">×</button>${html}`; document.body.append(velo, d); velo.onclick = cerrarModal; d.querySelector('#mx').onclick = cerrarModal;
+  document.addEventListener('keydown', escModal); if (bind) bind(d); return d;
+}
+function cerrarModal() { document.querySelectorAll('.modal,.velo').forEach(x => x.remove()); document.removeEventListener('keydown', escModal); }
+function escModal(e) { if (e.key === 'Escape') cerrarModal(); }
+const cobradoDe = id => r2(S.cobros.filter(c => c.VentaID === id).reduce((s, c) => s + Number(c.MontoUSD || 0), 0));
+
+/* ===== V11: corregir una venta ===== */
+function corregirVenta(id) {
+  const v = S.ventas.find(x => x.ID === id); if (!v) return;
+  const L = S.detalle.filter(d => d.VentaID === id).map(d => ({ codigo: d.Codigo, kg: String(d.Kg), precio: String(d.Precio), costo: d.Costo }));
+  const E = { fecha: v.Fecha, nota: v.Nota, cliente: v.Cliente, motivo: '', lineas: L }, cobrado = cobradoDe(id);
+  const pinta = d => {
+    const tot = E.lineas.reduce((s, l) => s + num(l.kg) * num(l.precio), 0);
+    d.querySelector('#mbody').innerHTML = `<h2 style="margin-right:30px">Corregir nota ${esc(v.Nota || 's/n')}</h2>
+      <p class="small muted" style="margin-top:-6px">Cambia lo que esté mal. Los cobros se mantienen; el inventario se ajusta solo por la diferencia.</p>
+      <div class="row"><div><label>Fecha</label><input type="date" id="ef" value="${E.fecha}"></div><div style="max-width:120px"><label>N° nota</label><input id="en" class="num" value="${esc(E.nota)}"></div></div>
+      <label style="margin-top:8px">Cliente${cobrado ? ' <span class="small muted">(tiene cobros: no se puede cambiar)</span>' : ''}</label><input id="ec" list="dl-cliE" value="${esc(E.cliente)}" ${cobrado ? 'disabled' : ''}><datalist id="dl-cliE">${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist>
+      <h3>Productos</h3>
+      <div class="tbl"><table><tr><th>Producto</th><th class="r">Kg</th><th class="r">Precio</th><th class="r">Subtotal</th><th></th></tr>
+        ${E.lineas.map((l, i) => `<tr><td>${esc(nombreProd(l.codigo))}</td><td class="r"><input class="num" style="width:76px" inputmode="decimal" data-li="${i}" data-lf="kg" value="${esc(l.kg)}"></td><td class="r"><input class="num" style="width:76px" inputmode="decimal" data-li="${i}" data-lf="precio" value="${esc(l.precio)}"></td><td class="r num" data-ls="${i}">${usd(num(l.kg) * num(l.precio))}</td><td><button class="x" data-lx="${i}">×</button></td></tr>`).join('')}
+      </table></div>
+      <div class="row" style="margin-top:6px"><select id="eadd"><option value="">+ Agregar producto…</option>${S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && !E.lineas.some(l => l.codigo === p.Codigo)).map(p => `<option value="${p.Codigo}">${esc(p.Nombre)}</option>`).join('')}</select></div>
+      <div class="tot"><span>Total antes</span><span class="num">${usd(v.Total)}</span></div>
+      <div class="tot big"><span>Total corregido</span><span class="num" id="etot">${usd(tot)}</span></div>
+      <div id="eav" class="small"></div>
+      <label style="margin-top:8px">Motivo (queda en el registro)</label><input id="em" value="${esc(E.motivo)}" placeholder="Ej: se pesó mal, precio equivocado">
+      <button class="btn acc full" style="margin-top:12px" id="eg">Guardar corrección</button>`;
+    const aviso = () => { const t = E.lineas.reduce((s, l) => s + num(l.kg) * num(l.precio), 0); d.querySelector('#etot').textContent = usd(t);
+      d.querySelector('#eav').innerHTML = cobrado - t > 0.005 ? `<div class="banner warn" style="margin-top:6px">Ya le cobraste ${usd(cobrado)}: los ${usd(cobrado - t)} de más quedan como <b>saldo a favor</b> del cliente.</div>` : ''; };
+    aviso();
+    d.querySelectorAll('[data-li]').forEach(el => el.oninput = () => { const l = E.lineas[el.dataset.li]; l[el.dataset.lf] = el.value; d.querySelector(`[data-ls="${el.dataset.li}"]`).textContent = usd(num(l.kg) * num(l.precio)); aviso(); });
+    d.querySelectorAll('[data-lx]').forEach(b => b.onclick = () => { E.lineas.splice(b.dataset.lx, 1); pinta(d); });
+    d.querySelector('#eadd').onchange = e => { const p = S.productos.find(x => x.Codigo === e.target.value); if (p) E.lineas.push({ codigo: p.Codigo, kg: '', precio: String(p.Precio), costo: p.Costo }); pinta(d); };
+    d.querySelector('#ef').onchange = e => E.fecha = e.target.value; d.querySelector('#en').oninput = e => E.nota = e.target.value; d.querySelector('#ec').oninput = e => E.cliente = e.target.value; d.querySelector('#em').oninput = e => E.motivo = e.target.value;
+    d.querySelector('#eg').onclick = e => busy(e.target, async () => {
+      const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), precio: num(l.precio), costo: l.costo }));
+      if (!lineas.length) throw new Error('La venta necesita al menos un producto con kilos');
+      const r = await call('editarVenta', { id, fecha: E.fecha, nota: E.nota, cliente: E.cliente.trim(), lineas, motivo: E.motivo });
+      cerrarModal(); toast('Venta corregida' + (r.aFavor ? ' · ' + usd(r.aFavor) + ' a favor del cliente' : '')); await recargar();
+    });
+  };
+  modal('<div id="mbody"></div>', pinta);
+}
+/* ===== V11: devolución ===== */
+function devolucionVenta(id) {
+  const v = S.ventas.find(x => x.ID === id); if (!v) return;
+  const L = S.detalle.filter(d => d.VentaID === id), dev = {}, E = { motivo: '', alInventario: true };
+  modal(`<h2 style="margin-right:30px">Devolución · nota ${esc(v.Nota || 's/n')}</h2><p class="small muted" style="margin-top:-6px">${esc(v.Cliente)} · ${fdate(v.Fecha)}. Escribe los kilos que devolvió el cliente: se descuentan de la nota.</p>
+    <div class="tbl"><table><tr><th>Producto</th><th class="r">Vendido</th><th class="r">Devuelve kg</th><th class="r">Monto</th></tr>
+      ${L.map((d, i) => `<tr><td>${esc(d.Producto)}</td><td class="r num">${n2(d.Kg)} kg</td><td class="r"><input class="num" style="width:76px" inputmode="decimal" data-dk="${i}" placeholder="0"></td><td class="r num" data-dm="${i}"></td></tr>`).join('')}</table></div>
+    <div class="tot big"><span>Se descuenta de la nota</span><span class="num" id="dtot">${usd(0)}</span></div>
+    <label style="margin-top:8px">¿Qué pasa con la mercancía?</label>
+    <div class="seg"><button class="on plain" data-ai="1">Vuelve al inventario (está buena)</button><button data-ai="0">Se bota (merma)</button></div>
+    <label style="margin-top:8px">Motivo</label><input id="dmo" placeholder="Ej: venía agrio, no era lo que pidió">
+    <button class="btn acc full" style="margin-top:12px" id="dg">Registrar devolución</button>`, d => {
+    const tot = () => { let t = 0; L.forEach((x, i) => { const k = Math.min(num(dev[i] || 0), Number(x.Kg)); t += k * Number(x.Precio); d.querySelector(`[data-dm="${i}"]`).textContent = k ? usd(k * Number(x.Precio)) : ''; }); d.querySelector('#dtot').textContent = usd(t); };
+    d.querySelectorAll('[data-dk]').forEach(el => el.oninput = () => { dev[el.dataset.dk] = el.value; tot(); });
+    d.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { E.alInventario = b.dataset.ai === '1'; d.querySelectorAll('[data-ai]').forEach(x => x.className = x === b ? 'on plain' : ''); });
+    d.querySelector('#dmo').oninput = e => E.motivo = e.target.value;
+    d.querySelector('#dg').onclick = e => busy(e.target, async () => {
+      const lineas = L.map((x, i) => ({ codigo: x.Codigo, kg: num(dev[i] || 0) })).filter(l => l.kg > 0);
+      if (!lineas.length) throw new Error('Escribe los kilos devueltos');
+      const r = await call('devolverVenta', { id, lineas, motivo: E.motivo, alInventario: E.alInventario });
+      cerrarModal(); toast('Devolución registrada · ' + usd(r.devuelto) + (r.aFavor ? ' (' + usd(r.aFavor) + ' a favor del cliente)' : '')); await recargar();
+    });
+  });
+}
+
+/* ===== V11: gastos ===== */
+let GASTO = null;
+function vGastos() {
+  if (!GASTO) GASTO = { fecha: hoy(), categoria: '', descripcion: '', moneda: 'USD', monto: '', metodo: '' };
+  const G = GASTO, { mes, html } = selMes(), lista = (S.gastos || []).filter(g => mesDe(g.Fecha) === mes).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
+  const porCat = {}; lista.forEach(g => porCat[g.Categoria] = (porCat[g.Categoria] || 0) + Number(g.MontoUSD));
+  const t = tasaPara(G.fecha), total = lista.reduce((s, g) => s + Number(g.MontoUSD), 0);
+  $('#main').innerHTML = `<div class="grid g2 st"><div class="card"><h2>Registrar gasto</h2>
+      <p class="small muted" style="margin-top:-6px">Todo lo que sale del negocio que no es mercancía: alquiler, sueldos, luz, gasolina, bolsas… Así el resumen del mes muestra la ganancia real.</p>
+      <div class="row"><div><label>Fecha</label><input type="date" id="gf" value="${G.fecha}"></div><div><label>Categoría</label><select id="gc"><option value="">Elige…</option>${(S.categoriasGasto || []).map(c => `<option ${c === G.categoria ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div></div>
+      <label style="margin-top:8px">Descripción</label><input id="gd" value="${esc(G.descripcion)}" placeholder="Ej: alquiler de noviembre">
+      <div class="row" style="margin-top:8px"><div><label>Moneda</label><div class="seg"><button class="${G.moneda === 'USD' ? 'on plain' : ''}" data-gm="USD">Dólares $</button><button class="${G.moneda === 'Bs' ? 'on plain' : ''}" data-gm="Bs">Bolívares</button></div></div>
+        <div><label>Monto</label><input id="gmo" class="num big" inputmode="decimal" value="${esc(G.monto)}" placeholder="0,00"></div></div>
+      <div class="small muted" id="geq" style="margin-top:4px"></div>
+      <label style="margin-top:8px">Cómo se pagó (opcional)</label><input id="gme" value="${esc(G.metodo)}" placeholder="Efectivo, pago móvil, Zelle…">
+      <button class="btn acc full" style="margin-top:12px" id="gg">Guardar gasto</button></div>
+    <div class="card"><h2>Gastos del mes</h2>${html}
+      ${Object.keys(porCat).length ? `<div style="margin:8px 0 12px">${Object.entries(porCat).sort((a, b) => b[1] - a[1]).map(([c, m]) => `<div class="tot"><span>${esc(c)}</span><span class="num">${usd(m)}</span></div>`).join('')}<div class="tot big"><span>Total</span><span class="num">${usd(total)}</span></div></div>` : ''}
+      <div class="tbl"><table>${lista.map(g => `<tr><td>${fdate(g.Fecha)}</td><td>${esc(g.Categoria)}<div class="small muted">${esc(g.Descripcion || '')}${g.Moneda === 'Bs' ? ' · ' + bs(g.MontoBs) : ''}</div></td><td class="r num">${usd(g.MontoUSD)}</td><td><button class="x" data-gx="${g.ID}" title="Eliminar">×</button></td></tr>`).join('') || '<tr><td class="muted">Sin gastos este mes</td></tr>'}</table></div></div></div>`;
+  const eq = () => { const m = num($('#gmo').value); $('#geq').textContent = G.moneda === 'Bs' && m ? (t ? '≈ ' + usd(m / t) + ' a tasa ' + n2(t) : 'Sin tasa para esa fecha') : ''; }; eq();
+  $('#gf').onchange = e => { G.fecha = e.target.value; vGastos(); }; $('#gc').onchange = e => G.categoria = e.target.value; $('#gd').oninput = e => G.descripcion = e.target.value;
+  $('#gmo').oninput = e => { G.monto = e.target.value; eq(); }; $('#gme').oninput = e => G.metodo = e.target.value;
+  document.querySelectorAll('[data-gm]').forEach(b => b.onclick = () => { G.moneda = b.dataset.gm; vGastos(); });
+  bindMes(vGastos);
+  $('#gg').onclick = e => busy(e.target, async () => { if (!G.categoria) throw new Error('Elige la categoría'); if (!(num(G.monto) > 0)) throw new Error('Escribe el monto');
+    await call('guardarGasto', { fecha: G.fecha, categoria: G.categoria, descripcion: G.descripcion, moneda: G.moneda, monto: num(G.monto), metodo: G.metodo });
+    toast('Gasto guardado'); FILTRO.mes = mesDe(G.fecha); GASTO = null; await recargar(); });
+  document.querySelectorAll('[data-gx]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Borrar?')) busy(b, async () => { await call('eliminarGasto', { id: b.dataset.gx }); toast('Gasto eliminado'); await recargar(); }); });
+}
+
+/* ===== V11: lotes por vencer ===== */
+function porVencer(dias) { const lim = addDays(hoy(), dias); return (S.lotes || []).filter(l => l.Vence && l.Vence <= lim); }
+function vVencer() {
+  const h = hoy(), ls = (S.lotes || []).slice().sort((a, b) => (a.Vence || '9') < (b.Vence || '9') ? -1 : 1);
+  $('#main').innerHTML = `<div class="card"><h2>Lotes por vencer</h2>
+    <p class="small muted" style="margin-top:-6px">Cada entrada con fecha de vencimiento crea un lote. Al vender, la app gasta primero lo que vence antes. Aquí ves lo que queda de cada lote.</p>
+    <div class="tbl"><table><tr><th>Vence</th><th>Producto</th><th class="r">Queda</th><th class="hm">Entró</th><th class="hm">Proveedor</th></tr>
+      ${ls.map(l => { const d = l.Vence ? diasEntre(h, l.Vence) : null;
+        return `<tr><td>${l.Vence ? fdate(l.Vence) : '—'}${d !== null ? `<div><span class="pill ${d < 0 ? 'p-bad' : d <= 7 ? 'p-warn' : 'p-ok'}">${d < 0 ? 'vencido' : d === 0 ? 'hoy' : 'en ' + d + ' d'}</span></div>` : ''}</td><td>${esc(l.Producto)}</td><td class="r num">${n2(l.Restante)} kg<div class="small muted">de ${n2(l.Kg)}</div></td><td class="hm">${fdate(l.FechaEntrada)}</td><td class="hm">${esc(l.Proveedor || '')}</td></tr>`; }).join('') || '<tr><td colspan="5" class="muted">No hay lotes. Al registrar una entrada, escribe la fecha de vencimiento de cada producto.</td></tr>'}
+    </table></div></div>`;
+}
+
+/* ===== V11: cobrar por WhatsApp desde el local ===== */
+function vCobrarLocal() {
+  const pc = S.porCobrar || { clientes: [] }, h = hoy(); S.datosPago = pc.datosPago; S.negocio = pc.negocio;
+  $('#main').innerHTML = `<div class="card" style="max-width:720px;margin:0 auto"><h2>Cobrar por WhatsApp</h2>
+    <p class="small muted" style="margin-top:-6px">Toca el botón verde y se abre WhatsApp con el mensaje de cobro listo para enviar. Si el cliente paga en el local, anótalo en el cierre del día.</p>
+    ${pc.clientes.map(c => { const venc = c.notas.some(n => n.Vence < h);
+      return `<div class="cli" style="flex-wrap:wrap"><div style="flex:1;min-width:170px"><b>${esc(c.cliente)}</b> ${venc ? '<span class="pill p-bad">vencida</span>' : ''}<div class="small muted">${c.notas.length} nota(s) · ${c.telefono ? '📞 ' + esc(c.telefono) : 'sin teléfono'}</div></div>
+        <div class="right"><b class="num">${usd(c.saldo)}</b></div><div class="row" style="flex-basis:100%;margin-top:6px">${botonWA(c, 'Enviar cobro')}</div></div>`; }).join('') || '<div class="empty">✅ Nadie debe</div>'}</div>`;
+}
+
+/* ===== V11: Ajustes → Funciones ===== */
+const PERFILES = [['admin', 'Admin'], ['empleado', 'Local'], ['cliente', 'Cliente'], ['otro', '']];
+function vFunciones() {
+  const cat = S.catalogoFunciones || [], conf = JSON.parse(JSON.stringify(S.confFunciones || {})); let otro = S.perfilOtro || 'Consulta';
+  const grupos = [...new Set(cat.map(f => f.g))];
+  const pinta = () => {
+    $('#main').innerHTML = `<div class="card"><h2>Funciones y quién las usa</h2>
+      <p class="small muted" style="margin-top:-6px">Prende o apaga cada función del negocio y marca qué perfiles la pueden usar. Lo apagado desaparece del menú y el servidor lo bloquea. Los cambios se aplican la próxima vez que cada persona abra la app.</p>
+      <div class="row" style="max-width:420px"><div><label>Nombre del 4.º perfil</label><input id="fo" value="${esc(otro)}" maxlength="30" placeholder="Ej: Contador, Vendedor, Socio"></div></div>
+      <div class="tbl" style="margin-top:12px"><table class="ftab"><tr><th>Función</th><th class="c">Activa</th>${PERFILES.map(([k, n]) => `<th class="c ${n ? '' : 'th-otro'}">${esc(n || otro)}</th>`).join('')}</tr>
+      ${grupos.map(g => `<tr class="fg"><td colspan="${2 + PERFILES.length}">${esc(g)}</td></tr>` + cat.filter(f => f.g === g).map(f => { const c = conf[f.k] || { activa: false, perfiles: [] };
+        return `<tr class="${c.activa ? '' : 'off'}"><td>${esc(f.n)}${f.bloq ? '<div class="small muted">siempre activa para el admin</div>' : ''}</td>
+          <td class="c"><label class="sw"><input type="checkbox" data-fa="${f.k}" ${c.activa ? 'checked' : ''} ${f.bloq ? 'disabled' : ''}><i></i></label></td>
+          ${PERFILES.map(([p]) => { const aplica = f.perfiles.includes(p); return `<td class="c">${aplica ? `<input type="checkbox" class="fchk" data-fp="${f.k}|${p}" ${c.perfiles.includes(p) ? 'checked' : ''} ${f.bloq || !c.activa ? 'disabled' : ''}>` : '<span class="muted" title="No aplica a este perfil">—</span>'}</td>`; }).join('')}</tr>`; }).join('')).join('')}
+      </table></div>
+      <div class="banner ok small" style="margin-top:12px">“—” = no aplica a ese perfil (por ejemplo, el cliente nunca ve costos ni el local ve las ventas).</div>
+      <button class="btn acc" style="margin-top:12px" id="fg">Guardar cambios</button></div>`;
+    $('#fo').oninput = e => { otro = e.target.value; document.querySelectorAll('.th-otro').forEach(t => t.textContent = otro || 'Otro'); };
+    document.querySelectorAll('[data-fa]').forEach(c => c.onchange = () => { const k = c.dataset.fa; conf[k] = conf[k] || { activa: false, perfiles: [] }; conf[k].activa = c.checked;
+      if (c.checked && !conf[k].perfiles.length) conf[k].perfiles = ['admin'].filter(p => cat.find(f => f.k === k).perfiles.includes(p)); pinta(); });
+    document.querySelectorAll('[data-fp]').forEach(c => c.onchange = () => { const [k, p] = c.dataset.fp.split('|'), x = conf[k]; x.perfiles = x.perfiles.filter(y => y !== p); if (c.checked) x.perfiles.push(p); });
+    $('#fg').onclick = e => busy(e.target, async () => {
+      if (conf.ajustes && !conf.ajustes.perfiles.includes('admin')) conf.ajustes.perfiles.push('admin');
+      await call('guardarFunciones', { funciones: conf, perfilOtro: otro.trim() || 'Consulta' }); toast('Funciones guardadas'); USER.perfilOtro = otro.trim(); await recargar(); });
+  };
+  pinta();
+}
+
+/* ===== V11: registro de cambios ===== */
+let REG = { q: '', usuario: '', r: null };
+function vRegistro() {
+  const r = REG.r;
+  $('#main').innerHTML = `<div class="card"><h2>Registro de cambios</h2>
+    <p class="small muted" style="margin-top:-6px">Quién hizo qué y cuándo: ventas, cobros, correcciones, anulaciones, cierres, precios, usuarios y funciones. No se puede borrar desde la app.</p>
+    <div class="row"><div style="flex:2"><input id="rq" placeholder="Buscar: anuló, cobro, nota 250, cliente…" value="${esc(REG.q)}"></div>
+      <div><select id="ru"><option value="">Todos los usuarios</option>${(S.usuarios || []).map(u => `<option value="${esc(u.Usuario)}" ${u.Usuario === REG.usuario ? 'selected' : ''}>${esc(u.Nombre)}</option>`).join('')}</select></div>
+      <button class="btn" id="rb" style="flex:none">Buscar</button></div>
+    <div id="rres" style="margin-top:12px">${r ? `<p class="small muted">${r.total > r.filas.length ? 'Últimos ' + r.filas.length + ' de ' + r.total : r.filas.length + ' movimiento(s)'}</p>
+      <div class="tbl"><table><tr><th>Cuándo</th><th>Quién</th><th>Qué</th></tr>${r.filas.map(x => `<tr><td class="small" style="white-space:nowrap">${esc(String(x.CreadoEn).replace('T', ' ').slice(0, 16))}</td><td class="small">${esc(x.Usuario)}<div class="muted">${esc(NOMBRE_ROL(x.Perfil))}</div></td><td><b class="small">${esc(x.Accion)}</b>${x.Ref ? ` <span class="small muted">· ${esc(x.Ref)}</span>` : ''}<div class="small muted" style="word-break:break-word">${esc(resumenDet(x.Detalle))}</div></td></tr>`).join('') || '<tr><td class="muted">Nada con ese filtro</td></tr>'}</table></div>` : '<div class="empty small"><span class="spin"></span> Cargando…</div>'}</div></div>`;
+  const buscar = async () => { REG.q = $('#rq').value.trim(); REG.usuario = $('#ru').value; REG.r = await call('verRegistro', { q: REG.q, usuario: REG.usuario }); if (TAB === 'registro') vRegistro(); };
+  $('#rb').onclick = e => busy(e.target, buscar); $('#rq').onkeydown = e => { if (e.key === 'Enter') $('#rb').click(); };
+  if (!r) buscar().catch(e => toast(e.message, true));
+}
+function resumenDet(t) { try { const o = JSON.parse(t); return Object.entries(o).filter(([, v]) => v !== '' && v !== null && typeof v !== 'object').map(([k, v]) => k + ': ' + v).join(' · ').slice(0, 220); } catch (e) { return String(t || '').slice(0, 220); } }
+
+/* ===== V11: descargar Excel (parametrizable) ===== */
+let XL = null;
+function vExcel() {
+  const ex = S.exportes || [], h = hoy();
+  if (!XL) { let g = {}; try { g = JSON.parse(localStorage.getItem('xl') || '{}'); } catch (e) {} XL = Object.assign({ tipo: (ex[0] || {}).k, periodo: 'mes', desde: h.slice(0, 8) + '01', hasta: h, cols: {}, anuladas: false }, g); }
+  const t = ex.find(x => x.k === XL.tipo) || ex[0]; if (!t) return $('#main').innerHTML = '<div class="card empty">No hay datos para descargar.</div>';
+  XL.tipo = t.k; const sel = XL.cols[t.k] || t.cols;
+  const rango = () => { const m = h.slice(0, 7), pm = mesAnterior(m), fin = x => addDays((x.slice(5) === '12' ? (Number(x.slice(0, 4)) + 1) + '-01' : x.slice(0, 5) + String(Number(x.slice(5)) + 1).padStart(2, '0')) + '-01', -1);
+    return { mes: [m + '-01', h], pasado: [pm + '-01', fin(pm)], tres: [mesAnterior(mesAnterior(m)) + '-01', h], anio: [h.slice(0, 4) + '-01-01', h], todo: ['2000-01-01', h], otro: [XL.desde, XL.hasta] }[XL.periodo]; };
+  $('#main').innerHTML = `<div class="card" style="max-width:760px"><h2>Descargar en Excel</h2>
+    <p class="small muted" style="margin-top:-6px">Elige qué datos, de qué fechas y qué columnas. Para archivos grandes, achica el período o quita columnas.</p>
+    <label>¿Qué datos?</label><select id="xt">${ex.map(x => `<option value="${x.k}" ${x.k === t.k ? 'selected' : ''}>${esc(x.n)}</option>`).join('')}</select>
+    ${t.fecha ? `<label style="margin-top:10px">Período</label><div class="seg wrap">${[['mes', 'Este mes'], ['pasado', 'Mes pasado'], ['tres', 'Últimos 3 meses'], ['anio', 'Este año'], ['todo', 'Todo'], ['otro', 'Elegir fechas']].map(([k, n]) => `<button class="${XL.periodo === k ? 'on plain' : ''}" data-xp="${k}">${n}</button>`).join('')}</div>
+      ${XL.periodo === 'otro' ? `<div class="row" style="margin-top:8px"><div><label>Desde</label><input type="date" id="xd" value="${XL.desde}"></div><div><label>Hasta</label><input type="date" id="xh" value="${XL.hasta}"></div></div>` : `<p class="small muted" style="margin:6px 0 0">${XL.periodo === 'todo' ? 'Todos los años' : 'Del ' + fdate(rango()[0]) + ' al ' + fdate(rango()[1])}</p>`}` : '<p class="small muted" style="margin:10px 0 0">Foto de hoy (no depende de fechas).</p>'}
+    ${t.k === 'ventas' ? `<label style="display:flex;gap:6px;align-items:center;margin-top:10px;color:var(--ink)"><input type="checkbox" id="xa" style="width:auto" ${XL.anuladas ? 'checked' : ''}> Incluir notas anuladas</label>` : ''}
+    <label style="margin-top:10px">Columnas <span class="small muted">(${sel.length} de ${t.cols.length}) · <a href="#" id="xall">todas</a> · <a href="#" id="xnone">ninguna</a></span></label>
+    <div class="xcols">${t.cols.map(c => `<label><input type="checkbox" data-xc="${esc(c)}" ${sel.includes(c) ? 'checked' : ''}> ${esc(c)}</label>`).join('')}</div>
+    <button class="btn acc" style="margin-top:14px" id="xg">⬇ Descargar Excel</button><div id="xr" class="small" style="margin-top:8px"></div></div>`;
+  const guarda = () => { try { localStorage.setItem('xl', JSON.stringify(XL)); } catch (e) {} };
+  $('#xt').onchange = e => { XL.tipo = e.target.value; guarda(); vExcel(); };
+  document.querySelectorAll('[data-xp]').forEach(b => b.onclick = () => { XL.periodo = b.dataset.xp; guarda(); vExcel(); });
+  const xd = $('#xd'); if (xd) { xd.onchange = e => { XL.desde = e.target.value; guarda(); }; $('#xh').onchange = e => { XL.hasta = e.target.value; guarda(); }; }
+  const xa = $('#xa'); if (xa) xa.onchange = e => { XL.anuladas = e.target.checked; guarda(); };
+  const leeCols = () => { XL.cols[t.k] = t.cols.filter(c => document.querySelector(`[data-xc="${c}"]`).checked); guarda(); };
+  document.querySelectorAll('[data-xc]').forEach(c => c.onchange = () => { leeCols(); vExcel(); });
+  $('#xall').onclick = e => { e.preventDefault(); XL.cols[t.k] = t.cols.slice(); guarda(); vExcel(); };
+  $('#xnone').onclick = e => { e.preventDefault(); XL.cols[t.k] = []; guarda(); vExcel(); };
+  $('#xg').onclick = e => busy(e.target, async () => {
+    if (!sel.length) throw new Error('Elige al menos una columna');
+    const [desde, hasta] = t.fecha ? rango() : ['', ''];
+    if (t.fecha && desde > hasta) throw new Error('La fecha "desde" es mayor que "hasta"');
+    const [r] = await Promise.all([call('exportar', { tipo: t.k, desde, hasta, columnas: sel, anuladas: XL.anuladas }), cargarXLSX()]);
+    if (!r.filas.length) throw new Error('No hay datos en ese período');
+    const ws = XLSX.utils.aoa_to_sheet([r.columnas].concat(r.filas.map(f => f.map(v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v) ? v.replace('T', ' ').slice(0, 16) : v))));
+    ws['!cols'] = r.columnas.map((c, i) => ({ wch: Math.min(40, Math.max(c.length + 2, ...r.filas.slice(0, 200).map(f => String(f[i] == null ? '' : f[i]).length + 1))) }));
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, r.titulo.replace(/[\\/?*[\]:]/g, '').slice(0, 31));
+    const nombre = r.titulo.replace(/[^\wáéíóúñ ]/gi, '').replace(/\s+/g, '_') + (t.fecha ? '_' + desde + '_a_' + hasta : '_' + h) + '.xlsx';
+    XLSX.writeFile(wb, nombre);
+    $('#xr').innerHTML = `✅ ${r.filas.length} fila(s) descargadas en <b>${esc(nombre)}</b>.${r.recortado ? ` <span style="color:var(--bad)">Eran ${r.total}: se recortó a ${r.filas.length}. Achica el período.</span>` : ''}`;
+  });
+}
+
 function vAjustes() {
   $('#main').innerHTML = `<div class="grid g2 st">
     <div class="card"><h2>Tasa BCV</h2>
@@ -1691,7 +2102,7 @@ function vAjustes() {
       <tr><td><input id="npn" placeholder="Nuevo producto"></td><td><input id="npc" class="num" placeholder="costo"></td><td><input id="npp" class="num" placeholder="precio"></td><td colspan="3"></td><td><button class="btn sm" id="npg">+</button></td></tr>
     </table></div></div>
     <div class="card" style="grid-column:1/-1"><h2>Usuarios</h2>
-      <p class="small muted" style="margin-top:-6px">Cada persona entra con su usuario (único) y su PIN (4 a 8 números). Rol: admin (todo), empleado (cierre y mercancía del local) o cliente (sus pedidos y su cuenta). Para un cliente, elige a qué cliente corresponde. Deja el PIN vacío para no cambiarlo.</p>
+      <p class="small muted" style="margin-top:-6px">Cada persona entra con su usuario (único) y su PIN (4 a 8 números). Rol: admin, empleado (el local), cliente o ${esc(S.perfilOtro || 'otro')} (el 4.º perfil). Lo que cada rol puede hacer se decide en <a href="#" data-ira="funciones">Ajustes → Funciones</a>. Para un cliente, elige a qué cliente corresponde. Deja el PIN vacío para no cambiarlo.</p>
       <div class="tbl"><table id="utab"></table></div></div>
     <div class="card" style="grid-column:1/-1"><h2>Clientes</h2><input id="cq" placeholder="Buscar cliente" style="margin-bottom:8px">
       <div class="tbl" style="max-height:380px;overflow:auto"><table id="ctab"></table></div></div>
@@ -1705,6 +2116,11 @@ function vAjustes() {
       <textarea id="dpago" rows="4" placeholder="Pago móvil: Banco ... · 0414-0000000 · V-00000000&#10;Zelle: 00000000">${esc(S.datosPago || '')}</textarea>
       <div class="row" style="margin-top:8px"><button class="btn" id="dpg" style="flex:none">Guardar</button><button class="btn sec" id="dpv" style="flex:none">Ver mensaje de ejemplo</button></div>
       <pre id="dpej" class="small hide" style="white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0 0;font-family:inherit"></pre></div>
+    ${F('cierreMes') ? `<div class="card"><h2>Cerrar mes</h2>
+      <p class="small muted" style="margin-top:-6px">Cuando un mes ya está revisado, ciérralo: nadie podrá registrar, corregir ni borrar ventas, cobros, cierres, compras o gastos con fecha de ese mes o anteriores. Se puede reabrir.</p>
+      <p class="small">Cerrado hasta: <b>${S.cierreHasta ? mesNombre(S.cierreHasta) : 'ningún mes'}</b></p>
+      <div class="row"><div><label>Cerrar hasta (incluido)</label><select id="cmh">${mesesLista().filter(m => m < hoy().slice(0, 7)).slice(0, 18).map(m => `<option value="${m}" ${m === S.cierreHasta ? 'selected' : ''}>${mesNombre(m)}</option>`).join('')}</select></div></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="cmg" style="flex:none">Cerrar</button>${S.cierreHasta ? '<button class="btn sec" id="cmr" style="flex:none">Reabrir todo</button>' : ''}</div></div>` : ''}
     <div class="card"><h2>Respaldo</h2>
       <p class="small muted" style="margin-top:-6px">Cada domingo en la noche se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las últimas 8.</p>
       <p class="small">Último respaldo: <b>${S.respaldo ? esc(S.respaldo) : 'todavía ninguno'}</b></p>
@@ -1723,7 +2139,7 @@ function vAjustes() {
     $('#utab').innerHTML = '<tr><th>Nombre</th><th>Usuario</th><th>PIN</th><th>Rol</th><th>Cliente</th><th>Correo</th><th>Activo</th><th></th></tr>' + rows.map((u, i) => `<tr>
       <td><input data-un="${i}" value="${esc(u.Nombre)}" placeholder="${u.nuevo ? 'Nuevo usuario' : ''}" style="min-width:110px"></td><td><input data-uu="${i}" value="${esc(u.Usuario)}" autocapitalize="none" style="min-width:90px"></td>
       <td><input data-up="${i}" class="mono" inputmode="numeric" maxlength="8" placeholder="${u.nuevo ? 'PIN' : '••••'}" style="width:80px"></td>
-      <td><select data-ur="${i}" style="min-width:112px">${['admin', 'empleado', 'cliente'].map(r => `<option ${String(u.Rol).toLowerCase() === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
+      <td><select data-ur="${i}" style="min-width:112px">${['admin', 'empleado', 'cliente', 'otro'].map(r => `<option value="${r}" ${String(u.Rol).toLowerCase() === r ? 'selected' : ''}>${r === 'otro' ? esc(S.perfilOtro || 'otro') : r}</option>`).join('')}</select></td>
       <td><input data-uc="${i}" list="dl-cli3" value="${esc(u.Cliente)}" style="min-width:150px"></td><td><input data-ue="${i}" value="${esc(u.Email)}" style="min-width:150px"></td>
       <td><select data-ua="${i}" style="min-width:70px"><option ${String(u.Activo).toUpperCase() !== 'NO' ? 'selected' : ''}>SI</option><option ${String(u.Activo).toUpperCase() === 'NO' ? 'selected' : ''}>NO</option></select></td>
       <td style="white-space:nowrap"><button class="btn sm ${u.nuevo ? '' : 'sec'}" data-ug="${i}" data-orig="${esc(u.Usuario || '')}">${u.nuevo ? '+' : '✓'}</button>${u.nuevo ? '' : ` <button class="btn sm sec" data-ub="${esc(u.Usuario || '')}" title="Quitar el bloqueo por PIN equivocado">🔓</button>`}</td></tr>`).join('') + `<datalist id="dl-cli3">${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist>`;
@@ -1736,14 +2152,17 @@ function vAjustes() {
   pintarUs();
   document.querySelectorAll('[data-ub]').forEach(b => b.onclick = () => busy(b, async () => { await call('desbloquear', { usuario: b.dataset.ub }); toast(b.dataset.ub + ' desbloqueado: ya puede volver a intentar'); }));
   $('#npg').onclick = e => busy(e.target, async () => { const n = $('#npn').value.trim(); if (!n) throw new Error('Escribe el nombre'); const cod = n.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() + (S.productos.length + 1); await call('guardarProducto', { Codigo: cod, Nombre: n, Costo: num($('#npc').value), Precio: num($('#npp').value) }); toast('Producto agregado'); VENTA = null; await recargar(); });
-  const pintarCli = () => { const q = $('#cq').value.toLowerCase(); $('#ctab').innerHTML = '<tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Zona</th><th class="r">Días</th><th></th></tr>' + S.clientes.filter(c => !q || String(c.Nombre).toLowerCase().includes(q)).map((c, i) => `<tr><td><input value="${esc(c.Nombre)}" data-cn="${i}" style="min-width:200px"></td><td><input value="${esc(c.Telefono)}" data-ct="${i}" inputmode="tel" style="min-width:110px"></td><td><input value="${esc(c.Direccion || '')}" data-cdir="${i}" style="min-width:160px"></td><td><input value="${esc(c.Zona)}" data-cz="${i}"></td><td><input class="num" style="width:56px" value="${esc(c.DiasCredito)}" data-cd="${i}"></td><td><button class="btn sm sec" data-cs="${i}" data-orig="${esc(c.Nombre)}">✓</button></td></tr>`).join('');
-    document.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.cs; await call('guardarCliente', { original: b.dataset.orig, Nombre: $(`[data-cn="${i}"]`).value.trim(), Telefono: $(`[data-ct="${i}"]`).value, Zona: $(`[data-cz="${i}"]`).value, Direccion: $(`[data-cdir="${i}"]`).value, DiasCredito: num($(`[data-cd="${i}"]`).value) }); toast('Cliente guardado'); await recargar(); })); };
+  const pintarCli = () => { const q = $('#cq').value.toLowerCase(); $('#ctab').innerHTML = '<tr><th>Nombre</th><th>Cédula / RIF</th><th>Teléfono</th><th>Dirección</th><th>Zona</th><th class="r">Días</th><th></th></tr>' + S.clientes.filter(c => !q || String(c.Nombre).toLowerCase().includes(q)).map((c, i) => `<tr><td><input value="${esc(c.Nombre)}" data-cn="${i}" style="min-width:200px"></td><td><input value="${esc(c.Documento || '')}" data-cdoc="${i}" placeholder="V- / J-" style="min-width:110px"></td><td><input value="${esc(c.Telefono)}" data-ct="${i}" inputmode="tel" style="min-width:110px"></td><td><input value="${esc(c.Direccion || '')}" data-cdir="${i}" style="min-width:160px"></td><td><input value="${esc(c.Zona)}" data-cz="${i}"></td><td><input class="num" style="width:56px" value="${esc(c.DiasCredito)}" data-cd="${i}"></td><td><button class="btn sm sec" data-cs="${i}" data-orig="${esc(c.Nombre)}">✓</button></td></tr>`).join('');
+    document.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.cs; await call('guardarCliente', { original: b.dataset.orig, Nombre: $(`[data-cn="${i}"]`).value.trim(), Telefono: $(`[data-ct="${i}"]`).value, Zona: $(`[data-cz="${i}"]`).value, Direccion: $(`[data-cdir="${i}"]`).value, Documento: $(`[data-cdoc="${i}"]`).value.trim(), DiasCredito: num($(`[data-cd="${i}"]`).value) }); toast('Cliente guardado'); await recargar(); })); };
   $('#cq').oninput = pintarCli; pintarCli();
   $('#al').onclick = e => busy(e.target, async () => { const r = await call('enviarAlertas'); toast(r.enviado ? 'Correo enviado a ' + r.para.join(', ') : r.motivo, !r.enviado); });
   $('#lo').onclick = salir;
   $('#dpg').onclick = e => busy(e.target, async () => { await call('guardarConfig', { clave: 'DATOS_PAGO', valor: $('#dpago').value.trim() }); S.datosPago = $('#dpago').value.trim(); toast('Datos para cobrar guardados'); });
   $('#dpv').onclick = () => { const d0 = S.datosPago; S.datosPago = $('#dpago').value.trim(); const c = deudasPorCliente()[0] || { cliente: 'CLIENTE EJEMPLO', saldo: 100, notas: [{ Nota: 123, Fecha: hoy(), Vence: hoy(), Saldo: 100 }] };
     const pre = $('#dpej'); pre.textContent = msgCobro(c); pre.classList.remove('hide'); S.datosPago = d0; };
+  document.querySelectorAll('[data-ira]').forEach(a => a.onclick = e => { e.preventDefault(); TAB = a.dataset.ira; render(); });
+  const cmg = $('#cmg'); if (cmg) cmg.onclick = e => { if (!confirmar(e.target, '¿Cerrar ' + $('#cmh').value + '?')) return; busy(e.target, async () => { await call('cerrarMes', { hasta: $('#cmh').value }); toast('Mes cerrado'); await recargar(); }); };
+  const cmr = $('#cmr'); if (cmr) cmr.onclick = e => { if (!confirmar(e.target, '¿Reabrir?')) return; busy(e.target, async () => { await call('cerrarMes', { hasta: '' }); toast('Meses reabiertos'); await recargar(); }); };
   $('#resp').onclick = e => busy(e.target, async () => { const r = await call('respaldoAhora'); toast('Respaldo guardado: ' + r.nombre); S.respaldo = r.cuando; vAjustes(); });
   const unir = probar => call('unirClientes', { de: $('#ude').value.trim(), a: $('#ua').value.trim(), probar });
   const resumenU = r => Object.entries(r.cuenta).filter(([, n]) => n).map(([h, n]) => n + ' ' + ({ Ventas: 'venta(s)', Cobros: 'cobro(s)', Pedidos: 'pedido(s)', PagosReportados: 'pago(s) reportado(s)', CierreLineas: 'línea(s) de cierre', Usuarios: 'usuario(s)' }[h])).join(', ') || 'no tiene movimientos';
