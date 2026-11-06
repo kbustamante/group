@@ -933,11 +933,27 @@ function bindMes(fn, ambos) { const el = $('#rm'); if (el) el.onchange = async e
 const usdCierre = (c, campo) => { const v = Number(c[campo]) || 0, t = tasaCierre(c); return c.Moneda === 'Bs' ? (t ? v / t : 0) : v; };
 const diasEntre = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
 function waLink(tel, msg) { let n = String(tel || '').replace(/\D/g, ''); if (n.startsWith('0')) n = '58' + n.slice(1); else if (n.length === 10) n = '58' + n; return 'https://wa.me/' + n + '?text=' + encodeURIComponent(msg); }
+function saludo() { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'; }
+const fechaLarga = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '';
+/** Recordatorio de cobro con tono corporativo (sin emojis ni asteriscos: se ven bien en cualquier WhatsApp). */
 function msgCobro(c) {
-  const t = S.tasaHoy && S.tasaHoy.tasa, h = hoy();
-  return `Hola ${c.cliente} 👋, le saluda ${USER.negocio || 'Lácteos'}.\nLe recordamos su saldo pendiente de *${usd(c.saldo)}*${t ? ` (${bs(c.saldo * t)} a la tasa BCV de hoy, ${n2(t)})` : ''}:\n`
-    + c.notas.slice().sort((a, b) => a.Fecha < b.Fecha ? -1 : 1).map(n => `• Nota ${n.Nota || '-'} del ${fdate(n.Fecha)}: ${usd(n.Saldo)}${n.Vence < h ? ' (vencida)' : ' · vence ' + fdate(n.Vence)}`).join('\n')
-    + `\n¡Muchas gracias!`;
+  const t = S.tasaHoy && S.tasaHoy.tasa, h = hoy(), neg = USER.negocio || 'Lácteos';
+  const conApp = (S.usuarios || []).some(u => String(u.Rol).toLowerCase() === 'cliente' && u.Cliente === c.cliente && String(u.Activo).toUpperCase() !== 'NO');
+  const notas = c.notas.slice().sort((a, b) => a.Fecha < b.Fecha ? -1 : 1).map(n => {
+    const d = diasEntre(n.Vence, h);
+    return `• Nota N° ${n.Nota || 's/n'} del ${fechaLarga(n.Fecha)}: ${usd(n.Saldo)} (${d > 0 ? 'vencida hace ' + d + (d === 1 ? ' día' : ' días') : d === 0 ? 'vence hoy' : 'vence el ' + fechaLarga(n.Vence)})`; });
+  return [`${saludo()}, estimado cliente ${c.cliente}.`, '',
+    `Le saluda ${neg}. Le recordamos que mantiene ${c.notas.length > 1 ? 'los siguientes saldos pendientes' : 'el siguiente saldo pendiente'} con nosotros:`, '',
+    ...notas, '',
+    `Total pendiente: ${usd(c.saldo)}`, ...(t ? [`Equivalente: ${bs(c.saldo * t)} (tasa BCV del ${fechaLarga(h)}: ${n2(t)})`] : []),
+    ...(S.datosPago ? ['', 'Datos para su pago:', S.datosPago.trim()] : []), '',
+    `Una vez realizado el pago, le agradecemos enviarnos el comprobante por este medio${conApp ? ' o reportarlo en nuestra app' : ''}. Si ya realizó el pago, por favor haga caso omiso de este mensaje.`, '',
+    'Atentamente,', neg].join('\n');
+}
+function msgReactivar(cliente) {
+  const neg = USER.negocio || 'Lácteos';
+  return [`${saludo()}, estimado cliente ${cliente}.`, '', `Le saluda ${neg}. Hace algunos días no recibimos su pedido y queremos saber si podemos ayudarle en algo.`,
+    'Contamos con mercancía fresca disponible y con gusto le preparamos su próximo pedido.', '', 'Atentamente,', neg].join('\n');
 }
 function botonWA(c, txt = 'WhatsApp') {
   const cl = S.clientes.find(x => x.Nombre === c.cliente) || {};
@@ -1171,7 +1187,7 @@ function vReportes() {
         ${Object.entries(cli).sort((a, b) => b[1].v - a[1].v).slice(0, 15).map(([n, c]) => `<tr><td>${esc(n)}</td><td class="r num">${c.n}</td><td class="r num">${usd(c.v)}</td><td class="r num" style="color:var(--ok)">${usd(c.u)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ventas</td></tr>'}</table></div></div>
     </div>
     <div class="card"><h2>Clientes que dejaron de comprar</h2><p class="small muted" style="margin-top:-6px">Compraban seguido (2 o más veces en 4 meses) y llevan más de 30 días sin comprar.</p>
-      ${perdidos.map(c => { const tel = (S.clientes.find(x => x.Nombre === c) || {}).Telefono; return `<div class="cli"><div><b>${esc(c)}</b><div class="small muted">última compra ${fdate(ultima[c])} · hace ${diasEntre(ultima[c], h)} días</div></div>${tel ? `<a class="btn sm sec" style="flex:none;text-decoration:none" target="_blank" rel="noopener" href="${waLink(tel, 'Hola ' + c + ' 👋, le saluda ' + (USER.negocio || 'Lácteos') + '. ¿Cómo está? Tenemos mercancía fresca, ¿le preparamos su pedido?')}">💬 Escribirle</a>` : ''}</div>`; }).join('') || '<div class="empty">✅ Ningún cliente frecuente ha dejado de comprar</div>'}</div>`;
+      ${perdidos.map(c => { const tel = (S.clientes.find(x => x.Nombre === c) || {}).Telefono; return `<div class="cli"><div><b>${esc(c)}</b><div class="small muted">última compra ${fdate(ultima[c])} · hace ${diasEntre(ultima[c], h)} días</div></div>${tel ? `<a class="btn sm sec" style="flex:none;text-decoration:none" target="_blank" rel="noopener" href="${waLink(tel, msgReactivar(c))}">💬 Escribirle</a>` : ''}</div>`; }).join('') || '<div class="empty">✅ Ningún cliente frecuente ha dejado de comprar</div>'}</div>`;
   $('#rm').onchange = async e => {
     FILTRO.mes = e.target.value;
     if (S.corte && FILTRO.mes + '-31' < S.corte && !S.mesesCargados[FILTRO.mes]) {
@@ -1656,6 +1672,11 @@ function vAjustes() {
       <div class="row"><div><label>Este cliente…</label><input id="ude" list="dl-cli3"></div><div><label>…pasa a ser</label><input id="ua" list="dl-cli3"></div></div>
       <div id="ures" class="small" style="margin:8px 0"></div>
       <div class="row"><button class="btn sec" id="urev" style="flex:none">Revisar</button><button class="btn bad hide" id="ugo" style="flex:none">Unir</button></div></div>
+    <div class="card"><h2>Datos para cobrar</h2>
+      <p class="small muted" style="margin-top:-6px">Salen al final del mensaje de cobro por WhatsApp. Si lo dejas vacío, el mensaje sale sin datos de pago.</p>
+      <textarea id="dpago" rows="4" placeholder="Pago móvil: Banco ... · 0414-0000000 · V-00000000&#10;Zelle: 00000000">${esc(S.datosPago || '')}</textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="dpg" style="flex:none">Guardar</button><button class="btn sec" id="dpv" style="flex:none">Ver mensaje de ejemplo</button></div>
+      <pre id="dpej" class="small hide" style="white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0 0;font-family:inherit"></pre></div>
     <div class="card"><h2>Respaldo</h2>
       <p class="small muted" style="margin-top:-6px">Cada domingo en la noche se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las últimas 8.</p>
       <p class="small">Último respaldo: <b>${S.respaldo ? esc(S.respaldo) : 'todavía ninguno'}</b></p>
@@ -1692,6 +1713,9 @@ function vAjustes() {
   $('#cq').oninput = pintarCli; pintarCli();
   $('#al').onclick = e => busy(e.target, async () => { const r = await call('enviarAlertas'); toast(r.enviado ? 'Correo enviado a ' + r.para.join(', ') : r.motivo, !r.enviado); });
   $('#lo').onclick = salir;
+  $('#dpg').onclick = e => busy(e.target, async () => { await call('guardarConfig', { clave: 'DATOS_PAGO', valor: $('#dpago').value.trim() }); S.datosPago = $('#dpago').value.trim(); toast('Datos para cobrar guardados'); });
+  $('#dpv').onclick = () => { const d0 = S.datosPago; S.datosPago = $('#dpago').value.trim(); const c = deudasPorCliente()[0] || { cliente: 'CLIENTE EJEMPLO', saldo: 100, notas: [{ Nota: 123, Fecha: hoy(), Vence: hoy(), Saldo: 100 }] };
+    const pre = $('#dpej'); pre.textContent = msgCobro(c); pre.classList.remove('hide'); S.datosPago = d0; };
   $('#resp').onclick = e => busy(e.target, async () => { const r = await call('respaldoAhora'); toast('Respaldo guardado: ' + r.nombre); S.respaldo = r.cuando; vAjustes(); });
   const unir = probar => call('unirClientes', { de: $('#ude').value.trim(), a: $('#ua').value.trim(), probar });
   const resumenU = r => Object.entries(r.cuenta).filter(([, n]) => n).map(([h, n]) => n + ' ' + ({ Ventas: 'venta(s)', Cobros: 'cobro(s)', Pedidos: 'pedido(s)', PagosReportados: 'pago(s) reportado(s)', CierreLineas: 'línea(s) de cierre', Usuarios: 'usuario(s)' }[h])).join(', ') || 'no tiene movimientos';
