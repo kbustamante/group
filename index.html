@@ -98,6 +98,20 @@ details summary{cursor:pointer;list-style:none}details summary::-webkit-details-
 input.big{font-size:18px;padding:11px 10px}
 .chart{position:relative;height:260px}
 .hide{display:none!important}
+/* que nada empuje la pantalla hacia los lados: las tablas anchas se desplazan dentro de su recuadro */
+.grid>*,.card,.kpi{min-width:0}
+.tbl{max-width:100%;-webkit-overflow-scrolling:touch}
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:560px){
+  main{padding:12px}
+  .card{padding:13px}
+  th,td{padding:7px 4px}
+  td .pill{white-space:normal;line-height:1.25}
+  td .num.small,td.small{font-size:11.5px}
+  .kpi b{font-size:18px}
+  .brand small{display:none}
+  .tasa b{font-size:14px}
+}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-3px}
 @keyframes s{to{transform:rotate(360deg)}}
 .banner{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}
