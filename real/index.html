@@ -160,7 +160,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyHC210YsoibDdg8DDwp3M7Arrj__hrBQbaqnmfK_ZRyml7Ba6z5N56ERr0WjA6oSUHTw/exec';
-const PANTALLA = 'V9b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V9c'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1095,6 +1095,27 @@ function vRepInventario() {
 
 /* ===== LOCAL: subir cierres de días anteriores ===== */
 let IMPC = null;
+/** Excel del Kiosco: varias filas por día (una por cierre del punto), la fecha solo en la primera.
+ * Venta = CIERRE (lo que marcó el punto; si está vacío, BANCO BS). PAGO MOVIL en Bs. "$" = efectivo en dólares. DIF = comisión del banco. */
+function leerKiosco(rows, hi, H) {
+  const ix = n => H.indexOf(n), cF = ix('FECHA'), cC = ix('CIERRE'), cB = ix('BANCO BS'), cD = ix('DIF'), cP = ix('PAGO MOVIL'), cT = ix('TASA'), cU = H.indexOf('$');
+  const dias = new Map(), avisos = []; let fecha = '', tasaPrev = 0, sinFecha = 0, sinTasa = 0;
+  rows.slice(hi + 1).forEach((r, k) => {
+    const f = r[cF] instanceof Date ? fechaISO(r[cF]) : '';
+    if (f) fecha = f; else if (r[cF] !== '' && r[cF] != null) fecha = ''; // "LUNES", "MARTES"…: fecha incompleta
+    const pdv = numX(r[cC]) || numX(r[cB]), pm = numX(r[cP]), usdE = cU >= 0 ? numX(r[cU]) : 0, com = cD >= 0 ? numX(r[cD]) : 0;
+    let tasa = numX(r[cT]);
+    if (!(pdv + pm + usdE > 0)) { if (tasa) tasaPrev = tasa; return; }
+    if (!fecha) { sinFecha++; return; }
+    if (!tasa) { tasa = tasaPrev; sinTasa++; } else tasaPrev = tasa;
+    const d = dias.get(fecha) || { fila: hi + k + 2, fecha, moneda: 'Bs', pdv: 0, pm: 0, efe: 0, efeUsd: 0, mayor: 0, tasa: 0, com: 0 };
+    d.pdv += pdv; d.pm += pm; d.efeUsd += usdE; d.com += com; if (!d.tasa && tasa) d.tasa = tasa; dias.set(fecha, d);
+  });
+  const cierres = [...dias.values()].map(d => ({ fila: d.fila, fecha: d.fecha, moneda: 'Bs', pdv: r2(d.pdv), pm: r2(d.pm), efe: 0, efeUsd: r2(d.efeUsd), mayor: 0, tasa: d.tasa, notas: 'Excel del Kiosco' + (d.com > 0.005 ? ' · comisión banco Bs ' + n2(d.com) : '') }));
+  if (sinFecha) avisos.push(`${sinFecha} fila(s) con montos al inicio del archivo no tienen la fecha completa (solo el día de la semana): se saltan`);
+  if (sinTasa) avisos.push(`${sinTasa} fila(s) sin tasa: se usó la tasa de la fila anterior`);
+  return { cierres, avisos, formato: 'Excel del Kiosco' };
+}
 function leerCierresExcel(buf) {
   const wb = XLSX.read(buf, { type: 'array', cellDates: true });
   const al = { fecha: ['FECHA', 'DIA'], pdv: ['PUNTO DE VENTA', 'PDV', 'PUNTO'], pm: ['PAGO MOVIL', 'PAGOS MOVILES', 'PM', 'TRANSFERENCIA'], efe: ['EFECTIVO'], mayor: ['PAGOS DEL MAYOR', 'PAGOS DE CLIENTES AL MAYOR', 'MAYOR', 'PAGO MAYOR'], moneda: ['MONEDA'], tasa: ['TASA'], notas: ['NOTAS', 'OBSERVACIONES'] };
@@ -1102,6 +1123,7 @@ function leerCierresExcel(buf) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
     for (let hi = 0; hi < Math.min(rows.length, 10); hi++) {
       const H = rows[hi].map(normTxt), ix = {}; Object.entries(al).forEach(([k, ns]) => { ix[k] = H.findIndex(h => ns.includes(h)); });
+      if (['FECHA', 'CIERRE', 'PAGO MOVIL', 'TASA'].every(h => H.includes(h))) return leerKiosco(rows, hi, H);
       if (ix.fecha < 0 || (ix.pdv < 0 && ix.pm < 0 && ix.efe < 0)) continue;
       const avisos = [], cierres = [], g = (r, k) => ix[k] >= 0 ? r[ix[k]] : '';
       rows.slice(hi + 1).forEach((r, k) => { const fila = hi + k + 2, fecha = fechaISO(g(r, 'fecha'));
@@ -1124,6 +1146,8 @@ function plantillaCierres() {
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Cierres'); XLSX.utils.book_append_sheet(wb, info, 'Instrucciones'); XLSX.writeFile(wb, 'Plantilla_cierres_local.xlsx');
   });
 }
+/** Total en $ de un día leído del Excel (null si está en Bs y no hay tasa). */
+function totC(c) { const bsT = c.pdv + c.pm + c.efe + c.mayor; return c.moneda === 'Bs' ? (c.tasa ? bsT / c.tasa + (c.efeUsd || 0) : null) : bsT; }
 function vSubirCierres() {
   const I = IMPC;
   if (!I) {
@@ -1133,17 +1157,19 @@ function vSubirCierres() {
     $('#ict').onclick = e => busy(e.target, plantillaCierres);
     $('#icf').onchange = e => { const f = e.target.files[0]; if (!f) return; $('#main').innerHTML = '<div class="card"><span class="spin"></span> Leyendo ' + esc(f.name) + '…</div>';
       cargarXLSX().then(() => f.arrayBuffer()).then(async buf => { const r = leerCierresExcel(buf); if (!r.cierres.length) throw new Error('No encontré días con montos en el archivo');
-        const ch = await call('importarCierres', { probar: true, cierres: r.cierres });
-        IMPC = Object.assign(r, { archivo: f.name, repetidos: new Set(ch.repetidos), errores: ch.errores }); vSubirCierres(); })
+        const rep = new Set(), errores = [];
+        for (let i = 0; i < r.cierres.length; i += 300) { $('#main').innerHTML = `<div class="card"><span class="spin"></span> Revisando ${esc(f.name)}… ${Math.round(i / r.cierres.length * 100)}%</div>`;
+          const ch = await call('importarCierres', { probar: true, cierres: r.cierres.slice(i, i + 300) }); ch.repetidos.forEach(k => rep.add(i + k)); errores.push(...ch.errores); }
+        IMPC = Object.assign(r, { archivo: f.name, repetidos: rep, errores }); vSubirCierres(); })
         .catch(err => { IMPC = null; vSubirCierres(); toast(err.message, true); }); };
     return;
   }
   const nuevos = I.cierres.filter((c, i) => !I.repetidos.has(i)), fs = I.cierres.map(c => c.fecha).sort();
-  $('#main').innerHTML = `<div class="card"><h2>⬆ ${esc(I.archivo)}</h2>
+  $('#main').innerHTML = `<div class="card"><h2>⬆ ${esc(I.archivo)}</h2>${I.formato ? `<p class="small muted" style="margin-top:-6px">${esc(I.formato)}: venta = CIERRE del punto, pago móvil en Bs y la columna "$" como efectivo en dólares</p>` : ''}
     ${I.resultado ? `<div class="banner ok">✅ Listo: se subieron <b>${I.resultado.creados}</b> cierre(s) por ${usd(I.resultado.total)}.</div><button class="btn sec" id="icx">Subir otro archivo</button>` : `
-    <div class="grid g3" style="margin-bottom:12px">${kpi('Días en el archivo', I.cierres.length, '', `<div class="small muted">${fdate(fs[0])} a ${fdate(fs[fs.length - 1])}</div>`)}${kpi('Nuevos por subir', nuevos.length, 'ok')}${kpi('Ya tenían cierre', I.repetidos.size, '', '<div class="small muted">se saltan</div>')}</div>
+    <div class="grid g3" style="margin-bottom:12px">${kpi('Días en el archivo', I.cierres.length, '', `<div class="small muted">${fdate(fs[0])} a ${fdate(fs[fs.length - 1])}</div>`)}${kpi('Nuevos por subir', nuevos.length, 'ok', `<div class="small muted">≈ ${usd(nuevos.reduce((s, c) => s + (totC(c) || 0), 0))}</div>`)}${kpi('Ya tenían cierre', I.repetidos.size, '', '<div class="small muted">se saltan</div>')}</div>
     ${I.avisos.length || I.errores.length ? `<details class="banner warn"><summary>⚠️ ${I.avisos.length + I.errores.length} aviso(s) — toca para ver</summary><div class="small" style="margin-top:6px">${I.avisos.concat(I.errores).slice(0, 40).map(esc).join('<br>')}</div></details>` : ''}
-    ${nuevos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Mon.</th><th class="r">Punto</th><th class="r">P. móvil</th><th class="r">Efectivo</th><th class="r hm">Mayor</th></tr>${nuevos.slice(0, 10).map(c => `<tr><td>${fdate(c.fecha)}</td><td>${c.moneda === 'Bs' ? 'Bs' : '$'}</td><td class="r num">${n2(c.pdv)}</td><td class="r num">${n2(c.pm)}</td><td class="r num">${n2(c.efe)}</td><td class="r num hm">${c.mayor ? n2(c.mayor) : ''}</td></tr>`).join('')}</table></div>${nuevos.length > 10 ? `<p class="small muted">…y ${nuevos.length - 10} más</p>` : ''}
+    ${nuevos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Mon.</th><th class="r">Punto</th><th class="r">P. móvil</th><th class="r">Efectivo</th><th class="r hm">Total $</th></tr>${nuevos.slice(0, 10).map(c => `<tr><td>${fdate(c.fecha)}</td><td>${c.moneda === 'Bs' ? 'Bs' : '$'}</td><td class="r num">${n2(c.pdv)}</td><td class="r num">${n2(c.pm)}</td><td class="r num">${c.efeUsd ? usd(c.efeUsd) : n2(c.efe)}</td><td class="r num hm">${totC(c) == null ? '' : usd(totC(c))}</td></tr>`).join('')}</table></div>${nuevos.length > 10 ? `<p class="small muted">…y ${nuevos.length - 10} más</p>` : ''}
       <div class="row" style="margin-top:10px"><button class="btn sec" id="icx" style="flex:none">Cancelar</button><button class="btn acc" id="icgo">Subir ${nuevos.length} cierre(s)</button></div>` : `<div class="banner ok">Todos esos días ya tienen cierre en la app.</div><button class="btn sec" id="icx">Elegir otro archivo</button>`}`}</div>`;
   $('#icx').onclick = () => { IMPC = null; vSubirCierres(); };
   const go = $('#icgo'); if (go) go.onclick = () => { if (!confirmar(go, `¿Subir ${nuevos.length}?`)) return; busy(go, async () => {
