@@ -34,6 +34,8 @@ header{background:var(--brand);color:#fff;padding:14px 16px 0;position:sticky;to
 @media(max-width:760px){body.adm .brand small{display:none}}
 .tasa{margin-left:auto;text-align:right;font-size:12px;opacity:.95}
 .tasa b{font-size:15px;display:block}
+.hsalir{flex:none;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;font-size:15px;line-height:1.1}
+.hsalir span{font-size:10.5px;font-weight:600;opacity:.9}
 nav{display:flex;gap:2px;overflow-x:auto;max-width:1100px;margin:10px auto 0;scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
 nav button{background:none;border:0;color:#cfdcec;padding:10px 12px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer;font-weight:500}
@@ -254,9 +256,9 @@ function render() {
   const np = USER.rol === 'admin' ? pendientesAdmin() : 0;
   $('#app').innerHTML = `<header><div class="hrow">
       <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small><span class="tabname">${esc((TABS().find(x => x[0] === TAB) || [])[1] || '')}</span></div>
-      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div>
+      <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div><button class="hsalir" data-salir title="Cerrar sesión">⏻<span>Salir</span></button>
     </div><nav>${TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}${k === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')}
-      ${USER.rol !== 'admin' ? '<button data-salir>Salir</button>' : ''}</nav></header><main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
+</nav></header><main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
   document.body.classList.toggle('adm', USER.rol === 'admin');
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { if (TAB !== b.dataset.tab) FILTRO = {}; TAB = b.dataset.tab; render(); });
   const mas = $('#mas'); if (mas) { const sh = $('#sheet'); mas.onclick = () => sh.classList.add('on'); sh.onclick = e => { if (e.target === sh) sh.classList.remove('on'); }; }
@@ -273,7 +275,7 @@ function barraMovil(np) {
     <button id="mas" class="${BARRA.includes(TAB) ? '' : 'on'}"><span class="i">${BARRA.includes(TAB) ? '☰' : ICONOS[TAB]}</span>${BARRA.includes(TAB) ? 'Más' : esc(TABS_ADMIN.find(x => x[0] === TAB)[1].replace(' del día', ''))}</button></div>
     <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}"><span class="i">${ICONOS[k]}</span>${l}</button>`).join('')}</div></div></div>`;
 }
-function salir() { document.body.classList.remove('adm'); PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
+function salir() { document.body.classList.remove('adm'); CONSULTA = { desde: '', hasta: '', r: null }; IMPORT = null; PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
 
 /* ===== Cálculos compartidos ===== */
 function mismoCliente(nombre, q) { const n = String(nombre || '').toLowerCase().trim(); return n.includes(q) || (n.length >= 4 && q.includes(n)); }
@@ -696,12 +698,177 @@ function vVentas() {
       ${v.Estado !== 'Anulada' ? `<div class="row" style="margin-top:8px"><button class="btn sm sec" data-cob="${esc(v.Cliente)}|${v.ID}" style="flex:none">Cobrar</button><button class="btn sm bad" data-anular="${v.ID}" style="flex:none">Anular</button></div>` : ''}</td></tr>`).join('')}
     </table></div>${list.length === 150 ? '<p class="small muted">Mostrando las 150 más recientes. Usa el buscador.</p>' : ''}
     <div class="banner ok" style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span class="small">La app muestra los últimos 12 meses y todo lo pendiente.${q ? ' Para ver ventas más viejas de este cliente:' : ' Escribe un cliente para buscar en años anteriores.'}</span>${q ? '<button class="btn sm" id="fh" style="flex:none">Buscar en todo el historial</button>' : ''}</div></div>`;
+  $('#main').insertAdjacentHTML('afterbegin', '<div class="card" id="imp"></div>');
+  pintarImport();
   const fh = $('#fh'); if (fh) fh.onclick = e => busy(e.target, async () => { const r = await call('historial', { cliente: FILTRO.q }); FILTRO.exacto = true; mergeS(r); toast(r.ventas.length + ' venta(s) en el historial'); vVentas(); });
   $('#fq').oninput = e => { FILTRO.q = e.target.value; FILTRO.exacto = false; clearTimeout(window._fq); window._fq = setTimeout(() => { vVentas(); const i = $('#fq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 350); };
   $('#fe').onchange = e => { FILTRO.estado = e.target.value; vVentas(); };
   document.querySelectorAll('[data-v]').forEach(tr => tr.onclick = () => $('#vd-' + tr.dataset.v).classList.toggle('hide'));
   document.querySelectorAll('[data-cob]').forEach(b => b.onclick = () => { const [c, id] = b.dataset.cob.split('|'); COBRO = nuevoCobro(c); COBRO.ventaId = id; TAB = 'cobrar'; render(); });
   document.querySelectorAll('[data-anular]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Anular?')) busy(b, async () => { await call('anularVenta', { id: b.dataset.anular }); toast('Venta anulada'); await recargar(); }); });
+}
+
+/* ===== SUBIR VENTAS ANTERIORES (Excel) ===== */
+let IMPORT = null, IMPORT_ABIERTO = false;
+const LOTE = 300;
+function cargarXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((ok, fail) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = () => fail(new Error('No se pudo cargar el lector de Excel. Revisa la conexión e intenta otra vez.')); document.head.appendChild(sc); });
+}
+const normTxt = t => String(t == null ? '' : t).trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ');
+const pad2 = n => String(n).padStart(2, '0');
+/** Fecha de Excel (fecha, número de serie o texto dd/mm/aaaa) → aaaa-mm-dd. */
+function fechaISO(v) {
+  if (v instanceof Date && !isNaN(v)) { const d = new Date(v.getTime() + 12 * 3600e3); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  if (typeof v === 'number' && v > 20000 && v < 80000 && window.XLSX) { const p = XLSX.SSF.parse_date_code(v); return p.y + '-' + pad2(p.m) + '-' + pad2(p.d); }
+  const t = String(v || '').trim(); let m;
+  if ((m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return m[1] + '-' + pad2(m[2]) + '-' + pad2(m[3]);
+  if ((m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/))) return (m[3].length === 2 ? '20' + m[3] : m[3]) + '-' + pad2(m[2]) + '-' + pad2(m[1]);
+  return '';
+}
+const numX = v => typeof v === 'number' ? v : num(String(v || '').replace(/[$\s]/g, ''));
+function buscarProd(t) { const n = normTxt(t); return S.productos.find(p => normTxt(p.Codigo) === n || normTxt(p.Nombre) === n) || S.productos.find(p => n.length >= 4 && normTxt(p.Nombre).startsWith(n)); }
+
+/** Lee el Excel: formato viejo (VENTAS: NOMBRES, FECHA, KG RIC…) o la plantilla (una fila por producto). */
+function leerVentasExcel(buf) {
+  const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+  for (const nom of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
+    for (let hi = 0; hi < Math.min(rows.length, 10); hi++) {
+      const H = rows[hi].map(normTxt), ix = n => H.indexOf(n);
+      if (ix('NOMBRES') >= 0 && ix('FECHA') >= 0 && H.some(h => /^KG ?[A-Z]+$/.test(h))) return leerAncho(rows, hi, H, ix);
+      if (ix('FECHA') >= 0 && ix('CLIENTE') >= 0 && ix('PRODUCTO') >= 0 && ix('KG') >= 0) return leerPlantilla(rows, hi, H, ix);
+    }
+  }
+  throw new Error('No reconocí el archivo. Usa el Excel de ventas de siempre (columnas FECHA, NOMBRES, KG RIC…) o la plantilla.');
+}
+function leerAncho(rows, hi, H, ix) {
+  const ALIAS = { PAU: 'PAS' }; // en el Excel la columna de Pasteurizado dice "KG PAU"
+  const cols = H.map((h, i) => { const m = h.match(/^KG ?([A-Z]+)$/); return m ? { cod: ALIAS[m[1]] || m[1], i } : null; }).filter(Boolean);
+  const avisos = [], ventas = [], codigos = new Set(S.productos.map(p => p.Codigo)), raros = new Set();
+  cols.forEach(c => { if (!codigos.has(c.cod)) raros.add(c.cod); });
+  rows.slice(hi + 1).forEach((r, k) => {
+    const fila = hi + k + 2, cliente = String(r[ix('NOMBRES')] || '').trim(), fecha = fechaISO(r[ix('FECHA')]);
+    if (!cliente && !fecha) return;
+    if (!cliente) return avisos.push(`Fila ${fila}: sin cliente, se salta`);
+    if (!fecha) return avisos.push(`Fila ${fila} (${cliente}): sin fecha, se salta`);
+    const lineas = cols.map(c => ({ codigo: c.cod, kg: numX(r[c.i]), costo: numX(r[c.i + 1]), precio: numX(r[c.i + 2]) })).filter(l => l.kg > 0);
+    if (!lineas.length) return avisos.push(`Fila ${fila} (${cliente} ${fdate(fecha)}): sin kilos, se salta`);
+    const total = r2(lineas.reduce((a, l) => a + l.kg * l.precio, 0));
+    const notaTxt = String(ix('DIRECCION') >= 0 ? r[ix('DIRECCION')] : '').trim();
+    const pagoTotal = ix('PAGO') >= 0 && String(r[ix('PAGO')]).trim() === '1';
+    const abonos = ix('ABONOS') >= 0 ? numX(r[ix('ABONOS')]) : 0;
+    ventas.push({ fila, fecha, cliente, nota: /^\d+(\.0+)?$/.test(notaTxt) ? Number(notaTxt) : '', lineas, total, abonado: pagoTotal ? total : Math.min(abonos, total) });
+  });
+  if (raros.size) avisos.unshift('Productos que no están en la app (se guardan con su código): ' + [...raros].join(', '));
+  return { formato: 'Excel de ventas (formato de siempre)', ventas, avisos };
+}
+function leerPlantilla(rows, hi, H, ix) {
+  const avisos = [], grupos = new Map(); let sinCosto = 0, sinPrecio = 0;
+  const col = n => ix(n) >= 0 ? ix(n) : -1, v = (r, n) => col(n) >= 0 ? r[col(n)] : '';
+  rows.slice(hi + 1).forEach((r, k) => {
+    const fila = hi + k + 2, cliente = String(v(r, 'CLIENTE')).trim(), fecha = fechaISO(v(r, 'FECHA')), prodTxt = String(v(r, 'PRODUCTO')).trim(), kg = numX(v(r, 'KG'));
+    if (!cliente && !fecha && !prodTxt) return;
+    if (!cliente || !fecha) return avisos.push(`Fila ${fila}: falta ${!cliente ? 'el cliente' : 'la fecha'}, se salta`);
+    const p = buscarProd(prodTxt);
+    if (!p) return avisos.push(`Fila ${fila}: no conozco el producto "${prodTxt}", se salta`);
+    if (!(kg > 0)) return avisos.push(`Fila ${fila}: sin kilos, se salta`);
+    let precio = numX(v(r, 'PRECIO')), costo = numX(v(r, 'COSTO'));
+    if (!precio) { precio = Number(p.Precio) || 0; sinPrecio++; }
+    if (!costo) { costo = Number(p.Costo) || 0; sinCosto++; }
+    const notaTxt = String(v(r, 'NOTA')).trim(), nota = /^\d+(\.0+)?$/.test(notaTxt) ? Number(notaTxt) : '';
+    const key = fecha + '|' + normTxt(cliente) + '|' + nota; // mismas fecha, cliente y nota = una sola venta
+    if (!grupos.has(key)) grupos.set(key, { fila, fecha, cliente, nota, lineas: [], pagado: '' });
+    const g = grupos.get(key); g.lineas.push({ codigo: p.Codigo, kg, costo, precio });
+    const pg = String(v(r, 'PAGADO')).trim(); if (pg) g.pagado = pg;
+  });
+  if (sinPrecio) avisos.unshift(`${sinPrecio} línea(s) sin precio: se usó el precio de lista actual`);
+  if (sinCosto) avisos.unshift(`${sinCosto} línea(s) sin costo: se usó el costo actual`);
+  const ventas = [...grupos.values()].map(g => { const total = r2(g.lineas.reduce((a, l) => a + l.kg * l.precio, 0)); const pg = normTxt(g.pagado);
+    const abonado = /^(SI|S|X|PAGADA|PAGADO)$/.test(pg) || pg === '1' ? total : (numX(g.pagado) > 1 ? Math.min(numX(g.pagado), total) : 0); return Object.assign(g, { total, abonado }); });
+  return { formato: 'Plantilla (una fila por producto)', ventas, avisos };
+}
+function descargarPlantilla() {
+  return cargarXLSX().then(() => {
+    const ej = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO').slice(0, 2);
+    const ws = XLSX.utils.aoa_to_sheet([['Fecha', 'Nota', 'Cliente', 'Producto', 'Kg', 'Precio', 'Costo', 'Pagado'],
+      ['15/03/2022', 120, 'CLIENTE EJEMPLO', ej[0] ? ej[0].Nombre : 'Mozarella', 10, 9.5, 8, 'SI'], ['15/03/2022', 120, 'CLIENTE EJEMPLO', ej[1] ? ej[1].Nombre : 'Mano', 5, 8, 6.5, 'SI']]);
+    ws['!cols'] = [12, 8, 28, 16, 8, 8, 8, 10].map(w => ({ wch: w }));
+    const pr = XLSX.utils.aoa_to_sheet([['Productos que reconoce la app'], ...S.productos.map(p => [p.Nombre])]);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Ventas'); XLSX.utils.book_append_sheet(wb, pr, 'Productos');
+    XLSX.writeFile(wb, 'Plantilla_ventas_anteriores.xlsx');
+  });
+}
+function pintarImport() {
+  const box = $('#imp'); if (!box) return;
+  const I = IMPORT;
+  if (!I && !IMPORT_ABIERTO) {
+    box.innerHTML = `<button class="btn sec full" id="impa">⬆ Subir ventas de meses o años anteriores (Excel)</button>`; box.style.padding = '10px';
+    $('#impa').onclick = () => { IMPORT_ABIERTO = true; pintarImport(); }; return;
+  }
+  box.style.padding = '';
+  if (!I) {
+    box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:start"><h2>⬆ Subir ventas de meses o años anteriores</h2><button class="x" id="impc" title="Cerrar">×</button></div>
+      <p class="small muted" style="margin-top:-6px">Sirve el Excel de ventas de siempre (FECHA, NOMBRES, KG RIC…) o la plantilla (una fila por producto). Las ventas que ya estén en la app se saltan solas, así que puedes subir el archivo completo sin miedo a duplicar. No mueve el inventario.</p>
+      <div class="row"><label class="btn acc" style="flex:none;margin:0;color:var(--accent-ink);font-size:15px">Elegir archivo Excel<input type="file" id="impf" accept=".xlsx,.xls,.csv" class="hide"></label>
+        <button class="btn sec" id="impt" style="flex:none">Descargar plantilla</button></div>`;
+    $('#impt').onclick = e => busy(e.target, descargarPlantilla);
+    $('#impc').onclick = () => { IMPORT_ABIERTO = false; pintarImport(); };
+    $('#impf').onchange = e => { const f = e.target.files[0]; if (!f) return; box.innerHTML = '<p><span class="spin"></span> Leyendo ' + esc(f.name) + '…</p>';
+      cargarXLSX().then(() => f.arrayBuffer()).then(buf => { IMPORT = Object.assign(leerVentasExcel(buf), { archivo: f.name, todasPagadas: true }); return revisarImport(); })
+        .catch(err => { IMPORT = null; pintarImport(); toast(err.message, true); }); };
+    return;
+  }
+  const vs = I.ventas, nuevas = vs.filter((v, i) => !I.repetidas.has(i)), fechas = vs.map(v => v.fecha).sort();
+  const deuda = nuevas.reduce((a, v) => a + Math.max(0, v.total - v.abonado), 0), conDeuda = nuevas.filter(v => v.total - v.abonado > 0.01).length;
+  const pocos = (arr, n) => arr.slice(0, n).map(esc).join(' · ') + (arr.length > n ? ` · y ${arr.length - n} más` : '');
+  box.innerHTML = `<h2>⬆ ${esc(I.archivo)}</h2><p class="small muted" style="margin-top:-6px">${esc(I.formato)}</p>
+    ${I.resultado ? `<div class="banner ok">✅ Listo: se subieron <b>${I.resultado.creadas}</b> venta(s) por ${usd(I.resultado.total)}. ${I.resultado.repetidas} ya estaban y se saltaron.${I.resultado.clientes ? ' ' + I.resultado.clientes + ' cliente(s) nuevo(s).' : ''}</div>
+      <button class="btn sec" id="impx">Subir otro archivo</button>` : `
+    <div class="grid g3" style="margin-bottom:12px">
+      <div class="kpi"><small>Ventas en el archivo</small><b>${vs.length}</b><div class="small muted">${fechas.length ? fdate(fechas[0]) + ' a ' + fdate(fechas[fechas.length - 1]) : ''}</div></div>
+      <div class="kpi ok"><small>Nuevas por subir</small><b>${nuevas.length}</b><div class="small muted">${usd(nuevas.reduce((a, v) => a + v.total, 0))}</div></div>
+      <div class="kpi"><small>Ya estaban en la app</small><b>${I.repetidas.size}</b><div class="small muted">se saltan</div></div></div>
+    ${I.clientesNuevos.length ? `<p class="small"><b>${I.clientesNuevos.length} cliente(s) nuevo(s)</b> se van a crear: ${pocos(I.clientesNuevos, 12)}</p><p class="small muted" style="margin-top:-6px">Si alguno es el mismo cliente escrito distinto, corrige el nombre en el Excel y vuelve a elegir el archivo.</p>` : ''}
+    ${I.avisos.length || I.errores.length ? `<details class="banner warn"><summary>⚠️ ${I.avisos.length + I.errores.length} aviso(s) — toca para ver</summary><div class="small" style="margin-top:6px">${I.avisos.concat(I.errores).slice(0, 40).map(esc).join('<br>')}${I.avisos.length + I.errores.length > 40 ? '<br>…' : ''}</div></details>` : ''}
+    ${nuevas.length ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);margin:10px 0"><input type="checkbox" id="imppag" ${I.todasPagadas ? 'checked' : ''} style="width:auto;margin-top:3px">
+      <span>Son ventas viejas y <b>ya están cobradas</b> (no crear deudas)<br><span class="small muted">${I.todasPagadas ? 'Cada venta queda Pagada.' : conDeuda ? `Se usa lo que dice el Excel (PAGO / ABONOS / Pagado): <b style="color:var(--bad)">${conDeuda} venta(s) quedarían debiendo ${usd(deuda)}</b>.` : 'Según el Excel todas están pagadas.'}</span></span></label>
+      <div class="tbl"><table><tr><th>Fecha</th><th>Nota</th><th>Cliente</th><th class="r">Kg</th><th class="r">Total</th></tr>${nuevas.slice(0, 8).map(v => `<tr><td>${fdate(v.fecha)}</td><td>${esc(v.nota || '-')}</td><td>${esc(v.cliente)}</td><td class="r num">${n2(v.lineas.reduce((a, l) => a + l.kg, 0))}</td><td class="r num">${usd(v.total)}</td></tr>`).join('')}</table></div>
+      ${nuevas.length > 8 ? `<p class="small muted">…y ${nuevas.length - 8} más</p>` : ''}
+      <div class="row" style="margin-top:10px"><button class="btn sec" id="impx" style="flex:none">Cancelar</button><button class="btn acc" id="impgo">Subir ${nuevas.length} venta(s)</button></div>`
+      : `<div class="banner ok">Todo lo del archivo ya está en la app. No hay nada nuevo que subir.</div><button class="btn sec" id="impx">Elegir otro archivo</button>`}`}`;
+  const x = $('#impx'); if (x) x.onclick = () => { IMPORT = null; pintarImport(); };
+  const pg = $('#imppag'); if (pg) pg.onchange = () => { I.todasPagadas = pg.checked; pintarImport(); };
+  const go = $('#impgo'); if (go) go.onclick = () => subirImport(go);
+}
+const lotesDe = arr => { const out = []; for (let i = 0; i < arr.length; i += LOTE) out.push([i, arr.slice(i, i + LOTE)]); return out; };
+const paraEnviar = v => ({ fila: v.fila, fecha: v.fecha, cliente: v.cliente, nota: v.nota, lineas: v.lineas, abonado: v.abonado });
+/** Pregunta al servidor (sin guardar) cuáles ya existen y qué clientes serían nuevos. */
+async function revisarImport() {
+  const I = IMPORT; I.repetidas = new Set(); I.clientesNuevos = []; I.errores = [];
+  if (!I.ventas.length) throw new Error('No encontré ventas en el archivo' + (I.avisos.length ? ': ' + I.avisos[0] : ''));
+  const lotes = lotesDe(I.ventas);
+  for (const [k, [ini, lote]] of lotes.entries()) {
+    $('#imp').innerHTML = `<p><span class="spin"></span> Revisando ${esc(I.archivo)}… ${Math.round(k / lotes.length * 100)}%</p>`;
+    const r = await call('importarVentas', { probar: true, ventas: lote.map(paraEnviar) });
+    r.repetidas.forEach(i => I.repetidas.add(ini + i)); I.errores.push(...r.errores);
+    r.clientesNuevos.forEach(c => { if (!I.clientesNuevos.some(x => normTxt(x) === normTxt(c))) I.clientesNuevos.push(c); });
+  }
+  pintarImport();
+}
+async function subirImport(btn) {
+  const I = IMPORT, nuevas = I.ventas.filter((v, i) => !I.repetidas.has(i)), lotes = lotesDe(nuevas);
+  if (!confirmar(btn, `¿Subir ${nuevas.length}?`)) return;
+  const tot = { creadas: 0, total: 0, repetidas: I.repetidas.size, clientes: 0 };
+  btn.disabled = true;
+  try {
+    for (const [k, [, lote]] of lotes.entries()) {
+      btn.innerHTML = `<span class="spin"></span> Subiendo… ${Math.round(k / lotes.length * 100)}%`;
+      const r = await call('importarVentas', { ventas: lote.map(paraEnviar), todasPagadas: I.todasPagadas, archivo: I.archivo });
+      tot.creadas += r.creadas; tot.total += r.total; tot.repetidas += r.repetidas.length; tot.clientes += r.clientesNuevos.length;
+    }
+  } catch (e) { toast(e.message + (tot.creadas ? ` (ya se subieron ${tot.creadas}; vuelve a elegir el archivo y se saltarán)` : ''), true); }
+  I.resultado = tot; await cargarDatos(); vVentas(); toast(tot.creadas + ' venta(s) subidas');
 }
 
 /* ===== REPORTES ===== */
@@ -1122,8 +1289,9 @@ function vCuentas() {
   const d = deudaCliente(), h = hoy();
   const det = {}; S.detalle.forEach(x => (det[x.VentaID] = det[x.VentaID] || []).push(x));
   const cob = {}; S.cobros.forEach(x => (cob[x.VentaID] = cob[x.VentaID] || []).push(x));
-  const vs = S.ventas.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
-  const pedAt = S.pedidos.filter(p => p.Estado !== 'Pendiente');
+  const vs = S.ventas.slice().sort((a, b) => (a.Fecha + a.ID) < (b.Fecha + b.ID) ? 1 : -1);
+  const pedAt = S.pedidos.filter(p => p.Estado !== 'Pendiente').slice(0, 5);
+  if (!CONSULTA.hasta) { CONSULTA.hasta = h.slice(0, 7); CONSULTA.desde = addDays(h.slice(0, 7) + '-01', -80).slice(0, 7); }
   $('#main').innerHTML = `<div style="max-width:720px;margin:0 auto">
     <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b></div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
     ${d.notas.length ? `<div class="card"><h2>Notas pendientes</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
@@ -1134,15 +1302,28 @@ function vCuentas() {
         <div class="small muted">Pediste: ${S.pedidoLineas.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div>
         ${desp.length ? `<div class="small">Despachado: ${desp.map(x => esc(x.Producto) + ' <b>' + n2(x.Kg) + ' kg</b>').join(' · ')}${p.TotalVenta ? ' · <b class="num">' + usd(p.TotalVenta) + '</b>' : ''}</div>` : ''}
         ${p.Motivo ? `<div class="small">${esc(p.Motivo)}</div>` : ''}</div><span class="pill ${p.Estado === 'Confirmado' ? 'p-ok' : 'p-bad'}">${p.Estado === 'Confirmado' ? 'Despachado' : esc(p.Estado)}</span></div>`; }).join('')}</div>` : ''}
-    <div class="card"><h2>Mis compras</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th class="r">Total</th><th>Estado</th></tr>
-      ${vs.map(v => `<tr style="cursor:pointer" data-cv="${v.ID}"><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td class="r num">${usd(v.Total)}</td><td><span class="pill ${v.Estado === 'Pagada' ? 'p-ok' : 'p-warn'}">${esc(v.Estado)}</span></td></tr>
-        <tr class="hide" id="cvd-${v.ID}"><td colspan="4"><table>${(det[v.ID] || []).map(x => `<tr><td class="small">${esc(x.Producto)}</td><td class="r num small">${n2(x.Kg)} kg × ${n2(x.Precio)}</td><td class="r num small">${usd(x.Subtotal)}</td></tr>`).join('')}</table>
-        ${(cob[v.ID] || []).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} · ${usd(c.MontoUSD)}</div>`).join('')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sin compras en el último año</td></tr>'}
-    </table></div>${S.historialCompleto ? '' : '<button class="btn sec full" style="margin-top:10px" id="vtodo">Ver todas mis compras (años anteriores)</button>'}</div></div>`;
+    <div class="card"><h2>Mis últimas compras</h2>${tablaCompras(vs.slice(0, 6), det, cob, 'Todavía no tienes compras')}
+      ${S.totalCompras > 6 ? `<p class="small muted" style="margin:8px 0 0">Te mostramos las 6 más recientes de ${S.totalCompras}. Para ver otras, consúltalas por mes aquí abajo.</p>` : ''}</div>
+    ${S.totalCompras > 6 ? `<div class="card"><h2>Consultar compras anteriores</h2>
+      <div class="row"><div><label>Desde</label><input type="month" id="cqd" value="${esc(CONSULTA.desde)}" min="${esc((S.primeraCompra || '').slice(0, 7))}" max="${h.slice(0, 7)}"></div>
+        <div><label>Hasta</label><input type="month" id="cqh" value="${esc(CONSULTA.hasta)}" min="${esc((S.primeraCompra || '').slice(0, 7))}" max="${h.slice(0, 7)}"></div>
+        <button class="btn" id="cqb" style="flex:none">Consultar</button></div>
+      <p class="small muted" style="margin:6px 0 0">Hasta 12 meses por consulta.${S.primeraCompra ? ' Tu primera compra fue el ' + fdate(S.primeraCompra) + '.' : ''}</p>
+      ${CONSULTA.r ? `<h3>${CONSULTA.r.ventas.length} compra(s) · ${mesNombre(CONSULTA.r.desde)} a ${mesNombre(CONSULTA.r.hasta)} · ${usd(CONSULTA.r.ventas.reduce((a, v) => a + Number(v.Total), 0))}</h3>${tablaCompras(CONSULTA.r.ventas, agrupar(CONSULTA.r.detalle), agrupar(CONSULTA.r.cobros), 'No compraste en esos meses', 'q')}` : ''}
+    </div>` : ''}</div>`;
   document.querySelectorAll('[data-cv]').forEach(tr => tr.onclick = () => $('#cvd-' + tr.dataset.cv).classList.toggle('hide'));
   const ip = $('#irpag'); if (ip) ip.onclick = () => { TAB = 'pagar'; render(); };
-  const vt = $('#vtodo'); if (vt) vt.onclick = e => busy(e.target, async () => { const r = await call('cliHistorial'); const have = new Set(S.ventas.map(v => v.ID)); r.ventas.forEach(v => { if (!have.has(v.ID)) S.ventas.push(v); });
-    const hd = new Set(S.detalle.map(x => x.VentaID)); r.detalle.forEach(x => { if (!hd.has(x.VentaID)) S.detalle.push(x); }); S.historialCompleto = true; vCuentas(); });
+  const cq = $('#cqb'); if (cq) cq.onclick = e => busy(e.target, async () => { CONSULTA.desde = $('#cqd').value; CONSULTA.hasta = $('#cqh').value; if (!CONSULTA.desde || !CONSULTA.hasta) throw new Error('Elige los dos meses');
+    CONSULTA.r = await call('cliHistorial', { desde: CONSULTA.desde, hasta: CONSULTA.hasta }); vCuentas(); const h3 = document.querySelector('#main h3:last-of-type'); if (h3) h3.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+}
+const agrupar = rows => { const o = {}; (rows || []).forEach(x => (o[x.VentaID] = o[x.VentaID] || []).push(x)); return o; };
+let CONSULTA = { desde: '', hasta: '', r: null };
+function tablaCompras(vs, det, cob, vacio, pre = '') {
+  return `<div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th class="r">Total</th><th>Estado</th></tr>
+      ${vs.map(v => `<tr style="cursor:pointer" data-cv="${pre}${v.ID}"><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td class="r num">${usd(v.Total)}</td><td><span class="pill ${v.Estado === 'Pagada' ? 'p-ok' : 'p-warn'}">${esc(v.Estado)}</span></td></tr>
+        <tr class="hide" id="cvd-${pre}${v.ID}"><td colspan="4"><table>${(det[v.ID] || []).map(x => `<tr><td class="small">${esc(x.Producto)}</td><td class="r num small">${n2(x.Kg)} kg × ${n2(x.Precio)}</td><td class="r num small">${usd(x.Subtotal)}</td></tr>`).join('')}</table>
+        ${(cob[v.ID] || []).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} · ${usd(c.MontoUSD)}</div>`).join('')}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">${vacio}</td></tr>`}
+    </table></div>`;
 }
 let PAGO_CLI = null;
 function vPagar() {
