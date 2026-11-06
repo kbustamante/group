@@ -128,7 +128,11 @@ html,body{max-width:100%;overflow-x:hidden}
 .sheet.on{display:flex}
 .sheet .box{background:var(--card);width:100%;border-radius:20px 20px 0 0;padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -6px 30px rgba(0,0,0,.15)}
 .sheet .grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 12px}
-.sheet .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sheet .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.subnav{max-width:1100px;margin:0 auto;padding:12px 16px 0}
+.subnav .chips{gap:6px}
+.subnav .chip{white-space:nowrap;padding:7px 12px;font-size:13.5px}
+@media(max-width:560px){.subnav{padding:10px 12px 0}}
 .sheet .tiles button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;line-height:1.2;text-align:center}
 .sheet .tiles button .i{font-size:24px}
 .sheet .tiles button.on{border-color:var(--accent);background:#fff8e5}
@@ -156,7 +160,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyHC210YsoibDdg8DDwp3M7Arrj__hrBQbaqnmfK_ZRyml7Ba6z5N56ERr0WjA6oSUHTw/exec';
-const PANTALLA = 'V8b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V9'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -242,9 +246,22 @@ function renderLogin(err) {
   (USR ? $('#pin') : $('#usr')).focus();
 }
 
-const ICONOS = { inicio: '🏠', vender: '🧾', cobrar: '💵', pedidos: '🛒', cierre: '🏪', deudas: '📋', local: '📊', inventario: '📦', ventas: '🗂️', reportes: '📈', productos: '🧀', ajustes: '⚙️' };
-const BARRA = ['inicio', 'vender', 'cobrar', 'pedidos']; // el resto va en "Más"
-const TABS_ADMIN = [['inicio', 'Inicio'], ['vender', 'Nueva venta'], ['cobrar', 'Cobrar'], ['pedidos', 'Pedidos'], ['cierre', 'Cierre del día'], ['deudas', 'Deudas'], ['local', 'Local'], ['inventario', 'Inventario'], ['ventas', 'Historial'], ['reportes', 'Reportes'], ['productos', 'Productos'], ['ajustes', 'Ajustes']];
+/* Menú del administrador: 9 módulos; cada uno con sus sub-pestañas (TAB = la sub-pestaña que se ve). */
+const GRUPOS = [
+  ['inicio', 'Inicio', '🏠', [['inicio', '']]],
+  ['mayor', 'Ventas al mayor', '🧾', [['vender', 'Nueva venta'], ['ventas', 'Historial'], ['subirv', 'Subir Excel']], 'Ventas'],
+  ['cobros', 'Cobros', '💵', [['cobrar', 'Registrar cobro'], ['deudas', 'Quién me debe']]],
+  ['pedidos', 'Pedidos', '🛒', [['pedidos', '']]],
+  ['local', 'Local', '🏪', [['cierre', 'Cierre del día'], ['local', 'Conciliación'], ['subirl', 'Subir Excel']]],
+  ['compras', 'Compras', '🚚', [['entrada', 'Entrada'], ['debo', 'Lo que debo'], ['proveedores', 'Proveedores']]],
+  ['inventario', 'Inventario', '📦', [['stock', 'Stock'], ['traslado', 'Traslado'], ['conteo', 'Conteo'], ['movs', 'Movimientos']]],
+  ['reportes', 'Reportes', '📈', [['r_mes', 'Del mes'], ['reportes', 'Ventas'], ['productos', 'Productos'], ['r_cobranza', 'Cobranza'], ['r_prov', 'Proveedores'], ['r_local', 'Local'], ['r_inv', 'Inventario']]],
+  ['ajustes', 'Ajustes', '⚙️', [['ajustes', '']]],
+];
+const BARRA = ['inicio', 'mayor', 'cobros', 'pedidos']; // en el celular; el resto va en "Más"
+const ULTIMA = {}; // última sub-pestaña usada de cada módulo
+const grupoDe = tab => GRUPOS.find(g => g[3].some(v => v[0] === tab)) || GRUPOS[0];
+const TABS_ADMIN = GRUPOS.flatMap(g => g[3].map(([k, l]) => [k, l ? g[1] + ' · ' + l : g[1]]));
 const TABS_LOCAL = [['cierre', 'Cierre del día'], ['mercancia', 'Mercancía']];
 const TABS_CLIENTE = [['pedir', 'Hacer pedido'], ['cuentas', 'Mis cuentas'], ['pagar', 'Reportar pago']];
 function TABS() { return USER.rol === 'admin' ? TABS_ADMIN : USER.rol === 'cliente' ? TABS_CLIENTE : TABS_LOCAL; }
@@ -256,27 +273,39 @@ function render() {
   const rolTxt = { admin: 'Administrador', empleado: 'Local', cliente: 'Cliente' }[USER.rol];
   const np = USER.rol === 'admin' ? pendientesAdmin() : 0;
   $('#app').innerHTML = `<header><div class="hrow">
-      <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small><span class="tabname">${esc((TABS().find(x => x[0] === TAB) || [])[1] || '')}</span></div>
+      <div class="logo">🧀</div><div class="brand"><b>${esc(USER.negocio || 'Lácteos')}</b><small>${esc(USER.nombre)} · ${rolTxt}</small><span class="tabname">${esc(USER.rol === 'admin' ? grupoDe(TAB)[1] : '')}</span></div>
       <div class="tasa">Tasa BCV<b class="mono">${t.tasa ? n2(t.tasa) : '—'}</b>${t.fecha ? fdate(t.fecha) : 'sin tasa'}</div><button class="hsalir" data-salir title="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg><span>Salir</span></button>
-    </div><nav>${TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}${k === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')}
-</nav></header><main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
+    </div><nav>${USER.rol === 'admin' ? GRUPOS.map(g => `<button data-grupo="${g[0]}" class="${grupoDe(TAB) === g ? 'on' : ''}">${g[1]}${g[0] === 'pedidos' && np ? ` <span class="badge">${np}</span>` : ''}</button>`).join('')
+      : TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}</button>`).join('')}
+</nav></header>${USER.rol === 'admin' ? subnav() : ''}<main id="main"></main>${USER.rol === 'admin' ? barraMovil(np) : ''}`;
   document.body.classList.toggle('adm', USER.rol === 'admin');
-  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { if (TAB !== b.dataset.tab) FILTRO = {}; TAB = b.dataset.tab; render(); });
+  const ir = tab => { if (grupoDe(tab) !== grupoDe(TAB)) FILTRO = {}; TAB = tab; ULTIMA[grupoDe(tab)[0]] = tab; render(); };
+  document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => ir(b.dataset.tab));
+  document.querySelectorAll('[data-grupo]').forEach(b => b.onclick = () => { const g = GRUPOS.find(x => x[0] === b.dataset.grupo); ir(ULTIMA[g[0]] || g[3][0][0]); });
+  ULTIMA[grupoDe(TAB)[0]] = TAB;
   const mas = $('#mas'); if (mas) { const sh = $('#sheet'); mas.onclick = () => sh.classList.add('on'); sh.onclick = e => { if (e.target === sh) sh.classList.remove('on'); }; }
   const s = document.querySelector('[data-salir]'); if (s) s.onclick = salir;
-  ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
-     pedidos: vPedidos, inventario: vInventario, mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
+  const inv = f => () => { $('#main').innerHTML = '<div id="inv"></div>'; f(); };
+  ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, subirv: vSubirVentas, subirl: vSubirCierres, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
+     pedidos: vPedidos, stock: inv(invStock), entrada: inv(invEntrada), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
+     r_mes: vResumenMes, r_cobranza: vCobranza, r_prov: vRepProveedores, r_local: vRepLocal, r_inv: vRepInventario,
+     mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
   window.scrollTo(0, 0);
 }
-/** Celular (admin): 4 accesos fijos abajo + "Más" con el resto en cuadritos. */
-function barraMovil(np) {
-  const b = k => `<span class="i">${ICONOS[k]}</span>${{ vender: 'Vender' }[k] || TABS_ADMIN.find(x => x[0] === k)[1]}`;
-  const resto = TABS_ADMIN.filter(([k]) => !BARRA.includes(k));
-  return `<div class="bnav">${BARRA.map(k => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${b(k)}${k === 'pedidos' && np ? `<span class="badge">${np}</span>` : ''}</button>`).join('')}
-    <button id="mas" class="${BARRA.includes(TAB) ? '' : 'on'}"><span class="i">${BARRA.includes(TAB) ? '☰' : ICONOS[TAB]}</span>${BARRA.includes(TAB) ? 'Más' : esc(TABS_ADMIN.find(x => x[0] === TAB)[1].replace(' del día', ''))}</button></div>
-    <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}"><span class="i">${ICONOS[k]}</span>${l}</button>`).join('')}</div></div></div>`;
+/** Sub-pestañas del módulo actual (debajo de la cabecera). */
+function subnav() {
+  const g = grupoDe(TAB); if (g[3].length < 2) return '';
+  return `<div class="subnav"><div class="chips">${g[3].map(([k, l]) => `<button class="chip ${TAB === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div></div>`;
 }
-function salir() { document.body.classList.remove('adm'); CONSULTA = { desde: '', hasta: '', r: null }; IMPORT = null; PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
+/** Celular (admin): 4 módulos fijos abajo + "Más" con el resto en cuadritos. */
+function barraMovil(np) {
+  const g = grupoDe(TAB), enBarra = BARRA.includes(g[0]);
+  const resto = GRUPOS.filter(x => !BARRA.includes(x[0]));
+  return `<div class="bnav">${BARRA.map(k => { const x = GRUPOS.find(y => y[0] === k); return `<button data-grupo="${k}" class="${g === x ? 'on' : ''}"><span class="i">${x[2]}</span>${x[4] || x[1]}${k === 'pedidos' && np ? `<span class="badge">${np}</span>` : ''}</button>`; }).join('')}
+    <button id="mas" class="${enBarra ? '' : 'on'}"><span class="i">${enBarra ? '☰' : g[2]}</span>${enBarra ? 'Más' : esc(g[1])}</button></div>
+    <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(x => `<button data-grupo="${x[0]}" class="${g === x ? 'on' : ''}"><span class="i">${x[2]}</span>${x[1]}</button>`).join('')}</div></div></div>`;
+}
+function salir() { document.body.classList.remove('adm'); CONSULTA = { desde: '', hasta: '', r: null }; IMPORT = null; IMPC = null; PIN = ''; store('pin', null); USER = null; S = null; TAB = 'inicio'; renderLogin(); }
 
 /* ===== Cálculos compartidos ===== */
 function mismoCliente(nombre, q) { const n = String(nombre || '').toLowerCase().trim(); return n.includes(q) || (n.length >= 4 && q.includes(n)); }
@@ -334,14 +363,19 @@ function vInicio() {
   if (!cierreAyer) avisos.push('Falta el cierre del local de ayer.');
   const np = pendientesAdmin(); if (np) avisos.push(`Hay ${np} pedido(s)/pago(s) de clientes por confirmar en la pestaña Pedidos.`);
   const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
+  const dp = deudaProveedores(), venceProv = dp.lista.filter(e => e.Vence <= addDays(h, 3));
+  if (venceProv.length) avisos.push(`Proveedores: ${venceProv.length} factura(s) ${venceProv.some(e => e.Vence < h) ? 'vencida(s) o ' : ''}por vencer en 3 días (${usd(venceProv.reduce((s, e) => s + Number(e.Saldo), 0))}). Míralas en Compras → Lo que debo.`);
+  const localMes = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.Total_Local_USD), 0);
   if (bajos.length) avisos.push('Inventario bajo: ' + bajos.map(p => p.Nombre + ' (' + n2(p.Stock) + ' kg)').join(', '));
   $('#main').innerHTML = `
     ${avisos.map(a => `<div class="banner warn">⚠️ ${esc(a)}</div>`).join('')}
-    <div class="grid g4" style="margin-bottom:14px">
+    <div class="grid g3" style="margin-bottom:14px">
       <div class="kpi"><small>Ventas al mayor · ${mesNombre(mes)}</small><b>${usd(ventasMes)}</b></div>
-      <div class="kpi ok"><small>Utilidad del mes</small><b>${usd(utilMes)}</b></div>
-      <div class="kpi"><small>Por cobrar</small><b>${usd(porCobrar)}</b></div>
-      <div class="kpi ${vencido > 0 ? 'bad' : ''}"><small>Vencido</small><b>${usd(vencido)}</b></div>
+      <div class="kpi ok"><small>Utilidad al mayor</small><b>${usd(utilMes)}</b></div>
+      <div class="kpi"><small>Ventas del local · ${mesNombre(mes)}</small><b>${usd(localMes)}</b></div>
+      <div class="kpi" data-ir="deudas" style="cursor:pointer"><small>Me deben</small><b>${usd(porCobrar)}</b></div>
+      <div class="kpi ${vencido > 0 ? 'bad' : ''}" data-ir="r_cobranza" style="cursor:pointer"><small>Vencido</small><b>${usd(vencido)}</b></div>
+      <div class="kpi ${dp.vencido > 0.01 ? 'bad' : ''}" data-ir="debo" style="cursor:pointer"><small>Le debo a proveedores</small><b>${usd(dp.total)}</b></div>
     </div>
     <div class="grid g2 st">
       <div class="card"><h2>Local — últimos 7 días</h2><div class="tbl"><table>
@@ -355,6 +389,7 @@ function vInicio() {
       </div>
     </div>`;
   bindCobrar();
+  document.querySelectorAll('[data-ir]').forEach(k => k.onclick = () => { TAB = k.dataset.ir; render(); });
 }
 function bindCobrar() { document.querySelectorAll('[data-cobrar]').forEach(b => b.onclick = () => { COBRO = nuevoCobro(b.dataset.cobrar); TAB = 'cobrar'; render(); }); }
 
@@ -489,6 +524,7 @@ function vVender() {
         <div><label>Precio $/kg</label><input class="num big" inputmode="decimal" data-i="${i}" data-f="precio" value="${esc(l.precio)}"></div>
       </div>
       ${S.movimientos && S.movimientos.length && num(l.kg) > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) ? `<div class="small" style="color:var(--bad);margin-top:4px">⚠️ En inventario hay ${n2((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock)} kg</div>` : ''}
+      <div class="small" data-pw="${i}" style="color:var(--bad);margin-top:4px"></div>
       ${l.previo && num(l.previo) !== num(l.precio) ? `<div class="small muted" style="margin-top:4px">La vez pasada: ${n2(l.previo)} · <a href="#" data-prev="${i}">usar ese precio</a></div>` : ''}
     </div>`).join('') || '<div class="empty small" style="grid-column:1/-1">Toca los productos que lleva el cliente o usa "Repetir último pedido".</div>'}</div>
     ${V.lineas.length ? `<label style="display:flex;gap:6px;align-items:center;margin-top:10px"><input type="checkbox" id="vap" style="width:auto" ${V.actualizarPrecios ? 'checked' : ''}> Guardar estos precios como precios de lista</label>` : ''}
@@ -501,7 +537,8 @@ function vVender() {
   </div>`;
   const pintarTot = () => {
     let t = 0, c = 0, k = 0;
-    V.lineas.forEach((l, i) => { const kg = num(l.kg); t += kg * num(l.precio); c += kg * num(l.costo); k += kg; const el = document.querySelector(`[data-st="${i}"]`); if (el) el.textContent = kg ? usd(kg * num(l.precio)) : ''; });
+    V.lineas.forEach((l, i) => { const kg = num(l.kg); t += kg * num(l.precio); c += kg * num(l.costo); k += kg; const el = document.querySelector(`[data-st="${i}"]`); if (el) el.textContent = kg ? usd(kg * num(l.precio)) : '';
+      const w = document.querySelector(`[data-pw="${i}"]`); if (w) w.textContent = num(l.costo) > 0 && num(l.precio) > 0 && num(l.precio) < num(l.costo) ? `⚠️ Vas a vender por debajo del costo (${n2(l.costo)}/kg): pierdes ${usd((num(l.costo) - num(l.precio)) * (kg || 1))}${kg ? '' : ' por kg'}` : ''; });
     $('#vtot').innerHTML = !V.lineas.length ? '' : `<div class="tot"><span>Kilos</span><span class="num">${n2(k)} kg</span></div>
       <div class="tot"><span>Utilidad</span><span class="num" style="color:var(--ok)">${usd(t - c)} ${t ? `<small class="muted">(${Math.round((t - c) / t * 100)}%)</small>` : ''}</span></div>
       <div class="tot big"><span>Total</span><span class="num">${usd(t)}${tasa ? `<br><small class="muted">${bs(t * tasa)}</small>` : ''}</span></div>`;
@@ -540,6 +577,8 @@ function vVender() {
     if (!lineas.length) throw new Error('Escribe los kilos de al menos un producto');
     const sinStock = lineas.filter(l => l.kg > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) + 0.001);
     if (sinStock.length && S.movimientos && S.movimientos.length && !e.target.dataset.okst) { e.target.dataset.okst = 1; throw new Error('El inventario no alcanza para: ' + sinStock.map(l => nombreProd(l.codigo)).join(', ') + '. Si igual lo despachaste, toca Guardar otra vez.'); }
+    const bajo = lineas.filter(l => l.costo > 0 && l.precio < l.costo);
+    if (bajo.length && !e.target.dataset.okbc) { e.target.dataset.okbc = 1; throw new Error('⚠️ Precio por debajo del costo: ' + bajo.map(l => nombreProd(l.codigo) + ' (' + n2(l.precio) + ' < ' + n2(l.costo) + ')').join(', ') + '. Si es correcto, toca Guardar otra vez.'); }
     const r = await call('guardarVenta', { fecha: V.fecha, cliente: V.cliente, nota: V.nota ? num(V.nota) : null, lineas, notas: V.notas, actualizarPrecios: V.actualizarPrecios, pedidoId: V.pedidoId || '' });
     const c2 = S.clientes.find(c => c.Nombre === V.cliente) || { Nombre: V.cliente, DiasCredito: 7 };
     if ((V.direccion || '') !== (c2.Direccion || '')) await call('guardarCliente', Object.assign({}, c2, { original: V.cliente, Direccion: V.direccion || '' }));
@@ -630,14 +669,12 @@ function vDeudas() {
       <div class="kpi bad"><small>Vencido</small><b>${usd(ven)}</b></div>
       <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
     <div class="card"><h2>Por cliente</h2>
-    ${d.map(c => { const tel = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Telefono;
-      const msg = `Hola, le recordamos que tiene un saldo pendiente de ${usd(c.saldo)} (${c.notas.map(n => 'nota ' + (n.Nota || '-') + ': ' + usd(n.Saldo)).join(', ')}). ¡Gracias!`;
-      const wa = 'https://wa.me/' + String(tel || '').replace(/\D/g, '').replace(/^0/, '58') + '?text=' + encodeURIComponent(msg);
+    ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
       return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
-        <div class="row" style="margin:10px 0 14px"><button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button><button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button><a class="btn sm sec" style="flex:none;text-decoration:none;white-space:nowrap" target="_blank" href="${wa}">Recordar por WhatsApp</a></div>
+        <div class="row" style="margin:10px 0 14px"><button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button><button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>${botonWA(c, 'Cobrar por WhatsApp')}</div>
       </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
     </div>`;
   bindCobrar(); bindHist();
@@ -699,8 +736,7 @@ function vVentas() {
       ${v.Estado !== 'Anulada' ? `<div class="row" style="margin-top:8px"><button class="btn sm sec" data-cob="${esc(v.Cliente)}|${v.ID}" style="flex:none">Cobrar</button><button class="btn sm bad" data-anular="${v.ID}" style="flex:none">Anular</button></div>` : ''}</td></tr>`).join('')}
     </table></div>${list.length === 150 ? '<p class="small muted">Mostrando las 150 más recientes. Usa el buscador.</p>' : ''}
     <div class="banner ok" style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span class="small">La app muestra los últimos 12 meses y todo lo pendiente.${q ? ' Para ver ventas más viejas de este cliente:' : ' Escribe un cliente para buscar en años anteriores.'}</span>${q ? '<button class="btn sm" id="fh" style="flex:none">Buscar en todo el historial</button>' : ''}</div></div>`;
-  $('#main').insertAdjacentHTML('afterbegin', '<div class="card" id="imp"></div>');
-  pintarImport();
+
   const fh = $('#fh'); if (fh) fh.onclick = e => busy(e.target, async () => { const r = await call('historial', { cliente: FILTRO.q }); FILTRO.exacto = true; mergeS(r); toast(r.ventas.length + ' venta(s) en el historial'); vVentas(); });
   $('#fq').oninput = e => { FILTRO.q = e.target.value; FILTRO.exacto = false; clearTimeout(window._fq); window._fq = setTimeout(() => { vVentas(); const i = $('#fq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 350); };
   $('#fe').onchange = e => { FILTRO.estado = e.target.value; vVentas(); };
@@ -803,18 +839,17 @@ function descargarPlantilla() {
 function pintarImport() {
   const box = $('#imp'); if (!box) return;
   const I = IMPORT;
-  if (!I && !IMPORT_ABIERTO) {
+  if (!I && !IMPORT_ABIERTO && TAB !== 'subirv') {
     box.innerHTML = `<button class="btn sec full" id="impa">⬆ Subir ventas de meses o años anteriores (Excel)</button>`; box.style.padding = '10px';
     $('#impa').onclick = () => { IMPORT_ABIERTO = true; pintarImport(); }; return;
   }
   box.style.padding = '';
   if (!I) {
-    box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:start"><h2>⬆ Subir ventas de meses o años anteriores</h2><button class="x" id="impc" title="Cerrar">×</button></div>
+    box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:start"><h2>⬆ Subir ventas de meses o años anteriores</h2></div>
       <p class="small muted" style="margin-top:-6px">Sirve el Excel de ventas de siempre (FECHA, NOMBRES, KG RIC…) o la plantilla (una fila por producto). Las ventas que ya estén en la app se saltan solas, así que puedes subir el archivo completo sin miedo a duplicar. No mueve el inventario.</p>
       <div class="row"><label class="btn acc" style="flex:none;margin:0;color:var(--accent-ink);font-size:15px">Elegir archivo Excel<input type="file" id="impf" accept=".xlsx,.xls,.csv" class="hide"></label>
         <button class="btn sec" id="impt" style="flex:none">Descargar plantilla</button></div>`;
     $('#impt').onclick = e => busy(e.target, descargarPlantilla);
-    $('#impc').onclick = () => { IMPORT_ABIERTO = false; pintarImport(); };
     $('#impf').onchange = e => { const f = e.target.files[0]; if (!f) return; box.innerHTML = '<p><span class="spin"></span> Leyendo ' + esc(f.name) + '…</p>';
       cargarXLSX().then(() => f.arrayBuffer()).then(buf => { IMPORT = Object.assign(leerVentasExcel(buf), { archivo: f.name, todasPagadas: true }); return revisarImport(); })
         .catch(err => { IMPORT = null; pintarImport(); toast(err.message, true); }); };
@@ -869,7 +904,233 @@ async function subirImport(btn) {
       tot.creadas += r.creadas; tot.total += r.total; tot.repetidas += r.repetidas.length; tot.clientes += r.clientesNuevos.length;
     }
   } catch (e) { toast(e.message + (tot.creadas ? ` (ya se subieron ${tot.creadas}; vuelve a elegir el archivo y se saltarán)` : ''), true); }
-  I.resultado = tot; await cargarDatos(); vVentas(); toast(tot.creadas + ' venta(s) subidas');
+  I.resultado = tot; await cargarDatos(); render(); toast(tot.creadas + ' venta(s) subidas');
+}
+
+function vSubirVentas() { $('#main').innerHTML = '<div class="card" id="imp"></div>'; pintarImport(); }
+
+/* ===== V9: utilidades de reportes ===== */
+const kpi = (label, val, cls = '', extra = '') => `<div class="kpi ${cls}"><small>${label}</small><b>${val}</b>${extra}</div>`;
+function delta(a, b, mesPrev, alReves) {
+  if (!b) return `<div class="small muted">sin datos de ${mesNombre(mesPrev)}</div>`;
+  const p = Math.round((a - b) / Math.abs(b) * 100), bueno = alReves ? p <= 0 : p >= 0;
+  return `<div class="small" style="color:${p === 0 ? 'var(--muted)' : bueno ? 'var(--ok)' : 'var(--bad)'}">${p > 0 ? '▲' : p < 0 ? '▼' : '='} ${Math.abs(p)}% vs ${mesNombre(mesPrev)}</div>`;
+}
+function mesesLista() { return [...new Set((S.meses || []).concat(S.ventas.map(v => mesDe(v.Fecha)), S.cierres.map(c => mesDe(c.Fecha)), [mesDe(hoy())]))].filter(Boolean).sort().reverse(); }
+function mesAnterior(m) { const y = Number(m.slice(0, 4)), n = Number(m.slice(5, 7)); return n === 1 ? (y - 1) + '-12' : y + '-' + String(n - 1).padStart(2, '0'); }
+function selMes() {
+  const meses = mesesLista(), mes = FILTRO.mes && meses.includes(FILTRO.mes) ? FILTRO.mes : meses[0];
+  return { mes, html: `<div class="row" style="margin-bottom:12px"><div style="max-width:220px"><label>Mes</label><select id="rm">${meses.map(m => `<option value="${m}" ${m === mes ? 'selected' : ''}>${mesNombre(m)}</option>`).join('')}</select></div></div>` };
+}
+async function traerMes(m) {
+  S.mesesCargados = S.mesesCargados || {};
+  if (S.corte && m + '-31' < S.corte && !S.mesesCargados[m]) { toast('Trayendo ' + mesNombre(m) + ' del historial…'); mergeS(await call('historial', { mes: m })); S.mesesCargados[m] = 1; }
+}
+function bindMes(fn, ambos) { const el = $('#rm'); if (el) el.onchange = async e => { FILTRO.mes = e.target.value; el.disabled = true; try { await traerMes(FILTRO.mes); if (ambos) await traerMes(mesAnterior(FILTRO.mes)); } catch (err) { toast(err.message, true); } fn(); }; }
+const usdCierre = (c, campo) => { const v = Number(c[campo]) || 0, t = tasaCierre(c); return c.Moneda === 'Bs' ? (t ? v / t : 0) : v; };
+const diasEntre = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
+function waLink(tel, msg) { let n = String(tel || '').replace(/\D/g, ''); if (n.startsWith('0')) n = '58' + n.slice(1); else if (n.length === 10) n = '58' + n; return 'https://wa.me/' + n + '?text=' + encodeURIComponent(msg); }
+function msgCobro(c) {
+  const t = S.tasaHoy && S.tasaHoy.tasa, h = hoy();
+  return `Hola ${c.cliente} 👋, le saluda ${USER.negocio || 'Lácteos'}.\nLe recordamos su saldo pendiente de *${usd(c.saldo)}*${t ? ` (${bs(c.saldo * t)} a la tasa BCV de hoy, ${n2(t)})` : ''}:\n`
+    + c.notas.slice().sort((a, b) => a.Fecha < b.Fecha ? -1 : 1).map(n => `• Nota ${n.Nota || '-'} del ${fdate(n.Fecha)}: ${usd(n.Saldo)}${n.Vence < h ? ' (vencida)' : ' · vence ' + fdate(n.Vence)}`).join('\n')
+    + `\n¡Muchas gracias!`;
+}
+function botonWA(c, txt = 'WhatsApp') {
+  const cl = S.clientes.find(x => x.Nombre === c.cliente) || {};
+  return `<a class="btn sm ${cl.Telefono ? '' : 'sec'}" style="flex:none;text-decoration:none;white-space:nowrap;${cl.Telefono ? 'background:#1f9d55' : ''}" target="_blank" rel="noopener" href="${waLink(cl.Telefono, msgCobro(c))}" title="${cl.Telefono ? 'Abrir WhatsApp con ' + esc(cl.Telefono) : 'Sin teléfono: WhatsApp te pedirá el contacto. Agrégalo en Ajustes → Clientes'}">💬 ${txt}${cl.Telefono ? '' : ' (sin tel.)'}</a>`;
+}
+function deudaProveedores() {
+  const h = hoy(), en = S.entradas.filter(e => Number(e.Saldo) > 0.01);
+  return { lista: en.sort((a, b) => a.Vence < b.Vence ? -1 : 1), total: en.reduce((s, e) => s + Number(e.Saldo), 0),
+    vencido: en.filter(e => e.Vence < h).reduce((s, e) => s + Number(e.Saldo), 0), pronto: en.filter(e => e.Vence >= h && e.Vence <= addDays(h, 7)) };
+}
+
+/* ===== COMPRAS: lo que debo ===== */
+function vDebo() {
+  const d = deudaProveedores(), h = hoy();
+  const porProv = {}; d.lista.forEach(e => (porProv[e.Proveedor] = porProv[e.Proveedor] || []).push(e));
+  const provs = Object.keys(porProv).sort((a, b) => porProv[b].reduce((s, e) => s + Number(e.Saldo), 0) - porProv[a].reduce((s, e) => s + Number(e.Saldo), 0));
+  $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">${kpi('Le debo a proveedores', usd(d.total))}${kpi('Vencido', usd(d.vencido), d.vencido > 0.01 ? 'bad' : '')}${kpi('Vence en 7 días', usd(d.pronto.reduce((s, e) => s + Number(e.Saldo), 0)), '', `<div class="small muted">${d.pronto.length} factura(s)</div>`)}</div>
+    ${provs.map((p, i) => { const fs = porProv[p], tot = fs.reduce((s, e) => s + Number(e.Saldo), 0), tel = (S.proveedores.find(x => x.Nombre === p) || {}).Telefono;
+      return `<div class="card"><div class="cli" style="border:0;padding-top:0"><div><b>${esc(p)}</b>${tel ? `<div class="small muted">📞 ${esc(tel)}</div>` : ''}</div><b class="num" style="color:${fs.some(e => e.Vence < h) ? 'var(--bad)' : 'var(--ink)'}">${usd(tot)}</b></div>
+        <div class="tbl"><table><tr><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Debo</th></tr>
+        ${fs.map(e => `<tr><td>${fdate(e.Fecha)}</td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)} · vencida</span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b></td></tr>`).join('')}</table></div>
+        <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(tot)}"></div><div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
+        <p class="small muted" style="margin:6px 0 0">El pago se aplica primero a la factura más vieja.</p></div>`; }).join('') || '<div class="card empty">✅ No le debes nada a ningún proveedor</div>'}`;
+  document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = num($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
+    await call('pagarProveedor', { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value }); toast('Pago registrado a ' + provs[i]); await recargar(); }));
+}
+
+/* ===== REPORTES V9 ===== */
+function numerosMes(m) {
+  const vm = ventasActivas().filter(v => mesDe(v.Fecha) === m), ids = new Set(vm.map(v => v.ID));
+  const cm = S.cierres.filter(c => mesDe(c.Fecha) === m);
+  const merma = S.movimientos.filter(x => mesDe(x.Fecha) === m && /Conteo|Ajuste/.test(x.Tipo) && Number(x.Kg) < 0);
+  return {
+    mayor: vm.reduce((s, v) => s + Number(v.Total), 0), util: vm.reduce((s, v) => s + Number(v.Utilidad), 0), notas: vm.length,
+    kg: S.detalle.filter(d => ids.has(d.VentaID)).reduce((s, d) => s + Number(d.Kg), 0),
+    local: cm.reduce((s, c) => s + Number(c.Total_Local_USD), 0), dias: cm.length,
+    cobrado: S.cobros.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + Number(c.MontoUSD), 0),
+    compras: S.entradas.filter(e => mesDe(e.Fecha) === m).reduce((s, e) => s + Number(e.Total), 0),
+    pagadoProv: S.pagosProveedor.filter(p => mesDe(p.Fecha) === m).reduce((s, p) => s + Number(p.Monto), 0),
+    mermaKg: -merma.reduce((s, x) => s + Number(x.Kg), 0), mermaUsd: -merma.reduce((s, x) => s + Number(x.Kg) * (Number(x.Costo) || 0), 0),
+  };
+}
+function vResumenMes() {
+  const { mes, html } = selMes(), pm = mesAnterior(mes), a = numerosMes(mes), b = numerosMes(pm);
+  const entra = a.cobrado + a.local, sale = a.pagadoProv;
+  const ult = mesesLista().slice(0, 6).reverse();
+  $('#main').innerHTML = `${html}
+    <div class="grid g3" style="margin-bottom:14px">
+      ${kpi('Vendido en total (mayor + local)', usd(a.mayor + a.local), '', delta(a.mayor + a.local, b.mayor + b.local, pm))}
+      ${kpi('Ventas al mayor', usd(a.mayor), '', delta(a.mayor, b.mayor, pm))}
+      ${kpi('Ventas del local', usd(a.local), '', delta(a.local, b.local, pm))}
+      ${kpi('Utilidad al mayor · ' + (a.mayor ? Math.round(a.util / a.mayor * 100) : 0) + '%', usd(a.util), 'ok', delta(a.util, b.util, pm))}
+      ${kpi('Cobrado a clientes al mayor', usd(a.cobrado), '', delta(a.cobrado, b.cobrado, pm))}
+      ${kpi('Kilos vendidos al mayor', n2(a.kg), '', delta(a.kg, b.kg, pm))}
+      ${kpi('Compras a proveedores', usd(a.compras), '', delta(a.compras, b.compras, pm, true))}
+      ${kpi('Pagado a proveedores', usd(a.pagadoProv), '', delta(a.pagadoProv, b.pagadoProv, pm, true))}
+      ${kpi('Merma', usd(a.mermaUsd), a.mermaUsd > 0 ? 'bad' : '', `<div class="small muted">${n2(a.mermaKg)} kg</div>`)}
+    </div>
+    <div class="card"><h2>Plata que entró y salió en ${mesNombre(mes)}</h2>
+      <div class="tot"><span>Entró: cobros al mayor</span><span class="num">${usd(a.cobrado)}</span></div>
+      <div class="tot"><span>Entró: ventas del local</span><span class="num">${usd(a.local)}</span></div>
+      <div class="tot"><span>Salió: pagos a proveedores</span><span class="num" style="color:var(--bad)">− ${usd(sale)}</span></div>
+      <div class="tot big"><span>Diferencia</span><span class="num" style="color:${entra - sale >= 0 ? 'var(--ok)' : 'var(--bad)'}">${usd(entra - sale)}</span></div>
+      <p class="small muted" style="margin:8px 0 0">No incluye otros gastos (sueldos, alquiler, servicios). La merma solo cuenta lo de los últimos 90 días.</p></div>
+    <div class="card"><h2>Últimos 6 meses</h2><div class="chart"><canvas id="rch"></canvas></div></div>`;
+  bindMes(vResumenMes, true);
+  if (window.Chart) { const n = ult.map(numerosMes);
+    CHARTS.push(new Chart($('#rch'), { type: 'bar', data: { labels: ult.map(mesNombre), datasets: [
+      { label: 'Al mayor', data: n.map(x => r2(x.mayor)), backgroundColor: '#2c5282', stack: 'v', borderRadius: 4 },
+      { label: 'Local', data: n.map(x => r2(x.local)), backgroundColor: '#f2b705', stack: 'v', borderRadius: 4 },
+      { label: 'Compras', data: n.map(x => r2(x.compras)), backgroundColor: '#c2410c', stack: 'c', borderRadius: 4 }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + usd(c.raw) } } }, scales: { y: { stacked: true, ticks: { callback: v => '$' + v } }, x: { stacked: true, grid: { display: false } } } } })); }
+}
+function vCobranza() {
+  const d = deudasPorCliente(), h = hoy();
+  const TR = [['Al día', -1e9, 0, 'p-ok'], ['1 a 7 días', 1, 7, 'p-warn'], ['8 a 30 días', 8, 30, 'p-warn'], ['31 a 60 días', 31, 60, 'p-bad'], ['Más de 60', 61, 1e9, 'p-bad']];
+  const tramo = dd => TR.findIndex(t => dd >= t[1] && dd <= t[2]);
+  const sum = TR.map(() => ({ m: 0, c: new Set() }));
+  d.forEach(c => c.notas.forEach(n => { const k = tramo(diasEntre(n.Vence, h)); sum[k].m += Number(n.Saldo); sum[k].c.add(c.cliente); }));
+  const filas = d.map(c => Object.assign({}, c, { atraso: Math.max(0, ...c.notas.map(n => diasEntre(n.Vence, h))) })).sort((a, b) => b.atraso - a.atraso || b.saldo - a.saldo);
+  $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">${TR.map((t, i) => kpi(t[0] === 'Al día' ? 'Al día (aún no vence)' : 'Vencido ' + t[0], usd(sum[i].m), i >= 3 && sum[i].m > 0 ? 'bad' : '', `<div class="small muted">${sum[i].c.size} cliente(s)</div>`)).join('')}${kpi('Total por cobrar', usd(d.reduce((s, c) => s + c.saldo, 0)))}</div>
+    <div class="card"><h2>A quién cobrar primero</h2><p class="small muted" style="margin-top:-6px">Ordenado por la nota más atrasada.</p>
+    ${filas.map(c => { const k = tramo(c.atraso || -1);
+      return `<div class="cli" style="flex-wrap:wrap"><div style="flex:1;min-width:170px"><b>${esc(c.cliente)}</b><div class="small muted">${c.notas.length} nota(s) · <span class="pill ${TR[k][3]}">${c.atraso > 0 ? c.atraso + ' días de atraso' : 'al día'}</span></div></div>
+        <div class="right"><b class="num">${usd(c.saldo)}</b>${c.vencido ? `<div class="small" style="color:var(--bad)">${usd(c.vencido)} vencido</div>` : ''}</div>
+        <div class="row" style="flex-basis:100%;margin-top:6px">${botonWA(c)}<button class="btn sm sec" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button></div></div>`; }).join('') || '<div class="empty">✅ Nadie debe</div>'}</div>`;
+  bindCobrar();
+}
+function vRepProveedores() {
+  const h = hoy(), d = deudaProveedores(), corte = addDays(h, -365), mesAct = mesDe(h);
+  const info = S.proveedores.map(p => { const en = S.entradas.filter(e => e.Proveedor === p.Nombre);
+    return { nombre: p.Nombre, c12: en.filter(e => e.Fecha >= corte).reduce((s, e) => s + Number(e.Total), 0), cmes: en.filter(e => mesDe(e.Fecha) === mesAct).reduce((s, e) => s + Number(e.Total), 0),
+      deuda: en.reduce((s, e) => s + Math.max(0, Number(e.Saldo)), 0), prox: en.filter(e => Number(e.Saldo) > 0.01).map(e => e.Vence).sort()[0] || '' }; }).sort((a, b) => b.c12 - a.c12);
+  const ult = [...Array(12)].map((_, i) => { let m = mesAct; for (let k = 0; k < 11 - i; k++) m = mesAnterior(m); return m; });
+  $('#main').innerHTML = `<div class="grid g4" style="margin-bottom:14px">${kpi('Compras últimos 12 meses', usd(info.reduce((s, p) => s + p.c12, 0)))}${kpi('Compras de ' + mesNombre(mesAct), usd(info.reduce((s, p) => s + p.cmes, 0)))}${kpi('Le debo', usd(d.total))}${kpi('Vencido', usd(d.vencido), d.vencido > 0.01 ? 'bad' : '')}</div>
+    ${d.pronto.length || d.vencido ? `<div class="card"><h2>Por pagar pronto</h2><div class="tbl"><table><tr><th>Vence</th><th>Proveedor</th><th class="r">Debo</th></tr>${d.lista.filter(e => e.Vence <= addDays(h, 7)).map(e => `<tr><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)}</span>` : `<span class="pill p-warn">${fdate(e.Vence)}</span>`}</td><td>${esc(e.Proveedor)}</td><td class="r num">${usd(e.Saldo)}</td></tr>`).join('')}</table></div><button class="btn sm sec" style="margin-top:10px" data-tab="debo">Ir a pagar</button></div>` : ''}
+    <div class="card"><h2>Compras por mes</h2><div class="chart"><canvas id="pvch"></canvas></div></div>
+    <div class="card"><h2>Por proveedor</h2><div class="tbl"><table><tr><th>Proveedor</th><th class="r">12 meses</th><th class="r hm">Este mes</th><th class="r">Debo</th><th class="hm">Próx. vence</th></tr>
+      ${info.map(p => `<tr><td>${esc(p.nombre)}</td><td class="r num">${usd(p.c12)}</td><td class="r num hm">${usd(p.cmes)}</td><td class="r num">${p.deuda > 0.01 ? usd(p.deuda) : ''}</td><td class="hm">${p.prox ? fdate(p.prox) : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Aún no hay proveedores</td></tr>'}</table></div></div>`;
+  document.querySelectorAll('#main [data-tab]').forEach(b => b.onclick = () => { TAB = b.dataset.tab; render(); });
+  if (window.Chart) CHARTS.push(new Chart($('#pvch'), { type: 'bar', data: { labels: ult.map(mesNombre), datasets: [{ label: 'Compras', data: ult.map(m => r2(S.entradas.filter(e => mesDe(e.Fecha) === m).reduce((s, e) => s + Number(e.Total), 0))), backgroundColor: '#c2410c', borderRadius: 4 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => usd(c.raw) } } }, scales: { y: { ticks: { callback: v => '$' + v } }, x: { grid: { display: false } } } } }));
+}
+function vRepLocal() {
+  const { mes, html } = selMes(), pm = mesAnterior(mes);
+  const cm = S.cierres.filter(c => mesDe(c.Fecha) === mes), cp = S.cierres.filter(c => mesDe(c.Fecha) === pm);
+  const tot = x => x.reduce((s, c) => s + Number(c.Total_Local_USD), 0);
+  const parte = k => cm.reduce((s, c) => s + usdCierre(c, k), 0);
+  const pdv = parte('PDV_Local'), pmv = parte('PM_Local'), efe = parte('Efectivo_Local'), suma = pdv + pmv + efe || 1;
+  const diasMes = mes === mesDe(hoy()) ? Number(hoy().slice(8, 10)) : new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0).getDate();
+  const malos = cm.map(c => ({ c, k: conciliacion(c.Fecha) })).filter(x => Math.abs(x.k.dif) > (S.tolerancia || 1)).sort((a, b) => a.c.Fecha < b.c.Fecha ? 1 : -1);
+  const ult = mesesLista().slice(0, 12).reverse();
+  const barra = (l, v, col) => `<div style="margin:8px 0"><div class="tot" style="padding:0"><span>${l}</span><span class="num">${usd(v)} <small class="muted">${Math.round(v / suma * 100)}%</small></span></div><div style="height:8px;border-radius:9px;background:var(--line)"><div style="height:8px;border-radius:9px;width:${Math.round(v / suma * 100)}%;background:${col}"></div></div></div>`;
+  $('#main').innerHTML = `${html}<div class="grid g4" style="margin-bottom:14px">
+      ${kpi('Ventas del local', usd(tot(cm)), '', delta(tot(cm), tot(cp), pm))}
+      ${kpi('Promedio por día', usd(cm.length ? tot(cm) / cm.length : 0))}
+      ${kpi('Días con cierre', cm.length + ' de ' + diasMes, cm.length < diasMes ? 'bad' : '')}
+      ${kpi('Pagos del mayor por el local', usd(cm.reduce((s, c) => s + Number(c.Total_Mayor_USD), 0)))}</div>
+    <div class="grid g2 st"><div class="card"><h2>¿Cómo pagan en el local?</h2>${barra('Punto de venta', pdv, '#2c5282')}${barra('Pago móvil', pmv, '#7c3aed')}${barra('Efectivo', efe, '#1a7f4b')}</div>
+      <div class="card"><h2>Días que no cuadraron</h2>${malos.map(x => `<div class="cli"><span>${fdate(x.c.Fecha)}</span>${concPill(x.k)}</div>`).join('') || '<div class="empty">✅ Todos los días cuadraron</div>'}</div></div>
+    <div class="card"><h2>Ventas del local por mes</h2><div class="chart"><canvas id="lch"></canvas></div></div>`;
+  bindMes(vRepLocal, true);
+  if (window.Chart) CHARTS.push(new Chart($('#lch'), { type: 'bar', data: { labels: ult.map(mesNombre), datasets: [{ label: 'Local', data: ult.map(m => r2(tot(S.cierres.filter(c => mesDe(c.Fecha) === m)))), backgroundColor: '#f2b705', borderRadius: 4 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => usd(c.raw) } } }, scales: { y: { ticks: { callback: v => '$' + v } }, x: { grid: { display: false } } } } }));
+}
+function vRepInventario() {
+  const h = hoy(), c30 = addDays(h, -30);
+  const ids30 = new Set(ventasActivas().filter(v => v.Fecha >= c30).map(v => v.ID));
+  const v30 = {}; S.detalle.filter(d => ids30.has(d.VentaID)).forEach(d => v30[d.Codigo] = (v30[d.Codigo] || 0) + Number(d.Kg));
+  const mer = {}; S.movimientos.filter(x => /Conteo|Ajuste/.test(x.Tipo) && Number(x.Kg) < 0).forEach(x => { const m = mer[x.Codigo] = mer[x.Codigo] || { kg: 0, usd: 0 }; m.kg -= Number(x.Kg); m.usd -= Number(x.Kg) * (Number(x.Costo) || 0); });
+  const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO').map(p => { const st = Math.max(0, Number(p.Stock) || 0), vd = (v30[p.Codigo] || 0) / 30;
+    return { p, st, valor: st * (Number(p.Costo) || 0), venta: st * (Number(p.Precio) || 0), v30: v30[p.Codigo] || 0, dias: vd ? st / vd : null, mer: mer[p.Codigo] || { kg: 0, usd: 0 } }; }).sort((a, b) => b.valor - a.valor || b.v30 - a.v30);
+  const T = k => prods.reduce((s, x) => s + (typeof k === 'function' ? k(x) : x[k]), 0);
+  $('#main').innerHTML = `<div class="grid g4" style="margin-bottom:14px">${kpi('Kilos en inventario', n2(T('st')))}${kpi('Valor al costo', usd(T('valor')))}${kpi('Valor a precio de venta', usd(T('venta')), 'ok')}${kpi('Merma (90 días)', usd(T(x => x.mer.usd)), T(x => x.mer.usd) > 0 ? 'bad' : '', `<div class="small muted">${n2(T(x => x.mer.kg))} kg</div>`)}</div>
+    <div class="card"><h2>Por producto</h2><p class="small muted" style="margin-top:-6px">"Alcanza para" = días que dura el stock al ritmo de venta al mayor de los últimos 30 días.</p>
+    <div class="tbl"><table><tr><th>Producto</th><th class="r">Stock</th><th class="r hm">Valor</th><th class="r">Vendido 30 d</th><th class="r">Alcanza</th><th class="r hm">Merma 90 d</th></tr>
+    ${prods.map(x => `<tr><td>${esc(x.p.Nombre)}</td><td class="r num"><b>${n2(x.st)}</b></td><td class="r num hm">${usd(x.valor)}</td><td class="r num">${n2(x.v30)}</td><td class="r">${!x.st && x.v30 ? '<span class="pill p-bad">agotado</span>' : x.dias == null ? (x.st ? '<span class="small muted">sin ventas</span>' : '') : `<span class="pill ${x.dias < 3 ? 'p-bad' : x.dias < 7 ? 'p-warn' : 'p-ok'}">${Math.round(x.dias)} días</span>`}</td><td class="r num hm" style="color:${x.mer.kg ? 'var(--bad)' : ''}">${x.mer.kg ? n2(x.mer.kg) + ' kg' : ''}</td></tr>`).join('')}</table></div></div>`;
+}
+
+/* ===== LOCAL: subir cierres de días anteriores ===== */
+let IMPC = null;
+function leerCierresExcel(buf) {
+  const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+  const al = { fecha: ['FECHA', 'DIA'], pdv: ['PUNTO DE VENTA', 'PDV', 'PUNTO'], pm: ['PAGO MOVIL', 'PAGOS MOVILES', 'PM', 'TRANSFERENCIA'], efe: ['EFECTIVO'], mayor: ['PAGOS DEL MAYOR', 'PAGOS DE CLIENTES AL MAYOR', 'MAYOR', 'PAGO MAYOR'], moneda: ['MONEDA'], tasa: ['TASA'], notas: ['NOTAS', 'OBSERVACIONES'] };
+  for (const nom of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
+    for (let hi = 0; hi < Math.min(rows.length, 10); hi++) {
+      const H = rows[hi].map(normTxt), ix = {}; Object.entries(al).forEach(([k, ns]) => { ix[k] = H.findIndex(h => ns.includes(h)); });
+      if (ix.fecha < 0 || (ix.pdv < 0 && ix.pm < 0 && ix.efe < 0)) continue;
+      const avisos = [], cierres = [], g = (r, k) => ix[k] >= 0 ? r[ix[k]] : '';
+      rows.slice(hi + 1).forEach((r, k) => { const fila = hi + k + 2, fecha = fechaISO(g(r, 'fecha'));
+        const x = { fila, fecha, moneda: /^\$|USD|DOLAR/.test(normTxt(g(r, 'moneda'))) ? 'USD' : 'Bs', pdv: numX(g(r, 'pdv')), pm: numX(g(r, 'pm')), efe: numX(g(r, 'efe')), mayor: numX(g(r, 'mayor')), tasa: numX(g(r, 'tasa')), notas: String(g(r, 'notas') || '').trim() };
+        if (!fecha && !(x.pdv + x.pm + x.efe + x.mayor)) return;
+        if (!fecha) return avisos.push(`Fila ${fila}: sin fecha, se salta`);
+        if (!(x.pdv + x.pm + x.efe + x.mayor > 0)) return avisos.push(`Fila ${fila} (${fdate(fecha)}): sin montos, se salta`);
+        cierres.push(x); });
+      if (ix.moneda < 0) avisos.unshift('No hay columna Moneda: se asume que todo está en bolívares');
+      return { cierres, avisos };
+    }
+  }
+  throw new Error('No reconocí el archivo. Debe tener una columna Fecha y al menos Punto de venta, Pago móvil o Efectivo. Usa la plantilla.');
+}
+function plantillaCierres() {
+  return cargarXLSX().then(() => {
+    const ws = XLSX.utils.aoa_to_sheet([['Fecha', 'Moneda', 'Punto de venta', 'Pago móvil', 'Efectivo', 'Pagos del mayor', 'Tasa', 'Notas'], ['01/10/2026', 'Bs', 45000, 18000, 6000, 0, '', ''], ['02/10/2026', 'Bs', 39000, 21000, 4500, 35000, '', 'Pago de Gaviota por el local']]);
+    ws['!cols'] = [12, 8, 15, 12, 10, 15, 8, 30].map(w => ({ wch: w }));
+    const info = XLSX.utils.aoa_to_sheet([['Cómo llenarla'], ['Una fila por día.'], ['Moneda: Bs o $. Si está en Bs y no pones Tasa, se usa la tasa BCV guardada de ese día.'], ['Pagos del mayor: lo que entró por las cuentas del local pero era pago de un cliente al mayor.'], ['Si un día ya tiene cierre en la app, se salta.']]);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Cierres'); XLSX.utils.book_append_sheet(wb, info, 'Instrucciones'); XLSX.writeFile(wb, 'Plantilla_cierres_local.xlsx');
+  });
+}
+function vSubirCierres() {
+  const I = IMPC;
+  if (!I) {
+    $('#main').innerHTML = `<div class="card"><h2>⬆ Subir cierres del local de días anteriores</h2>
+      <p class="small muted" style="margin-top:-6px">Una fila por día con lo que vendió el local: punto de venta, pago móvil y efectivo (en Bs o en $). Los días que ya tengan cierre en la app se saltan solos.</p>
+      <div class="row"><label class="btn acc" style="flex:none;margin:0;color:var(--accent-ink);font-size:15px">Elegir archivo Excel<input type="file" id="icf" accept=".xlsx,.xls,.csv" class="hide"></label><button class="btn sec" id="ict" style="flex:none">Descargar plantilla</button></div></div>`;
+    $('#ict').onclick = e => busy(e.target, plantillaCierres);
+    $('#icf').onchange = e => { const f = e.target.files[0]; if (!f) return; $('#main').innerHTML = '<div class="card"><span class="spin"></span> Leyendo ' + esc(f.name) + '…</div>';
+      cargarXLSX().then(() => f.arrayBuffer()).then(async buf => { const r = leerCierresExcel(buf); if (!r.cierres.length) throw new Error('No encontré días con montos en el archivo');
+        const ch = await call('importarCierres', { probar: true, cierres: r.cierres });
+        IMPC = Object.assign(r, { archivo: f.name, repetidos: new Set(ch.repetidos), errores: ch.errores }); vSubirCierres(); })
+        .catch(err => { IMPC = null; vSubirCierres(); toast(err.message, true); }); };
+    return;
+  }
+  const nuevos = I.cierres.filter((c, i) => !I.repetidos.has(i)), fs = I.cierres.map(c => c.fecha).sort();
+  $('#main').innerHTML = `<div class="card"><h2>⬆ ${esc(I.archivo)}</h2>
+    ${I.resultado ? `<div class="banner ok">✅ Listo: se subieron <b>${I.resultado.creados}</b> cierre(s) por ${usd(I.resultado.total)}.</div><button class="btn sec" id="icx">Subir otro archivo</button>` : `
+    <div class="grid g3" style="margin-bottom:12px">${kpi('Días en el archivo', I.cierres.length, '', `<div class="small muted">${fdate(fs[0])} a ${fdate(fs[fs.length - 1])}</div>`)}${kpi('Nuevos por subir', nuevos.length, 'ok')}${kpi('Ya tenían cierre', I.repetidos.size, '', '<div class="small muted">se saltan</div>')}</div>
+    ${I.avisos.length || I.errores.length ? `<details class="banner warn"><summary>⚠️ ${I.avisos.length + I.errores.length} aviso(s) — toca para ver</summary><div class="small" style="margin-top:6px">${I.avisos.concat(I.errores).slice(0, 40).map(esc).join('<br>')}</div></details>` : ''}
+    ${nuevos.length ? `<div class="tbl"><table><tr><th>Fecha</th><th>Mon.</th><th class="r">Punto</th><th class="r">P. móvil</th><th class="r">Efectivo</th><th class="r hm">Mayor</th></tr>${nuevos.slice(0, 10).map(c => `<tr><td>${fdate(c.fecha)}</td><td>${c.moneda === 'Bs' ? 'Bs' : '$'}</td><td class="r num">${n2(c.pdv)}</td><td class="r num">${n2(c.pm)}</td><td class="r num">${n2(c.efe)}</td><td class="r num hm">${c.mayor ? n2(c.mayor) : ''}</td></tr>`).join('')}</table></div>${nuevos.length > 10 ? `<p class="small muted">…y ${nuevos.length - 10} más</p>` : ''}
+      <div class="row" style="margin-top:10px"><button class="btn sec" id="icx" style="flex:none">Cancelar</button><button class="btn acc" id="icgo">Subir ${nuevos.length} cierre(s)</button></div>` : `<div class="banner ok">Todos esos días ya tienen cierre en la app.</div><button class="btn sec" id="icx">Elegir otro archivo</button>`}`}</div>`;
+  $('#icx').onclick = () => { IMPC = null; vSubirCierres(); };
+  const go = $('#icgo'); if (go) go.onclick = () => { if (!confirmar(go, `¿Subir ${nuevos.length}?`)) return; busy(go, async () => {
+    const tot = { creados: 0, total: 0 };
+    for (let i = 0; i < nuevos.length; i += 300) { const r = await call('importarCierres', { cierres: nuevos.slice(i, i + 300), archivo: I.archivo }); tot.creados += r.creados; tot.total += r.total; }
+    I.resultado = tot; await cargarDatos(); render(); toast(tot.creados + ' cierre(s) subidos'); }); };
 }
 
 /* ===== REPORTES ===== */
@@ -885,6 +1146,9 @@ function vReportes() {
   const kg = Object.values(prod).reduce((s, p) => s + p.kg, 0);
   const cli = {}; vm.forEach(v => { const c = cli[v.Cliente] = cli[v.Cliente] || { n: 0, v: 0, u: 0 }; c.n++; c.v += Number(v.Total); c.u += Number(v.Utilidad); });
   const ult12 = [...new Set(ventasActivas().map(v => mesDe(v.Fecha)))].sort().slice(-12);
+  const h = hoy(), ultima = {}, n90 = {};
+  ventasActivas().forEach(v => { if (!ultima[v.Cliente] || v.Fecha > ultima[v.Cliente]) ultima[v.Cliente] = v.Fecha; if (v.Fecha >= addDays(h, -120)) n90[v.Cliente] = (n90[v.Cliente] || 0) + 1; });
+  const perdidos = Object.keys(ultima).filter(c => ultima[c] < addDays(h, -30) && ultima[c] >= addDays(h, -120) && n90[c] >= 2).sort((a, b) => ultima[a] < ultima[b] ? 1 : -1);
   $('#main').innerHTML = `<div class="row" style="margin-bottom:12px"><div style="max-width:220px"><label>Mes</label><select id="rm">${meses.map(m => `<option value="${m}" ${m === mes ? 'selected' : ''}>${mesNombre(m)}</option>`).join('')}</select></div></div>
     <div class="grid g4" style="margin-bottom:14px">
       <div class="kpi"><small>Ventas al mayor</small><b>${usd(tot)}</b></div>
@@ -902,7 +1166,9 @@ function vReportes() {
         ${Object.entries(prod).sort((a, b) => b[1].v - a[1].v).map(([n, p]) => `<tr><td>${esc(n)}</td><td class="r num">${n2(p.kg)}</td><td class="r num">${usd(p.v)}</td><td class="r num" style="color:var(--ok)">${usd(p.u)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ventas</td></tr>'}</table></div></div>
       <div class="card"><h2>Mejores clientes</h2><div class="tbl"><table><tr><th>Cliente</th><th class="r">Notas</th><th class="r">Ventas</th><th class="r">Utilidad</th></tr>
         ${Object.entries(cli).sort((a, b) => b[1].v - a[1].v).slice(0, 15).map(([n, c]) => `<tr><td>${esc(n)}</td><td class="r num">${c.n}</td><td class="r num">${usd(c.v)}</td><td class="r num" style="color:var(--ok)">${usd(c.u)}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">Sin ventas</td></tr>'}</table></div></div>
-    </div>`;
+    </div>
+    <div class="card"><h2>Clientes que dejaron de comprar</h2><p class="small muted" style="margin-top:-6px">Compraban seguido (2 o más veces en 4 meses) y llevan más de 30 días sin comprar.</p>
+      ${perdidos.map(c => { const tel = (S.clientes.find(x => x.Nombre === c) || {}).Telefono; return `<div class="cli"><div><b>${esc(c)}</b><div class="small muted">última compra ${fdate(ultima[c])} · hace ${diasEntre(ultima[c], h)} días</div></div>${tel ? `<a class="btn sm sec" style="flex:none;text-decoration:none" target="_blank" rel="noopener" href="${waLink(tel, 'Hola ' + c + ' 👋, le saluda ' + (USER.negocio || 'Lácteos') + '. ¿Cómo está? Tenemos mercancía fresca, ¿le preparamos su pedido?')}">💬 Escribirle</a>` : ''}</div>`; }).join('') || '<div class="empty">✅ Ningún cliente frecuente ha dejado de comprar</div>'}</div>`;
   $('#rm').onchange = async e => {
     FILTRO.mes = e.target.value;
     if (S.corte && FILTRO.mes + '-31' < S.corte && !S.mesesCargados[FILTRO.mes]) {
@@ -934,6 +1200,7 @@ function vProductos() {
       <div class="chips">${prods.map(x => `<button class="chip ${x.Codigo === cod ? 'on' : ''}" data-pr="${x.Codigo}">${esc(x.Nombre)}</button>`).join('')}</div>
       <div class="row" style="margin-top:12px;align-items:center"><div class="seg" style="flex:none"><button class="${rango === '12' ? 'on plain' : ''}" data-rg="12">Últimos 12 meses</button><button class="${rango === 'todo' ? 'on plain' : ''}" data-rg="todo">Todo desde 2023</button></div>
       <span class="small muted">Precio de lista hoy: <b class="num">${usd(p.Precio)}</b> · costo <b class="num">${usd(p.Costo)}</b></span></div></div>
+    ${margenesCard()}
     <div id="pbody">${D ? '' : '<div class="empty"><span class="spin"></span> Trayendo historial…</div>'}</div>`;
   document.querySelectorAll('[data-pr]').forEach(b => b.onclick = () => { FILTRO.prod = b.dataset.pr; vProductos(); });
   document.querySelectorAll('[data-rg]').forEach(b => b.onclick = () => { FILTRO.rango = b.dataset.rg; vProductos(); });
@@ -976,6 +1243,17 @@ function vProductos() {
       options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' } },
         scales: { y: { position: 'left', title: { display: true, text: 'kg' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => '$' + v } }, x: { grid: { display: false } } } } }));
   }
+}
+
+/** Margen real de cada producto en los últimos 90 días vs su objetivo; los que dejan menos, arriba. */
+function margenesCard() {
+  const c90 = addDays(hoy(), -90), ids = new Set(ventasActivas().filter(v => v.Fecha >= c90).map(v => v.ID)), m = {};
+  S.detalle.filter(d => ids.has(d.VentaID)).forEach(d => { const x = m[d.Codigo] = m[d.Codigo] || { v: 0, u: 0, kg: 0 }; x.v += Number(d.Subtotal); x.u += Number(d.Utilidad); x.kg += Number(d.Kg); });
+  const filas = Object.entries(m).filter(([, x]) => x.v > 0).map(([cod, x]) => { const p = S.productos.find(q => q.Codigo === cod) || {}; return { nombre: p.Nombre || cod, mg: x.u / x.v, obj: Number(p.Margen) || 0, v: x.v, kg: x.kg, bajo: Number(p.Precio) > 0 && Number(p.Precio) < Number(p.Costo) }; }).sort((a, b) => a.mg - b.mg);
+  if (!filas.length) return '';
+  return `<details class="card" ${filas.some(f => f.bajo || f.mg < f.obj - 0.03) ? 'open' : ''}><summary><h2 style="margin:0">Margen por producto · últimos 90 días ▾</h2></summary>
+    <div class="tbl" style="margin-top:10px"><table><tr><th>Producto</th><th class="r">Kg</th><th class="r">Ventas</th><th class="r">Margen</th><th class="r hm">Objetivo</th></tr>
+    ${filas.map(f => `<tr><td>${esc(f.nombre)}${f.bajo ? ' <span class="pill p-bad">precio < costo</span>' : ''}</td><td class="r num">${n2(f.kg)}</td><td class="r num">${usd(f.v)}</td><td class="r num" style="color:${f.mg < f.obj - 0.03 || f.mg < 0 ? 'var(--bad)' : 'var(--ok)'}"><b>${Math.round(f.mg * 100)}%</b></td><td class="r num hm muted">${f.obj ? Math.round(f.obj * 100) + '%' : ''}</td></tr>`).join('')}</table></div></details>`;
 }
 
 /* ===== Selector de productos con kg (compartido) ===== */
@@ -1046,13 +1324,6 @@ let ENTRADA = null, TRASLADO = null;
 function margenDe(costo, precio) { return precio > 0 ? (precio - costo) / precio : 0; }
 function precioCon(costo, margen) { return margen < 1 ? costo / (1 - margen) : 0; }
 const pct = m => (Math.round(m * 1000) / 10).toLocaleString('es-VE') + '%';
-function vInventario() {
-  const sub = FILTRO.inv || 'stock';
-  const tabs = [['stock', 'Stock'], ['entrada', 'Entrada de mercancía'], ['traslado', 'Traslado al local'], ['conteo', 'Conteo'], ['proveedores', 'Proveedores'], ['movs', 'Movimientos']];
-  $('#main').innerHTML = `<div class="chips" style="margin-bottom:12px">${tabs.map(([k, l]) => `<button class="chip ${sub === k ? 'on' : ''}" data-sub="${k}">${l}</button>`).join('')}</div><div id="inv"></div>`;
-  document.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { FILTRO.inv = b.dataset.sub; vInventario(); });
-  ({ stock: invStock, entrada: invEntrada, traslado: invTraslado, conteo: invConteo, proveedores: invProveedores, movs: invMovs }[sub])();
-}
 function invStock() {
   const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO');
   const reservado = c => r2(Number(S.productos.find(p => p.Codigo === c).Stock || 0) - Number(S.disponible[c] || 0));
@@ -1128,7 +1399,7 @@ function invEntrada() {
     if (!E.proveedor.trim()) throw new Error('Escribe el proveedor');
     const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio }));
     const r = await call('guardarEntrada', { fecha: E.fecha, proveedor: E.proveedor.trim(), condicion: E.condicion, dias: num(E.dias), notas: E.notas, lineas });
-    toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; FILTRO.inv = 'stock'; await recargar(); TAB = 'inventario'; render();
+    toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; await recargar(); TAB = 'stock'; render();
   });
 }
 function formTraslado(T, cont, onSave, titulo, ayuda, prods) {
@@ -1159,7 +1430,7 @@ function listaTraslados(tras, lineas, conBoton) {
 function invTraslado() {
   if (!TRASLADO) TRASLADO = { fecha: hoy(), notas: '', lineas: [] };
   $('#inv').innerHTML = '<div id="tform"></div><div class="card"><h2>Traslados recientes</h2><div id="tlist"></div></div>';
-  formTraslado(TRASLADO, $('#tform'), async (d) => { await call('guardarTraslado', d); toast('Traslado registrado: el local lo confirmará al recibir'); TRASLADO = null; await recargar(); TAB = 'inventario'; FILTRO.inv = 'traslado'; render(); },
+  formTraslado(TRASLADO, $('#tform'), async (d) => { await call('guardarTraslado', d); toast('Traslado registrado: el local lo confirmará al recibir'); TRASLADO = null; await recargar(); TAB = 'traslado'; render(); },
     'Enviar mercancía al local', 'Se descuenta del inventario ahora y queda "Enviado" hasta que el local confirme que llegó.', S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO'));
   const lineas = S.movimientos.filter(m => m.Tipo === 'Traslado').map(m => ({ Ref: m.Ref, Producto: m.Producto, Kg: -Number(m.Kg) }));
   $('#tlist').innerHTML = listaTraslados(S.traslados.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1), lineas, false);
@@ -1185,7 +1456,7 @@ function invConteo() {
     const conteos = prods.filter(p => C[p.Codigo] !== undefined && C[p.Codigo] !== '').map(p => ({ codigo: p.Codigo, kg: num(C[p.Codigo]) }));
     if (!conteos.length) throw new Error('Escribe al menos un conteo');
     const r = await call('guardarConteo', { fecha: C.fecha || hoy(), conteos });
-    toast('Conteo guardado' + (r.merma ? ' · merma ' + n2(r.merma) + ' kg' : '')); FILTRO.conteo = {}; FILTRO.inv = 'stock'; await recargar(); TAB = 'inventario'; render();
+    toast('Conteo guardado' + (r.merma ? ' · merma ' + n2(r.merma) + ' kg' : '')); FILTRO.conteo = {}; await recargar(); TAB = 'stock'; render();
   });
 }
 function invProveedores() {
@@ -1206,9 +1477,9 @@ function invProveedores() {
       <div class="row" style="margin:10px 0 16px"><div><label>Teléfono</label><input data-pvt="${i}" value="${esc(p.Telefono || '')}"></div><div style="flex:2"><label>Notas</label><input data-pvn="${i}" value="${esc(p.Notas || '')}"></div><button class="btn sm sec" data-pvg="${i}" style="flex:none">Guardar datos</button></div>
     </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo aquí.</div>'}
     <div class="row" style="margin-top:12px"><div style="flex:2"><label>Nuevo proveedor</label><input id="npv" placeholder="Nombre"></div><div><label>Teléfono</label><input id="npt"></div><button class="btn" id="npg2" style="flex:none">Agregar</button></div></div>`;
-  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: num($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); }));
-  document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); }));
-  $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); FILTRO.inv = 'proveedores'; await recargar(); TAB = 'inventario'; render(); });
+  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: num($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
+  document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
+  $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); });
 }
 function invMovs() {
   const f = FILTRO.mp || '';
@@ -1377,6 +1648,15 @@ function vAjustes() {
       <div class="tbl"><table id="utab"></table></div></div>
     <div class="card" style="grid-column:1/-1"><h2>Clientes</h2><input id="cq" placeholder="Buscar cliente" style="margin-bottom:8px">
       <div class="tbl" style="max-height:380px;overflow:auto"><table id="ctab"></table></div></div>
+    <div class="card"><h2>Unir clientes repetidos</h2>
+      <p class="small muted" style="margin-top:-6px">Si un cliente está escrito de dos formas (ej. "GAVIOTA" y "GAVIOTA 14106913"), sus ventas, cobros y pedidos pasan al nombre que se queda y el otro se borra. Primero toca <b>Revisar</b> para ver qué se movería.</p>
+      <div class="row"><div><label>Este cliente…</label><input id="ude" list="dl-cli3"></div><div><label>…pasa a ser</label><input id="ua" list="dl-cli3"></div></div>
+      <div id="ures" class="small" style="margin:8px 0"></div>
+      <div class="row"><button class="btn sec" id="urev" style="flex:none">Revisar</button><button class="btn bad hide" id="ugo" style="flex:none">Unir</button></div></div>
+    <div class="card"><h2>Respaldo</h2>
+      <p class="small muted" style="margin-top:-6px">Cada domingo en la noche se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las últimas 8.</p>
+      <p class="small">Último respaldo: <b>${S.respaldo ? esc(S.respaldo) : 'todavía ninguno'}</b></p>
+      <button class="btn sec" id="resp">Hacer un respaldo ahora</button></div>
     <div class="card"><h2>Alertas y cuenta</h2>
       <p class="small muted">Todos los días a las 7 a.m. llega un correo a los administradores que tengan correo en Usuarios: deudas vencidas, cierre faltante, conciliación, inventario bajo, pedidos por confirmar y pagos a proveedores por vencer. Los pedidos y pagos de clientes avisan al momento.</p>
       <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div><p class="small muted" style="margin:10px 0 0">Pantalla ${PANTALLA} · servidor V${USER.version || '?'}</p></div>
@@ -1394,7 +1674,7 @@ function vAjustes() {
       <td><select data-ur="${i}" style="min-width:112px">${['admin', 'empleado', 'cliente'].map(r => `<option ${String(u.Rol).toLowerCase() === r ? 'selected' : ''}>${r}</option>`).join('')}</select></td>
       <td><input data-uc="${i}" list="dl-cli3" value="${esc(u.Cliente)}" style="min-width:150px"></td><td><input data-ue="${i}" value="${esc(u.Email)}" style="min-width:150px"></td>
       <td><select data-ua="${i}" style="min-width:70px"><option ${String(u.Activo).toUpperCase() !== 'NO' ? 'selected' : ''}>SI</option><option ${String(u.Activo).toUpperCase() === 'NO' ? 'selected' : ''}>NO</option></select></td>
-      <td><button class="btn sm ${u.nuevo ? '' : 'sec'}" data-ug="${i}" data-orig="${esc(u.Usuario || '')}">${u.nuevo ? '+' : '✓'}</button></td></tr>`).join('') + `<datalist id="dl-cli3">${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist>`;
+      <td style="white-space:nowrap"><button class="btn sm ${u.nuevo ? '' : 'sec'}" data-ug="${i}" data-orig="${esc(u.Usuario || '')}">${u.nuevo ? '+' : '✓'}</button>${u.nuevo ? '' : ` <button class="btn sm sec" data-ub="${esc(u.Usuario || '')}" title="Quitar el bloqueo por PIN equivocado">🔓</button>`}</td></tr>`).join('') + `<datalist id="dl-cli3">${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist>`;
     document.querySelectorAll('[data-ug]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ug, v = k => $(`[data-${k}="${i}"]`).value;
       const propio = b.dataset.orig && b.dataset.orig === USR, nuevoPin = v('up').trim();
       await call('guardarUsuario', { original: b.dataset.orig, Nombre: v('un'), Usuario: v('uu'), PIN: nuevoPin, Rol: v('ur'), Cliente: v('uc'), Email: v('ue'), Activo: v('ua') });
@@ -1402,12 +1682,19 @@ function vAjustes() {
       toast(propio && nuevoPin ? 'Tu PIN quedó cambiado' : 'Usuario guardado'); await recargar(); TAB = 'ajustes'; render(); }));
   };
   pintarUs();
+  document.querySelectorAll('[data-ub]').forEach(b => b.onclick = () => busy(b, async () => { await call('desbloquear', { usuario: b.dataset.ub }); toast(b.dataset.ub + ' desbloqueado: ya puede volver a intentar'); }));
   $('#npg').onclick = e => busy(e.target, async () => { const n = $('#npn').value.trim(); if (!n) throw new Error('Escribe el nombre'); const cod = n.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() + (S.productos.length + 1); await call('guardarProducto', { Codigo: cod, Nombre: n, Costo: num($('#npc').value), Precio: num($('#npp').value) }); toast('Producto agregado'); VENTA = null; await recargar(); });
   const pintarCli = () => { const q = $('#cq').value.toLowerCase(); $('#ctab').innerHTML = '<tr><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Zona</th><th class="r">Días</th><th></th></tr>' + S.clientes.filter(c => !q || String(c.Nombre).toLowerCase().includes(q)).map((c, i) => `<tr><td><input value="${esc(c.Nombre)}" data-cn="${i}" style="min-width:200px"></td><td><input value="${esc(c.Telefono)}" data-ct="${i}" inputmode="tel" style="min-width:110px"></td><td><input value="${esc(c.Direccion || '')}" data-cdir="${i}" style="min-width:160px"></td><td><input value="${esc(c.Zona)}" data-cz="${i}"></td><td><input class="num" style="width:56px" value="${esc(c.DiasCredito)}" data-cd="${i}"></td><td><button class="btn sm sec" data-cs="${i}" data-orig="${esc(c.Nombre)}">✓</button></td></tr>`).join('');
     document.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.cs; await call('guardarCliente', { original: b.dataset.orig, Nombre: $(`[data-cn="${i}"]`).value.trim(), Telefono: $(`[data-ct="${i}"]`).value, Zona: $(`[data-cz="${i}"]`).value, Direccion: $(`[data-cdir="${i}"]`).value, DiasCredito: num($(`[data-cd="${i}"]`).value) }); toast('Cliente guardado'); await recargar(); })); };
   $('#cq').oninput = pintarCli; pintarCli();
   $('#al').onclick = e => busy(e.target, async () => { const r = await call('enviarAlertas'); toast(r.enviado ? 'Correo enviado a ' + r.para.join(', ') : r.motivo, !r.enviado); });
   $('#lo').onclick = salir;
+  $('#resp').onclick = e => busy(e.target, async () => { const r = await call('respaldoAhora'); toast('Respaldo guardado: ' + r.nombre); S.respaldo = r.cuando; vAjustes(); });
+  const unir = probar => call('unirClientes', { de: $('#ude').value.trim(), a: $('#ua').value.trim(), probar });
+  const resumenU = r => Object.entries(r.cuenta).filter(([, n]) => n).map(([h, n]) => n + ' ' + ({ Ventas: 'venta(s)', Cobros: 'cobro(s)', Pedidos: 'pedido(s)', PagosReportados: 'pago(s) reportado(s)', CierreLineas: 'línea(s) de cierre', Usuarios: 'usuario(s)' }[h])).join(', ') || 'no tiene movimientos';
+  $('#urev').onclick = e => busy(e.target, async () => { const r = await unir(true); $('#ures').innerHTML = `"<b>${esc(r.de)}</b>" → "<b>${esc(r.a)}</b>": se moverían ${resumenU(r)} y se borraría "${esc(r.de)}" de la lista.`; $('#ugo').classList.remove('hide'); });
+  $('#ude').oninput = $('#ua').oninput = () => { $('#ugo').classList.add('hide'); $('#ures').textContent = ''; };
+  $('#ugo').onclick = e => { if (!confirmar(e.target, '¿Seguro? No se deshace')) return; busy(e.target, async () => { const r = await unir(false); toast('Unidos: ' + r.de + ' → ' + r.a); await recargar(); }); };
 }
 
 start();
