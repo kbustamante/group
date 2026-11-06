@@ -73,7 +73,7 @@ td.r,th.r{text-align:right}
 .seg button{border:0;background:none;padding:9px 12px;cursor:pointer;font-weight:500;color:var(--muted)}
 .seg button.on.local{background:var(--local);color:#fff}.seg button.on.mayor{background:var(--mayor);color:#fff}
 .seg button.on.plain{background:var(--brand);color:#fff}
-.linea{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
+.linea{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px}
 .linea .quien{grid-column:1/-1}
 .x{border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
 .muted{color:var(--muted)}.small{font-size:13px}.right{text-align:right}
@@ -312,10 +312,17 @@ function mismoCliente(nombre, q) { const n = String(nombre || '').toLowerCase().
 /** Bs de un cierre: si se registró en Bs, los montos exactos que anotó el local; si no, $ × tasa. */
 function bsCierre(c, que) {
   const t = tasaCierre(c);
-  if (c.Moneda === 'Bs') { const k = ['PDV', 'PM', 'Efectivo'], suf = que === 'Total' ? ['Local', 'Mayor'] : [que]; return suf.reduce((s, x) => s + k.reduce((a, y) => a + Number(c[y + '_' + x] || 0), 0), 0); }
-  const usdV = que === 'Total' ? c.Total_USD : que === 'Local' ? c.Total_Local_USD : c.Total_Mayor_USD;
+  if (c.Moneda === 'Bs') { // montos exactos que anotó el local; lo del mayor sale de lo que marcó o de los cobros
+    const crudo = suf => ['PDV', 'PM', 'Efectivo'].reduce((a, y) => a + Number(c[y + '_' + suf] || 0), 0), tot = crudo('Local') + crudo('Mayor'), k = conciliacion(c.Fecha);
+    const may = k.mayor >= k.cobros ? crudo('Mayor') : mayorDia(c) * (t || 0);
+    return que === 'Total' ? tot : que === 'Mayor' ? may : tot - may; }
+  const usdV = que === 'Total' ? c.Total_USD : que === 'Local' ? localNeto(c) : mayorDia(c);
   return t ? Number(usdV) * t : 0;
 }
+/** Lo que fue de clientes al mayor ese día: lo que marcó el local (cierres viejos) o los cobros "entró por las cuentas del local", lo mayor. */
+function mayorDia(c) { const k = conciliacion(c.Fecha); return r2(Math.max(k.mayor, k.cobros)); }
+/** Venta real del local = todo lo que entró en el día − lo que fue del mayor. */
+function localNeto(c) { return r2(Number(c.Total_USD) - mayorDia(c)); }
 function tasaCierre(c) { return Number(c.Tasa) || tasaPara(c.Fecha); }
 /** Agrega datos traídos del historial sin duplicar. */
 function mergeS(r) {
@@ -340,11 +347,12 @@ function deudasPorCliente() {
 function conciliacion(fecha) {
   const mayor = S.cierreLineas.filter(l => l.Fecha === fecha && l.Destino === 'Mayor').reduce((s, l) => s + Number(l.MontoUSD || 0), 0);
   const cob = S.cobros.filter(c => c.Fecha === fecha && String(c.PorLocal).toUpperCase() === 'SI').reduce((s, c) => s + Number(c.MontoUSD || 0), 0);
-  return { mayor: r2(mayor), cobros: r2(cob), dif: r2(mayor - cob) };
+  return { mayor: r2(mayor), cobros: r2(cob), dif: mayor > 0.005 ? r2(mayor - cob) : 0 }; // desde la V9 el local ya no marca "Mayor": solo se compara en los cierres viejos
 }
 function concPill(c) {
   const tol = S.tolerancia || 1;
   if (!c.mayor && !c.cobros) return '<span class="pill p-local">Sin mayor</span>';
+  if (!c.mayor) return `<span class="pill p-mayor" title="Cobros a clientes al mayor que entraron por las cuentas del local">Mayor ${usd(c.cobros)}</span>`;
   if (Math.abs(c.dif) <= tol) return '<span class="pill p-ok">Cuadra</span>';
   return `<span class="pill p-bad">${c.dif > 0 ? 'Faltan' : 'Sobran'}<span class="hm"> cobros</span> ${usd(Math.abs(c.dif))}</span>`;
 }
@@ -365,7 +373,7 @@ function vInicio() {
   const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
   const dp = deudaProveedores(), venceProv = dp.lista.filter(e => e.Vence <= addDays(h, 3));
   if (venceProv.length) avisos.push(`Proveedores: ${venceProv.length} factura(s) ${venceProv.some(e => e.Vence < h) ? 'vencida(s) o ' : ''}por vencer en 3 días (${usd(venceProv.reduce((s, e) => s + Number(e.Saldo), 0))}). Míralas en Compras → Lo que debo.`);
-  const localMes = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.Total_Local_USD), 0);
+  const localMes = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + localNeto(c), 0);
   if (bajos.length) avisos.push('Inventario bajo: ' + bajos.map(p => p.Nombre + ' (' + n2(p.Stock) + ' kg)').join(', '));
   $('#main').innerHTML = `
     ${avisos.map(a => `<div class="banner warn">⚠️ ${esc(a)}</div>`).join('')}
@@ -382,7 +390,7 @@ function vInicio() {
         <tr><th>Día</th><th class="r">Local</th><th class="r">Mayor</th><th style="padding-left:12px">Concilia<span class="hm">ción</span></th></tr>
         ${dias.map(d => { const c = S.cierres.find(x => x.Fecha === d); const k = conciliacion(d);
           const t = c && tasaCierre(c), dos = (u, q) => `<div class="num">${usd(u)}</div>${t ? `<div class="num small muted">${bs(bsCierre(c, q))}</div>` : ''}`;
-          return `<tr><td>${fdate(d)}</td>${c ? `<td class="r">${dos(c.Total_Local_USD, 'Local')}</td><td class="r">${dos(c.Total_Mayor_USD, 'Mayor')}</td><td style="padding-left:12px">${concPill(k)}</td>` : `<td class="r muted">—</td><td class="r muted">—</td><td style="padding-left:12px"><span class="pill p-warn">Sin cierre</span>${k.cobros ? `<div class="small muted">${usd(k.cobros)} en cobros</div>` : ''}</td>`}</tr>`; }).join('')}
+          return `<tr><td>${fdate(d)}</td>${c ? `<td class="r">${dos(localNeto(c), 'Local')}</td><td class="r">${dos(mayorDia(c), 'Mayor')}</td><td style="padding-left:12px">${concPill(k)}</td>` : `<td class="r muted">—</td><td class="r muted">—</td><td style="padding-left:12px"><span class="pill p-warn">Sin cierre</span>${k.cobros ? `<div class="small muted">${usd(k.cobros)} en cobros</div>` : ''}</td>`}</tr>`; }).join('')}
       </table></div></div>
       <div class="card"><h2>Clientes con deuda vencida</h2>
         ${deudas.filter(d => d.vencido > 0).slice(0, 8).map(d => `<div class="cli"><div><b>${esc(d.cliente)}</b><div class="small muted">${d.notas.length} nota(s) · desde ${fdate(d.venceMin)}</div></div><div class="right"><b class="num" style="color:var(--bad)">${usd(d.vencido)}</b><br><button class="btn sm sec" data-cobrar="${esc(d.cliente)}">Cobrar</button></div></div>`).join('') || '<div class="empty">✅ Nadie tiene deuda vencida</div>'}
@@ -405,9 +413,7 @@ function vCierre() {
   const sec = tipo => `<h3>${TIPOS[tipo]}</h3>
     ${C.lineas.map((l, i) => l.tipo !== tipo ? '' : `<div class="linea">
       <input class="num" inputmode="decimal" placeholder="0,00" value="${esc(l.monto)}" data-l="${i}" data-k="monto">
-      <div class="seg"><button class="${l.destino === 'Local' ? 'on local' : ''}" data-l="${i}" data-dest="Local">Local</button><button class="${l.destino === 'Mayor' ? 'on mayor' : ''}" data-l="${i}" data-dest="Mayor">Mayor</button></div>
       <button class="x" data-del="${i}" title="Quitar">×</button>
-      ${l.destino === 'Mayor' ? `<input class="quien" placeholder="¿De qué cliente es? (opcional)" value="${esc(l.cliente || '')}" data-l="${i}" data-k="cliente">` : ''}
     </div>`).join('')}
     <button class="btn sm sec" data-add="${tipo}">+ Agregar ${TIPOS[tipo].toLowerCase()}</button>`;
   const sym = C.moneda === 'Bs' ? bs : usd;
@@ -415,7 +421,7 @@ function vCierre() {
   const esAdmin = USER.rol === 'admin';
   $('#main').innerHTML = `<div class="card" style="max-width:620px;margin:0 auto 14px">
     <h2>Cierre del día</h2>
-    <p class="small muted" style="margin-top:-6px">Anota cada cobro y márcalo <span class="pill p-local">Local</span> si es una venta del local, o <span class="pill p-mayor">Mayor</span> si es un cliente al mayor que pagó por la cuenta del local.</p>
+    <p class="small muted" style="margin-top:-6px">Anota todo lo que entró en el día por punto de venta, pago móvil y efectivo. ${esAdmin ? 'Los pagos de clientes al mayor que entraron por las cuentas del local se registran en <b>Cobros</b> (marcando "entró por las cuentas del local") y la app los descuenta de la venta del local.' : 'Si algún pago era de un cliente al mayor, no pasa nada: el administrador lo registra aparte.'}</p>
     <div class="row">
       <div><label>Fecha</label>${esAdmin ? `<input type="date" id="cf" value="${C.fecha}">` : `<select id="cf"><option value="${hoy()}" ${C.fecha === hoy() ? 'selected' : ''}>Hoy ${fdate(hoy())}</option><option value="${addDays(hoy(), -1)}" ${C.fecha !== hoy() ? 'selected' : ''}>Ayer ${fdate(addDays(hoy(), -1))}</option></select>`}</div>
       <div><label>Montos en</label><div class="seg"><button class="${C.moneda === 'USD' ? 'on plain' : ''}" data-mon="USD">Dólares $</button><button class="${C.moneda === 'Bs' ? 'on plain' : ''}" data-mon="Bs">Bolívares</button></div></div>
@@ -428,29 +434,26 @@ function vCierre() {
     <button class="btn acc full" style="margin-top:14px" id="cg">Guardar cierre</button>
   </div>`;
   const pintarTot = () => {
-    const lo = sum(l => l.destino === 'Local'), ma = sum(l => l.destino === 'Mayor');
-    $('#ctot').innerHTML = `<div class="tot"><span>Total local</span><b class="num" style="color:var(--local)">${sym(lo)}</b></div>
-      <div class="tot"><span>Total pagos del mayor</span><b class="num" style="color:var(--mayor)">${sym(ma)}</b></div>
-      <div class="tot big"><span>Gran total</span><span class="num">${sym(lo + ma)}</span></div>
+    const lo = sum(() => true), ma = 0;
+    const porTipo = t => sum(l => l.tipo === t);
+    $('#ctot').innerHTML = `${['PDV', 'PM', 'EFE'].filter(t => porTipo(t)).map(t => `<div class="tot"><span>${TIPOS[t]}</span><span class="num">${sym(porTipo(t))}</span></div>`).join('')}
+      <div class="tot big"><span>Total del día</span><span class="num">${sym(lo)}</span></div>
       ${C.moneda === 'USD' && lo + ma > LIMITE_USD ? `<div class="banner warn" style="margin-top:8px">⚠️ <b>¿Seguro que son dólares?</b> ${usd(lo + ma)} es mucho para un día; parece un monto en bolívares.
         <button class="btn sm" id="cabs" style="margin-top:8px;display:block">Son bolívares: cambiar</button></div>` : ''}
       ${tasa ? `<div class="banner ok" style="margin-top:8px"><div class="small" style="margin-bottom:4px">En ${C.moneda === 'Bs' ? 'dólares' : 'bolívares'} (tasa ${n2(tasa)})</div>
-        <div class="tot" style="padding:2px 0"><span>Local</span><b class="num">${otra(lo)}</b></div>
-        <div class="tot" style="padding:2px 0"><span>Mayor</span><b class="num">${otra(ma)}</b></div>
-        <div class="tot" style="padding:2px 0"><span>Total</span><b class="num">${otra(lo + ma)}</b></div></div>` : ''}`;
+        <div class="tot" style="padding:2px 0"><span>Total</span><b class="num">${otra(lo)}</b></div></div>` : ''}`;
   };
   const pinta = () => { pintarTot(); const cb = $('#cabs'); if (cb) cb.onclick = () => { C.moneda = 'Bs'; rer(); }; };
   pinta();
   const rer = () => { const y = window.scrollY; vCierre(); window.scrollTo(0, y); };
   document.querySelectorAll('[data-k]').forEach(el => el.oninput = () => { C.lineas[el.dataset.l][el.dataset.k] = el.value; pinta(); });
-  document.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => { C.lineas[b.dataset.l].destino = b.dataset.dest; rer(); });
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { C.lineas.splice(b.dataset.del, 1); rer(); });
   document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { C.lineas.push({ tipo: b.dataset.add, destino: 'Local', monto: '' }); rer(); const e2 = document.querySelector(`[data-l="${C.lineas.length - 1}"][data-k="monto"]`); if (e2) e2.focus(); });
   document.querySelectorAll('[data-mon]').forEach(b => b.onclick = () => { C.moneda = b.dataset.mon; rer(); });
   $('#cf').onchange = e => { C.fecha = e.target.value; rer(); };
   $('#cn').oninput = e => C.notas = e.target.value;
   $('#cg').onclick = e => busy(e.target, async () => {
-    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: l.destino, monto: num(l.monto), cliente: l.cliente || '' })).filter(l => l.monto > 0);
+    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: 'Local', monto: num(l.monto) })).filter(l => l.monto > 0);
     if (!lineas.length) throw new Error('Escribe al menos un monto');
     const totalCierre = lineas.reduce((a, l) => a + l.monto, 0);
     if (C.moneda === 'USD' && totalCierre > LIMITE_USD && !e.target.dataset.okusd) {
@@ -692,14 +695,14 @@ function vLocal() {
   const mes = mesDe(hoy());
   const cm = S.cierres.filter(c => mesDe(c.Fecha) === mes);
   $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
-      <div class="kpi"><small>Ventas del local · ${mesNombre(mes)}</small><b>${usd(cm.reduce((s, c) => s + Number(c.Total_Local_USD), 0))}</b></div>
-      <div class="kpi"><small>Pagos del mayor por el local</small><b>${usd(cm.reduce((s, c) => s + Number(c.Total_Mayor_USD), 0))}</b></div>
+      <div class="kpi"><small>Ventas del local · ${mesNombre(mes)}</small><b>${usd(cm.reduce((s, c) => s + localNeto(c), 0))}</b></div>
+      <div class="kpi"><small>Pagos del mayor por el local</small><b>${usd(cm.reduce((s, c) => s + mayorDia(c), 0))}</b></div>
       <div class="kpi"><small>Cierres registrados</small><b>${cm.length}</b></div></div>
     <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0;flex:none;white-space:nowrap">Cierres y conciliación</h2><button class="btn acc" style="flex:none;white-space:nowrap" id="nc">+ Registrar cierre</button></div>
-    <p class="small muted">"Conciliación" compara lo que el local marcó como <span class="pill p-mayor">Mayor</span> con los cobros que registraste como "entró por las cuentas del local" ese mismo día.</p>
+    <p class="small muted"><b>Venta del local</b> = todo lo que entró en el día − los cobros a clientes al mayor que registraste en Cobros como "entró por las cuentas del local" ese mismo día (columna <span class="pill p-mayor">Mayor</span>).</p>
     <div class="tbl"><table><tr><th>Fecha</th><th class="hm">Por</th><th class="r">Local</th><th class="r">Mayor<span class="hm"> (local)</span></th><th class="r hm">Cobros mayor</th><th>Concilia<span class="hm">ción</span></th><th></th></tr>
     ${fechas.map(f => { const c = S.cierres.find(x => x.Fecha === f); const k = conciliacion(f);
-      return `<tr><td>${fdate(f)}</td><td class="small hm">${c ? esc(c.Empleado) : ''}</td><td class="r">${c ? `<div class="num">${usd(c.Total_Local_USD)}</div>${tasaCierre(c) ? `<div class="num small muted">${bs(bsCierre(c, 'Local'))}</div>` : ''}` : ''}</td><td class="r num">${usd(k.mayor)}</td><td class="r num hm">${usd(k.cobros)}</td><td>${c ? concPill(k) : '<span class="pill p-warn">sin cierre</span>'}</td><td>${c ? `<button class="btn sm sec" data-ver="${c.ID}">Ver</button>` : ''}</td></tr>
+      return `<tr><td>${fdate(f)}</td><td class="small hm">${c ? esc(c.Empleado) : ''}</td><td class="r">${c ? `<div class="num">${usd(localNeto(c))}</div>${tasaCierre(c) ? `<div class="num small muted">${bs(bsCierre(c, 'Local'))}</div>` : ''}` : ''}</td><td class="r num">${usd(k.mayor)}</td><td class="r num hm">${usd(k.cobros)}</td><td>${c ? concPill(k) : '<span class="pill p-warn">sin cierre</span>'}</td><td>${c ? `<button class="btn sm sec" data-ver="${c.ID}">Ver</button>` : ''}</td></tr>
       <tr class="hide" id="d-${c ? c.ID : f}"><td colspan="7"></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Aún no hay cierres</td></tr>'}
     </table></div></div>`;
   $('#nc').onclick = () => { CIERRE = nuevoCierre(); TAB = 'cierre'; render(); };
@@ -970,7 +973,7 @@ function numerosMes(m) {
   return {
     mayor: vm.reduce((s, v) => s + Number(v.Total), 0), util: vm.reduce((s, v) => s + Number(v.Utilidad), 0), notas: vm.length,
     kg: S.detalle.filter(d => ids.has(d.VentaID)).reduce((s, d) => s + Number(d.Kg), 0),
-    local: cm.reduce((s, c) => s + Number(c.Total_Local_USD), 0), dias: cm.length,
+    local: cm.reduce((s, c) => s + localNeto(c), 0), dias: cm.length,
     cobrado: S.cobros.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + Number(c.MontoUSD), 0),
     compras: S.entradas.filter(e => mesDe(e.Fecha) === m).reduce((s, e) => s + Number(e.Total), 0),
     pagadoProv: S.pagosProveedor.filter(p => mesDe(p.Fecha) === m).reduce((s, p) => s + Number(p.Monto), 0),
@@ -1041,9 +1044,9 @@ function vRepProveedores() {
 function vRepLocal() {
   const { mes, html } = selMes(), pm = mesAnterior(mes);
   const cm = S.cierres.filter(c => mesDe(c.Fecha) === mes), cp = S.cierres.filter(c => mesDe(c.Fecha) === pm);
-  const tot = x => x.reduce((s, c) => s + Number(c.Total_Local_USD), 0);
+  const tot = x => x.reduce((s, c) => s + localNeto(c), 0);
   const parte = k => cm.reduce((s, c) => s + usdCierre(c, k), 0);
-  const pdv = parte('PDV_Local'), pmv = parte('PM_Local'), efe = parte('Efectivo_Local'), suma = pdv + pmv + efe || 1;
+  const pdv = parte('PDV_Local') + parte('PDV_Mayor'), pmv = parte('PM_Local') + parte('PM_Mayor'), efe = parte('Efectivo_Local') + parte('Efectivo_Mayor'), suma = pdv + pmv + efe || 1;
   const diasMes = mes === mesDe(hoy()) ? Number(hoy().slice(8, 10)) : new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0).getDate();
   const malos = cm.map(c => ({ c, k: conciliacion(c.Fecha) })).filter(x => Math.abs(x.k.dif) > (S.tolerancia || 1)).sort((a, b) => a.c.Fecha < b.c.Fecha ? 1 : -1);
   const ult = mesesLista().slice(0, 12).reverse();
@@ -1052,8 +1055,8 @@ function vRepLocal() {
       ${kpi('Ventas del local', usd(tot(cm)), '', delta(tot(cm), tot(cp), pm))}
       ${kpi('Promedio por día', usd(cm.length ? tot(cm) / cm.length : 0))}
       ${kpi('Días con cierre', cm.length + ' de ' + diasMes, cm.length < diasMes ? 'bad' : '')}
-      ${kpi('Pagos del mayor por el local', usd(cm.reduce((s, c) => s + Number(c.Total_Mayor_USD), 0)))}</div>
-    <div class="grid g2 st"><div class="card"><h2>¿Cómo pagan en el local?</h2>${barra('Punto de venta', pdv, '#2c5282')}${barra('Pago móvil', pmv, '#7c3aed')}${barra('Efectivo', efe, '#1a7f4b')}</div>
+      ${kpi('Pagos del mayor por el local', usd(cm.reduce((s, c) => s + mayorDia(c), 0)))}</div>
+    <div class="grid g2 st"><div class="card"><h2>¿Cómo entra la plata al local?</h2><p class="small muted" style="margin-top:-6px">Todo lo que entró, incluidos los pagos del mayor.</p>${barra('Punto de venta', pdv, '#2c5282')}${barra('Pago móvil', pmv, '#7c3aed')}${barra('Efectivo', efe, '#1a7f4b')}</div>
       <div class="card"><h2>Días que no cuadraron</h2>${malos.map(x => `<div class="cli"><span>${fdate(x.c.Fecha)}</span>${concPill(x.k)}</div>`).join('') || '<div class="empty">✅ Todos los días cuadraron</div>'}</div></div>
     <div class="card"><h2>Ventas del local por mes</h2><div class="chart"><canvas id="lch"></canvas></div></div>`;
   bindMes(vRepLocal, true);
@@ -1141,7 +1144,7 @@ function vReportes() {
   const vm = ventasActivas().filter(v => mesDe(v.Fecha) === mes), ids = new Set(vm.map(v => v.ID));
   const tot = vm.reduce((s, v) => s + Number(v.Total), 0), uti = vm.reduce((s, v) => s + Number(v.Utilidad), 0);
   const cob = S.cobros.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.MontoUSD), 0);
-  const local = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + Number(c.Total_Local_USD), 0);
+  const local = S.cierres.filter(c => mesDe(c.Fecha) === mes).reduce((s, c) => s + localNeto(c), 0);
   const prod = {}; S.detalle.filter(d => ids.has(d.VentaID)).forEach(d => { const p = prod[d.Producto] = prod[d.Producto] || { kg: 0, v: 0, u: 0 }; p.kg += Number(d.Kg); p.v += Number(d.Subtotal); p.u += Number(d.Utilidad); });
   const kg = Object.values(prod).reduce((s, p) => s + p.kg, 0);
   const cli = {}; vm.forEach(v => { const c = cli[v.Cliente] = cli[v.Cliente] || { n: 0, v: 0, u: 0 }; c.n++; c.v += Number(v.Total); c.u += Number(v.Utilidad); });
@@ -1179,7 +1182,7 @@ function vReportes() {
   };
   if (window.Chart) {
     const serie = f => ult12.map(m => ventasActivas().filter(v => mesDe(v.Fecha) === m).reduce((s, v) => s + Number(v[f]), 0));
-    const loc = ult12.map(m => S.cierres.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + Number(c.Total_Local_USD), 0));
+    const loc = ult12.map(m => S.cierres.filter(c => mesDe(c.Fecha) === m).reduce((s, c) => s + localNeto(c), 0));
     CHARTS.push(new Chart($('#ch1'), { type: 'bar', data: { labels: ult12.map(mesNombre), datasets: [
       { label: 'Ventas al mayor', data: serie('Total'), backgroundColor: '#2c5282', borderRadius: 4 },
       { label: 'Utilidad', data: serie('Utilidad'), backgroundColor: '#1a7f4b', borderRadius: 4 },
