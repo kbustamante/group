@@ -160,7 +160,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyHC210YsoibDdg8DDwp3M7Arrj__hrBQbaqnmfK_ZRyml7Ba6z5N56ERr0WjA6oSUHTw/exec';
-const PANTALLA = 'V9c'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V10'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -331,6 +331,7 @@ function mergeS(r) {
   add(S.ventas, r.ventas, x => x.ID);
   add(S.cobros, r.cobros, x => x.ID);
   add(S.cierres, r.cierres, x => x.ID);
+  if (r.cierreLineas && S.cierreLineas) { const ya = new Set(S.cierreLineas.map(l => l.CierreID)); r.cierreLineas.forEach(l => { if (!ya.has(l.CierreID)) S.cierreLineas.push(l); }); }
   (r.detalle || []).forEach(d => { if (!conDet.has(d.VentaID)) S.detalle.push(d); });
 }
 function ventasActivas() { return S.ventas.filter(v => v.Estado !== 'Anulada'); }
@@ -691,10 +692,10 @@ function bindHist() {
 
 /* ===== LOCAL ===== */
 function vLocal() {
-  const fechas = [...new Set([...S.cierres.map(c => c.Fecha), ...S.cobros.filter(c => String(c.PorLocal).toUpperCase() === 'SI').map(c => c.Fecha)])].sort().reverse().slice(0, 45);
-  const mes = mesDe(hoy());
+  const { mes, html } = selMes(); // un mes a la vez (por defecto el actual)
+  const fechas = [...new Set([...S.cierres.map(c => c.Fecha), ...S.cobros.filter(c => String(c.PorLocal).toUpperCase() === 'SI').map(c => c.Fecha)])].filter(f => mesDe(f) === mes).sort().reverse();
   const cm = S.cierres.filter(c => mesDe(c.Fecha) === mes);
-  $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
+  $('#main').innerHTML = `${html}<div class="grid g3" style="margin-bottom:14px">
       <div class="kpi"><small>Ventas del local · ${mesNombre(mes)}</small><b>${usd(cm.reduce((s, c) => s + localNeto(c), 0))}</b></div>
       <div class="kpi"><small>Pagos del mayor por el local</small><b>${usd(cm.reduce((s, c) => s + mayorDia(c), 0))}</b></div>
       <div class="kpi"><small>Cierres registrados</small><b>${cm.length}</b></div></div>
@@ -702,8 +703,8 @@ function vLocal() {
     <p class="small muted"><b>Venta del local</b> = todo lo que entró en el día − los cobros a clientes al mayor que registraste en Cobros como "entró por las cuentas del local" ese mismo día (columna <span class="pill p-mayor">Mayor</span>).</p>
     <div class="tbl"><table><tr><th>Fecha</th><th class="hm">Por</th><th class="r">Local</th><th class="r">Mayor<span class="hm"> (local)</span></th><th class="r hm">Cobros mayor</th><th>Concilia<span class="hm">ción</span></th><th></th></tr>
     ${fechas.map(f => { const c = S.cierres.find(x => x.Fecha === f); const k = conciliacion(f);
-      return `<tr><td>${fdate(f)}</td><td class="small hm">${c ? esc(c.Empleado) : ''}</td><td class="r">${c ? `<div class="num">${usd(localNeto(c))}</div>${tasaCierre(c) ? `<div class="num small muted">${bs(bsCierre(c, 'Local'))}</div>` : ''}` : ''}</td><td class="r num">${usd(k.mayor)}</td><td class="r num hm">${usd(k.cobros)}</td><td>${c ? concPill(k) : '<span class="pill p-warn">sin cierre</span>'}</td><td>${c ? `<button class="btn sm sec" data-ver="${c.ID}">Ver</button>` : ''}</td></tr>
-      <tr class="hide" id="d-${c ? c.ID : f}"><td colspan="7"></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Aún no hay cierres</td></tr>'}
+      return `<tr><td>${fdate(f)}</td><td class="small hm">${c ? esc(c.Empleado) : ''}</td><td class="r">${c ? `<div class="num">${usd(localNeto(c))}</div>${tasaCierre(c) ? `<div class="num small muted">${bs(bsCierre(c, 'Local'))}</div>` : ''}` : ''}</td><td class="r num">${usd(Math.max(k.mayor, k.cobros))}</td><td class="r num hm">${usd(k.cobros)}</td><td>${c ? concPill(k) : '<span class="pill p-warn">sin cierre</span>'}</td><td>${c ? `<button class="btn sm sec" data-ver="${c.ID}">Ver</button>` : ''}</td></tr>
+      <tr class="hide" id="d-${c ? c.ID : f}"><td colspan="7"></td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">No hay cierres en este mes</td></tr>'}
     </table></div></div>`;
   $('#nc').onclick = () => { CIERRE = nuevoCierre(); TAB = 'cierre'; render(); };
   document.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => {
@@ -719,6 +720,7 @@ function vLocal() {
     tr.querySelector('[data-edit]').onclick = () => { CIERRE = { fecha: c.Fecha, moneda: c.Moneda === 'Bs' ? 'Bs' : 'USD', notas: c.Notas || '', lineas: ls.map(l => ({ tipo: l.Tipo, destino: l.Destino, monto: String(l.Monto), cliente: l.Cliente })) }; TAB = 'cierre'; render(); };
     tr.querySelector('[data-delc]').onclick = e => { if (confirmar(e.target, '¿Seguro?')) busy(e.target, async () => { await call('eliminarCierre', { id: c.ID }); toast('Cierre eliminado'); await recargar(); }); };
   });
+  bindMes(vLocal);
 }
 
 /* ===== VENTAS (historial) ===== */
