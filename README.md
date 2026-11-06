@@ -1,1 +1,7 @@
-# lacteos
+# Ventas Lácteos
+
+App instalable (GitHub Pages) para ventas al mayor, cobros, pedidos de clientes, inventario y cierre diario del local.
+Los datos viven en Google Sheets y la lógica en Google Apps Script; esta página solo es la pantalla.
+
+- `index.html`: la app (habla con Apps Script por `API_URL`).
+- `manifest.webmanifest`, `sw.js`, íconos: para instalarla en el celular.
