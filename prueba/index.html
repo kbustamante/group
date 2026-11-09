@@ -2144,7 +2144,7 @@ function vExcel() {
 function vAjustes() {
   $('#main').innerHTML = `<div class="grid g2 st">
     <div class="card"><h2>Tasa BCV</h2>
-      <p class="small muted">Se busca sola todos los días a las 9 a.m. y 5 p.m. Si falla, o quieres usar otra, cárgala aquí (la manual tiene prioridad).</p>
+      <p class="small muted">Se busca sola a las 9 a.m., 5 p.m. y 7 p.m. (Caracas). En la tarde el BCV publica la del <b>día hábil siguiente</b> (su "Fecha Valor"): esa se guarda con la fecha de mañana y la cabecera sigue mostrando la de hoy. Si escribes una a mano, elige bien la fecha: la escrita a mano manda sobre la automática de ese día.</p>
       <div class="row"><div><label>Fecha</label><input type="date" id="tf" value="${hoy()}"></div><div><label>Tasa Bs/$</label><input id="tv" class="num" inputmode="decimal" placeholder="0,00"></div></div>
       <div class="row" style="margin-top:10px"><button class="btn" id="tg">Guardar tasa</button><button class="btn sec" id="tb">Buscar BCV ahora</button></div>
       <h3>Historial</h3><div class="tbl" style="max-height:260px;overflow:auto"><table>${S.tasas.map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="r num">${n2(t.Tasa)}</td><td class="small muted">${esc(t.Fuente)}</td></tr>`).join('') || '<tr><td class="muted">Sin tasas aún</td></tr>'}</table></div>
