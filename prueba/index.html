@@ -310,7 +310,7 @@ async function start() {
   cargarChart();
   try {
     try { aplicarEntrada(await call('entrar', {}, !TOKEN)); }
-    catch (e1) { if (!/desconocida/i.test(e1.message)) throw e1; USER = await call('login', {}, true); await cargarDatos(); } // servidor todavía en V11
+    catch (e1) { if (!/desconocida/i.test(e1.message)) throw e1; USER = await call('login', {}, true); await cargarDatos(); if (PIN) store('pin', PIN); } // servidor todavía sin V12: entra como antes
     SOLO_VER = false;
     if (!TABS().some(t => t[0] === TAB)) TAB = TABS()[0][0];
     render(); guardarVista(); avisoPrivacidad();
@@ -367,7 +367,7 @@ const GRUPOS = [
   ['ajustes', 'Ajustes', '⚙️', [['ajustes', 'General'], ['funciones', 'Funciones'], ['registro', 'Registro de cambios']]],
 ];
 /* V11: cada pantalla pide una función (Ajustes → Funciones decide quién la usa). */
-const LEGADO = { admin: null, empleado: ['cierre', 'mercancia'], cliente: ['cliPedidos', 'cliPagos'], otro: [] }; // servidor viejo (sin funciones): como antes
+const LEGADO = { admin: ['venta', 'subir', 'cobros', 'whatsapp', 'pedidos', 'cierre', 'mercancia', 'conciliacion', 'compras', 'inventario', 'reportes', 'ajustes', 'tasa'], empleado: ['cierre', 'mercancia'], cliente: ['cliPedidos', 'cliPagos'], otro: [] }; // servidor viejo (sin funciones): como antes
 const F = k => { if (!USER) return false; if (!USER.funciones) { const l = LEGADO[USER.rol]; return l === null ? !/^cli|lotes|cierreMes/.test(k) : (l || []).includes(k); } return !!USER.funciones[k]; };
 const FS = (...ks) => ks.some(F);
 const AL = () => USER && (USER.rol === 'admin' || USER.rol === 'otro'); // admin y el 4.º perfil usan el menú grande
@@ -376,7 +376,8 @@ const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['ve
   stock: ['inventario'], vencer: ['lotes'], traslado: ['inventario'], conteo: ['inventario'], movs: ['inventario'],
   r_mes: ['reportes'], reportes: ['reportes'], productos: ['reportes'], r_cobranza: ['reportes'], r_prov: ['reportes'], r_local: ['reportes'], r_inv: ['reportes'], ajustes: ['ajustes'], funciones: ['ajustes'], registro: ['ajustes'], excel: ['excel'],
   mercancia: ['mercancia'], wa: ['whatsapp'], pedir: ['cliPedidos'], pagar: ['cliPagos'], cuentas: [] };
-const puedeVer = k => !VISTA_F[k] || !VISTA_F[k].length || FS(...VISTA_F[k]);
+const SOLO_V11 = ['funciones', 'registro', 'gastos', 'vencer', 'excel']; // pantallas que necesitan servidor V11 o más nuevo
+const puedeVer = k => (!SOLO_V11.includes(k) || !!(USER && USER.funciones)) && (!VISTA_F[k] || !VISTA_F[k].length || FS(...VISTA_F[k]));
 const NOMBRE_ROL = r => ({ admin: 'Administrador', empleado: 'Local', cliente: 'Cliente', otro: (USER && USER.perfilOtro) || (S && S.perfilOtro) || 'Otro perfil' }[r] || r);
 const ULTIMA = {}; // última sub-pestaña usada de cada módulo
 function GV() { return GRUPOS.map(g => [g[0], g[1], g[2], g[3].filter(v => puedeVer(v[0])), g[4]]).filter(g => g[3].length); } // menú con lo permitido
