@@ -327,7 +327,20 @@ function veloSoloVer() {
   d.onclick = () => toast('Espera un momento: se están trayendo los datos actualizados'); document.body.appendChild(d);
 }
 function quitarVelo() { const x = document.getElementById('soloVer'); if (x) x.remove(); }
-async function recargar() { await cargarDatos(); render(); guardarVista(); }
+/** V12: guardar una tasa no recarga todo: se actualiza solo la tasa en pantalla (es lo que hacía lento guardarla). */
+function tasaLocal(r) {
+  if (!r || !r.fecha) return;
+  const fila = { Fecha: r.fecha, Tasa: Number(r.tasa), Fuente: r.fuente, RegistradaEn: new Date().toISOString() };
+  S.tasas = (S.tasas || []).filter(x => x.Fecha !== r.fecha).concat([fila]).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
+  if (r.fecha === hoy() || !S.tasaHoy || !S.tasaHoy.fecha || (r.fecha <= hoy() && r.fecha >= S.tasaHoy.fecha)) S.tasaHoy = { fecha: r.fecha, tasa: Number(r.tasa), fuente: r.fuente };
+  guardarVista();
+}
+/** Después de guardar: la pantalla sigue a la vista con "Actualizando…" mientras llegan los datos al día (antes el botón se quedaba girando). */
+async function recargar() {
+  SOLO_VER = true; render();
+  try { await cargarDatos(); } finally { SOLO_VER = false; }
+  render(); guardarVista();
+}
 
 function renderLogin(err) {
   $('#app').innerHTML = `<div class="login card">
@@ -473,7 +486,7 @@ function bindCabecera() {
       d => { const b = d.querySelector('#ptb'); if (b) b.onclick = () => busy(b, async () => { const r = await call('buscarTasa'); S.tasaHoy = await call('tasa', {}); cerrarPop(); toast(r.pendiente ? 'El BCV todavía no publica la tasa de mañana' : r.sinCambio ? 'Se mantiene la tasa escrita a mano' : 'Tasa del BCV: ' + n2(r.tasa) + ' (' + fdate(r.fecha) + ')'); render(); });
         const g = d.querySelector('#ptg'); if (g) g.onclick = () => busy(g, async () => { const t = num(d.querySelector('#ptv').value); if (!(t > 0)) throw new Error('Escribe la tasa'); const f = d.querySelector('#ptf').value;
           if (S.tasaHoy && S.tasaHoy.tasa && Math.abs(t / S.tasaHoy.tasa - 1) > 0.1 && !confirm('La tasa ' + n2(t) + ' es muy distinta a la actual (' + n2(S.tasaHoy.tasa) + '). ¿Guardarla?')) return;
-          await call('guardarTasa', { fecha: f, tasa: t }); S.tasaHoy = await call('tasa', {}); cerrarPop(); toast('Tasa guardada: ' + n2(t) + ' para el ' + fdate(f)); if (AL()) await recargar(); else render(); }); }); };
+          tasaLocal(await call('guardarTasa', { fecha: f, tasa: t })); cerrarPop(); toast('Tasa guardada: ' + n2(t) + ' para el ' + fdate(f)); render(); }); }); };
   $('#hav').onclick = () => popover($('#hav'), `<div class="ph"><b style="font-size:15px;color:var(--ink)">${esc(USER.nombre)}</b><div class="small muted" style="font-weight:400;text-transform:none;letter-spacing:0">${esc(NOMBRE_ROL(USER.rol))} · ${esc(USR)}</div></div>
       <button class="pi" id="pmp"><span>🔑</span>Cambiar mi PIN</button><div class="pv small muted">Versión: pantalla ${PANTALLA}${USER.version ? ' · servidor V' + USER.version : ''}</div>
       <button class="pi rojo" id="psal"><span>⏻</span>Cerrar sesión</button>`, d => { d.querySelector('#psal').onclick = () => { cerrarPop(); salir(); }; d.querySelector('#pmp').onclick = cambiarMiPin; });
@@ -2189,7 +2202,7 @@ function vAjustes() {
       <p class="small muted">Todos los días a las 7 a.m. llega un correo a los administradores que tengan correo en Usuarios: deudas vencidas, cierre faltante, conciliación, inventario bajo, pedidos por confirmar y pagos a proveedores por vencer. Los pedidos y pagos de clientes avisan al momento.</p>
       <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div><p class="small muted" style="margin:10px 0 0">Pantalla ${PANTALLA} · servidor V${USER.version || '?'}</p></div>
   </div>`;
-  $('#tg').onclick = e => busy(e.target, async () => { await call('guardarTasa', { fecha: $('#tf').value, tasa: num($('#tv').value) }); toast('Tasa guardada'); await recargar(); });
+  $('#tg').onclick = e => busy(e.target, async () => { tasaLocal(await call('guardarTasa', { fecha: $('#tf').value, tasa: num($('#tv').value) })); toast('Tasa guardada'); render(); });
   $('#tb').onclick = e => busy(e.target, async () => { const r = await call('buscarTasa'); toast(r.sinCambio ? 'Hay una tasa manual para ese día; se mantiene' : 'Tasa BCV: ' + n2(r.tasa)); await recargar(); });
   const codDe = t => { t = t.trim(); const p = S.productos.find(x => x.Nombre.toLowerCase() === t.toLowerCase() || x.Codigo === t.toUpperCase()); return p ? p.Codigo : t; };
   document.querySelectorAll('[data-ps]').forEach(b => b.onclick = () => busy(b, async () => { const c = b.dataset.ps; await call('guardarProducto', { Codigo: c, Nombre: $(`[data-pn="${c}"]`).value, Costo: num($(`[data-pc="${c}"]`).value), Precio: num($(`[data-pp="${c}"]`).value),
