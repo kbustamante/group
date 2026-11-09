@@ -370,6 +370,7 @@ const GRUPOS = [
 const LEGADO = { admin: ['venta', 'subir', 'cobros', 'whatsapp', 'pedidos', 'cierre', 'mercancia', 'conciliacion', 'compras', 'inventario', 'reportes', 'ajustes', 'tasa'], empleado: ['cierre', 'mercancia'], cliente: ['cliPedidos', 'cliPagos'], otro: [] }; // servidor viejo (sin funciones): como antes
 const F = k => { if (!USER) return false; if (!USER.funciones) { const l = LEGADO[USER.rol]; return l === null ? !/^cli|lotes|cierreMes/.test(k) : (l || []).includes(k); } return !!USER.funciones[k]; };
 const FS = (...ks) => ks.some(F);
+const V12 = () => Number(USER && USER.version) >= 12; // el servidor ya tiene la V12 (inventario nuevo)
 const AL = () => USER && (USER.rol === 'admin' || USER.rol === 'otro'); // admin y el 4.º perfil usan el menú grande
 const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['venta', 'corregir', 'cobros'], subirv: ['subir'], cobrar: ['cobros'], deudas: ['cobros', 'whatsapp'],
   pedidos: ['pedidos'], cierre: ['cierre'], local: ['conciliacion'], subirl: ['subir'], entrada: ['compras'], debo: ['compras'], gastos: ['gastos'], proveedores: ['compras'],
@@ -406,7 +407,7 @@ function render() {
   const mas = $('#mas'); if (mas) { const sh = $('#sheet'); mas.onclick = () => sh.classList.add('on'); sh.onclick = e => { if (e.target === sh) sh.classList.remove('on'); }; }
   const inv = f => () => { $('#main').innerHTML = '<div id="inv"></div>'; f(); };
   ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, subirv: vSubirVentas, subirl: vSubirCierres, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
-     pedidos: vPedidos, stock: inv(invStock), entrada: inv(invEntrada), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
+     pedidos: vPedidos, stock: inv(invStock), entrada: inv(() => { invEntrada(); porCompletar(); }), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
      r_mes: vResumenMes, r_cobranza: vCobranza, r_prov: vRepProveedores, r_local: vRepLocal, r_inv: vRepInventario,
      gastos: vGastos, vencer: vVencer, wa: vCobrarLocal, nada: vNada, funciones: vFunciones, registro: vRegistro, excel: vExcel,
      mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
@@ -424,7 +425,7 @@ function estadoTasa() {
   const t = S.tasaHoy || {}, h = hoy();
   if (!t.tasa) return { cls: 'bad', txt: 'Sin tasa', det: 'No hay tasa cargada' };
   const manual = /manual/i.test(String(t.fuente || ''));
-  if (t.fecha === h) return { cls: 'ok', txt: manual ? 'Tasa BCV hoy · manual' : 'Tasa BCV hoy', det: (manual ? 'Manual: la escribió una persona' : 'Automática del BCV') + ' · ' + fdate(t.fecha) };
+  if (t.fecha === h) return { cls: 'ok', txt: 'Tasa BCV', det: (manual ? 'Manual: la escribió una persona' : 'Automática del BCV') + ' · ' + fdate(t.fecha) };
   return { cls: 'warn', txt: 'Tasa del ' + fdate(t.fecha), det: 'No es la de hoy' };
 }
 /** Todo lo que necesita atención del admin (campanita e Inicio). */
@@ -436,6 +437,8 @@ function avisosAdmin() {
   if (F('conciliacion') && !S.cierres.find(c => c.Fecha === addDays(h, -1))) out.push({ i: '🏪', txt: 'Falta el cierre del local de ayer', tab: 'local' });
   const dp = deudaProveedores(), vp = dp.lista.filter(e => e.Vence <= addDays(h, 3));
   if (F('compras') && vp.length) out.push({ i: '🚚', txt: `${vp.length} factura(s) de proveedor ${vp.some(e => e.Vence < h) ? 'vencida(s) o ' : ''}por vencer (${usd(vp.reduce((s, e) => s + Number(e.Saldo), 0))})`, tab: 'debo' });
+  const pcomp = (S.entradas || []).filter(e => e.Estado === 'Por completar').length;
+  if (F('compras') && pcomp) out.push({ i: '📥', txt: `${pcomp} mercancía(s) que llegó al local: falta el costo y el proveedor`, tab: 'entrada' });
   const bajos = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO' && Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
   if (F('inventario') && bajos.length) out.push({ i: '📦', txt: 'Inventario bajo: ' + bajos.slice(0, 3).map(p => p.Nombre).join(', ') + (bajos.length > 3 ? ` y ${bajos.length - 3} más` : ''), tab: 'stock' });
   const pv = porVencer(7); if (F('lotes') && pv.length) out.push({ i: '📅', txt: `${pv.length} lote(s) vencen en 7 días o menos (${n2(pv.reduce((s, l) => s + Number(l.Restante), 0))} kg)`, tab: 'vencer' });
@@ -828,8 +831,8 @@ function vVender() {
     const lineas = V.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), precio: num(l.precio), costo: num(l.costo) }));
     if (!V.cliente) throw new Error('Elige el cliente');
     if (!lineas.length) throw new Error('Escribe los kilos de al menos un producto');
-    const sinStock = lineas.filter(l => l.kg > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) + 0.001);
-    if (sinStock.length && S.movimientos && S.movimientos.length && !e.target.dataset.okst) { e.target.dataset.okst = 1; throw new Error('El inventario no alcanza para: ' + sinStock.map(l => nombreProd(l.codigo)).join(', ') + '. Si igual lo despachaste, toca Guardar otra vez.'); }
+    const ctrl = new Set(S.controlados || []), sinStock = lineas.filter(l => (!S.controlados || ctrl.has(l.codigo)) && l.kg > Number(((S.productos.find(p => p.Codigo === l.codigo) || {}).Stock) || 0) + 0.001);
+    if (sinStock.length && S.controlados) throw new Error('No hay suficiente inventario de: ' + sinStock.map(l => nombreProd(l.codigo) + ' (hay ' + n2(Math.max(0, Number(S.productos.find(p => p.Codigo === l.codigo).Stock) || 0)) + ' kg)').join(', ') + '. Si la mercancía está, regístrala primero en Compras → Entrada o haz un conteo.');
     const bajo = lineas.filter(l => l.costo > 0 && l.precio < l.costo);
     if (bajo.length && !e.target.dataset.okbc) { e.target.dataset.okbc = 1; throw new Error('⚠️ Precio por debajo del costo: ' + bajo.map(l => nombreProd(l.codigo) + ' (' + n2(l.precio) + ' < ' + n2(l.costo) + ')').join(', ') + '. Si es correcto, toca Guardar otra vez.'); }
     const r = await call('guardarVenta', { fecha: V.fecha, cliente: V.cliente, nota: V.nota ? num(V.nota) : null, lineas, notas: V.notas, actualizarPrecios: V.actualizarPrecios, pedidoId: V.pedidoId || '' });
@@ -1642,7 +1645,8 @@ function invStock() {
     <div class="card"><div class="tbl"><table>
       <tr><th>Producto</th><th class="r">Stock<span class="hm"> kg</span></th><th class="r">Reserv<span class="hm">ado</span></th><th class="r">Dispon<span class="hm">ible</span></th><th class="r hm">Mínimo</th><th class="r hm">Costo</th><th class="r hm">Precio</th><th class="r">Margen</th></tr>
       ${prods.map(p => { const st = Number(p.Stock) || 0, mi = Number(p.Minimo) || 0, m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0;
-        return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}</td><td class="r num"><b>${n2(st)}</b></td><td class="r num muted">${reservado(p.Codigo) ? n2(reservado(p.Codigo)) : ''}</td><td class="r num">${n2(S.disponible[p.Codigo])}</td>
+        const sc = S.controlados && !S.controlados.includes(p.Codigo);
+        return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}${st < -0.001 ? ' <span class="pill p-bad" title="Haz un conteo para corregirlo">negativo</span>' : ''}</td><td class="r num">${sc ? '<span class="small muted">sin contar</span>' : `<b style="${st < -0.001 ? 'color:var(--bad)' : ''}">${n2(st)}</b>`}</td><td class="r num muted">${reservado(p.Codigo) ? n2(reservado(p.Codigo)) : ''}</td><td class="r num">${n2(S.disponible[p.Codigo])}</td>
           <td class="r num muted hm">${mi ? n2(mi) : ''}</td><td class="r num hm">${n2(p.Costo)}</td><td class="r num hm">${n2(p.Precio)}</td>
           <td class="r num" style="color:${m < obj - 0.03 ? 'var(--bad)' : 'var(--ok)'}" title="Objetivo ${pct(obj)}">${pct(m)}</td></tr>`; }).join('')}
     </table></div><p class="small muted">"Reservado" son kg de pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
@@ -1651,6 +1655,35 @@ function invStock() {
         <div><label>Kg (− resta, + suma)</label><input id="ajk" class="num" inputmode="decimal" placeholder="-1,5"></div>
         <div style="flex:2"><label>Motivo</label><input id="ajm" placeholder="Ej: queso dañado"></div><button class="btn" id="ajg" style="flex:none">Guardar</button></div></div>`;
   $('#ajg').onclick = e => busy(e.target, async () => { const kg = num($('#ajk').value); if (!kg) throw new Error('Escribe los kg'); await call('guardarAjuste', { lineas: [{ codigo: $('#ajp').value, kg, motivo: $('#ajm').value }] }); toast('Ajuste guardado'); await recargar(); });
+}
+/** V12: mercancía que la empleada anotó al llegar al local: ya está en el inventario, falta costo y proveedor. */
+function porCompletar() {
+  const pc = (S.entradas || []).filter(e => e.Estado === 'Por completar').sort((a, b) => a.Fecha < b.Fecha ? 1 : -1);
+  if (!pc.length) return;
+  const lin = id => S.movimientos.filter(m => m.Ref === id && m.Tipo === 'Entrada');
+  const d = document.createElement('div'); d.className = 'card'; d.style.borderColor = 'var(--warn, #f59e0b)';
+  d.innerHTML = `<h2>📥 Llegó al local · falta completar (${pc.length})</h2><p class="small muted" style="margin-top:-6px">Ya está sumado al inventario. Completa el proveedor y el costo para que quede en compras y, si fue a crédito, en Lo que debo.</p>
+    ${pc.map(e => `<div class="cli" style="flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>${fdate(e.Fecha)}</b> · ${esc(e.Proveedor)}<div class="small muted">${lin(e.ID).map(m => esc(m.Producto) + ' ' + n2(m.Kg) + ' kg').join(' · ')}</div><div class="small muted">${esc(e.Notas || '')}</div></div>
+      <div class="row" style="flex:none;gap:6px"><button class="btn sm acc" data-pcm="${e.ID}" style="flex:none">Completar</button><button class="btn sm bad" data-anut="${e.ID}" style="flex:none">Anular</button></div></div>`).join('')}`;
+  $('#inv').prepend(d); bindAnularInv();
+  d.querySelectorAll('[data-pcm]').forEach(b => b.onclick = () => {
+    const e = pc.find(x => x.ID === b.dataset.pcm), L = lin(e.ID), C = { proveedor: e.Proveedor === 'Por completar' ? '' : e.Proveedor, condicion: 'Contado', dias: 15, costos: {} };
+    L.forEach(m => C.costos[m.Codigo] = String((S.productos.find(p => p.Codigo === m.Codigo) || {}).Costo || ''));
+    modal(`<h2 style="margin-right:30px">Completar compra del ${fdate(e.Fecha)}</h2>
+      <label>Proveedor</label><input id="cpp" list="dl-prov2" value="${esc(C.proveedor)}"><datalist id="dl-prov2">${S.proveedores.map(p => `<option value="${esc(p.Nombre)}">`).join('')}</datalist>
+      <div class="row" style="margin-top:8px"><div><label>Pago</label><div class="seg"><button data-cc="Contado" class="on plain">Contado</button><button data-cc="Crédito">Crédito</button></div></div><div style="max-width:110px"><label>Días</label><input id="cpd" class="num" value="15"></div></div>
+      <div class="tbl" style="margin-top:8px"><table><tr><th>Producto</th><th class="r">Kg</th><th class="r">Costo $/kg</th><th class="r">Subtotal</th></tr>
+        ${L.map(m => `<tr><td>${esc(m.Producto)}</td><td class="r num">${n2(m.Kg)}</td><td class="r"><input class="num" style="width:86px" inputmode="decimal" data-cpc="${m.Codigo}" value="${esc(C.costos[m.Codigo])}"></td><td class="r num" data-cps="${m.Codigo}"></td></tr>`).join('')}</table></div>
+      <div class="tot big"><span>Total</span><span class="num" id="cpt"></span></div>
+      <button class="btn acc full" id="cpg" style="margin-top:10px">Guardar compra</button>`, md => {
+      const tot = () => { let t = 0; L.forEach(m => { const v = num(C.costos[m.Codigo]) * Number(m.Kg); t += v; md.querySelector(`[data-cps="${m.Codigo}"]`).textContent = v ? usd(v) : ''; }); md.querySelector('#cpt').textContent = usd(t); }; tot();
+      md.querySelectorAll('[data-cpc]').forEach(i => i.oninput = () => { C.costos[i.dataset.cpc] = i.value; tot(); });
+      md.querySelectorAll('[data-cc]').forEach(x => x.onclick = () => { C.condicion = x.dataset.cc; md.querySelectorAll('[data-cc]').forEach(y => y.className = y === x ? 'on plain' : ''); });
+      md.querySelector('#cpg').onclick = ev => busy(ev.target, async () => {
+        await call('completarEntrada', { id: e.ID, proveedor: md.querySelector('#cpp').value.trim(), condicion: C.condicion, dias: num(md.querySelector('#cpd').value) || 15, lineas: L.map(m => ({ codigo: m.Codigo, costo: num(C.costos[m.Codigo]) })) });
+        cerrarModal(); toast('Compra completada'); await recargar(); });
+    });
+  });
 }
 function invEntrada() {
   if (!ENTRADA) ENTRADA = { fecha: hoy(), proveedor: '', condicion: 'Contado', dias: 15, notas: '', lineas: [] };
@@ -1726,11 +1759,14 @@ function formTraslado(T, cont, onSave, titulo, ayuda, prods) {
     await onSave({ fecha: T.fecha, notas: T.notas, lineas });
   });
 }
-function listaTraslados(tras, lineas, conBoton) {
+function listaTraslados(tras, lineas, conBoton, anular) {
   return `<div class="tbl"><table><tr><th>Fecha</th><th>Productos</th><th>Estado</th><th></th></tr>
     ${tras.map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="small">${lineas.filter(x => x.Ref === t.ID).map(x => esc(x.Producto) + ' ' + n2(x.Kg) + ' kg').join(' · ')}${t.Notas ? `<div class="muted">📝 ${esc(t.Notas)}</div>` : ''}</td>
-      <td><span class="pill ${t.Estado === 'Recibido' ? 'p-ok' : 'p-warn'}">${t.Estado}</span><div class="small muted">${t.Estado === 'Recibido' ? 'por ' + esc(t.RecibidoPor) : 'enviado por ' + esc(t.EnviadoPor)}</div></td>
-      <td>${conBoton && t.Estado === 'Enviado' ? `<button class="btn sm acc" data-recib="${t.ID}">Ya llegó</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sin traslados recientes</td></tr>'}</table></div>`;
+      <td><span class="pill ${t.Estado === 'Recibido' ? 'p-ok' : t.Estado === 'Anulado' ? 'p-bad' : 'p-warn'}">${t.Estado}</span><div class="small muted">${t.Estado === 'Recibido' ? 'por ' + esc(t.RecibidoPor) : t.Estado === 'Anulado' ? '' : 'enviado por ' + esc(t.EnviadoPor)}</div></td>
+      <td>${conBoton && t.Estado === 'Enviado' ? `<button class="btn sm acc" data-recib="${t.ID}">Ya llegó</button>` : ''}${anular && t.Estado !== 'Anulado' ? `<button class="btn sm bad" data-anut="${t.ID}" title="Devuelve los kilos al inventario">Anular</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Sin traslados recientes</td></tr>'}</table></div>`;
+}
+function bindAnularInv() {
+  document.querySelectorAll('[data-anut]').forEach(b => b.onclick = () => { if (!confirmar(b, '¿Anular?')) return; busy(b, async () => { await call('anularInventario', { id: b.dataset.anut }); toast('Anulado: el inventario volvió a como estaba'); await recargar(); }); });
 }
 function invTraslado() {
   if (!TRASLADO) TRASLADO = { fecha: hoy(), notas: '', lineas: [] };
@@ -1738,7 +1774,8 @@ function invTraslado() {
   formTraslado(TRASLADO, $('#tform'), async (d) => { await call('guardarTraslado', d); toast('Traslado registrado: el local lo confirmará al recibir'); TRASLADO = null; await recargar(); TAB = 'traslado'; render(); },
     'Enviar mercancía al local', 'Se descuenta del inventario ahora y queda "Enviado" hasta que el local confirme que llegó.', S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO'));
   const lineas = S.movimientos.filter(m => m.Tipo === 'Traslado').map(m => ({ Ref: m.Ref, Producto: m.Producto, Kg: -Number(m.Kg) }));
-  $('#tlist').innerHTML = listaTraslados(S.traslados.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1), lineas, false);
+  $('#tlist').innerHTML = listaTraslados(S.traslados.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1), lineas, false, V12());
+  bindAnularInv();
 }
 function invConteo() {
   const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO');
@@ -1806,12 +1843,22 @@ function vMercancia() {
       ${pend.map(t => `<div class="pcard" style="margin-bottom:10px;background:#fff"><div class="top"><b>Enviado el ${fdate(t.Fecha)}</b><span class="small muted">por ${esc(t.EnviadoPor)}</span></div>
         <table>${S.trasladoLineas.filter(l => l.Ref === t.ID).map(l => `<tr><td>${esc(l.Producto)}</td><td class="r num"><b>${n2(l.Kg)} kg</b></td></tr>`).join('')}</table>
         <div class="row" style="margin-top:8px"><input data-rn="${t.ID}" placeholder="Nota (opcional): ej. faltó 1 kg" style="flex:2"><button class="btn acc" data-recib="${t.ID}" style="flex:none">Ya llegó</button></div></div>`).join('') || '<div class="empty">No hay mercancía pendiente por recibir.</div>'}
-    </div><div id="rform" style="max-width:720px;margin:0 auto"></div>
+    </div><div class="card" id="rorig" style="max-width:720px;margin:0 auto 10px"></div><div id="rform" style="max-width:720px;margin:0 auto"></div>
     <div class="card" style="max-width:720px;margin:14px auto"><h2>Recibido últimamente</h2>${listaTraslados(S.traslados.filter(t => t.Estado === 'Recibido'), S.trasladoLineas, false)}</div>`;
   document.querySelectorAll('[data-recib]').forEach(b => b.onclick = () => busy(b, async () => { await call('recibirTraslado', { id: b.dataset.recib, notas: $(`[data-rn="${b.dataset.recib}"]`).value }); toast('Recibido ✓'); await recargar(); }));
-  if (!RECIBO) RECIBO = { fecha: hoy(), notas: '', lineas: [] };
-  formTraslado(RECIBO, $('#rform'), async (d) => { await call('guardarTraslado', d); toast('Mercancía registrada ✓'); RECIBO = null; await recargar(); },
+  if (!RECIBO) RECIBO = { fecha: hoy(), notas: '', lineas: [], origen: '', proveedor: '' };
+  formTraslado(RECIBO, $('#rform'), async (d) => {
+    if (V12() && !RECIBO.origen) throw new Error('Elige de dónde vino la mercancía');
+    await call('guardarTraslado', Object.assign(d, { origen: RECIBO.origen, proveedor: RECIBO.proveedor }));
+    toast(RECIBO.origen === 'proveedor' ? 'Mercancía registrada ✓ El administrador completará el costo' : 'Registrado ✓'); RECIBO = null; await recargar(); },
     'Registrar mercancía que llegó', '¿Llegó mercancía que no aparece arriba? Anótala aquí con los kg que recibiste.', S.productos);
+  const R0 = RECIBO, sel = $('#rorig');
+  if (!V12()) { sel.remove(); return; }
+  sel.innerHTML = `<h2>¿Llegó mercancía que no estaba anunciada?</h2><label>Primero elige de dónde vino</label><div class="seg wrap"><button data-org="proveedor" class="${R0.origen === 'proveedor' ? 'on plain' : ''}">🚚 Del proveedor (compra nueva)</button><button data-org="mayor" class="${R0.origen === 'mayor' ? 'on plain' : ''}">📦 Del inventario del mayor</button></div>
+    <div class="small muted" style="margin-top:4px">${R0.origen === 'proveedor' ? 'Se suma al inventario. El administrador completa después el costo y el proveedor.' : R0.origen === 'mayor' ? 'Se resta del inventario del mayor: es mercancía que ya estaba registrada y pasa a la venta del local.' : 'Elige una opción.'}</div>
+    ${R0.origen === 'proveedor' ? `<div style="margin-top:8px"><label>Proveedor (si lo sabes)</label><input id="rprov" value="${esc(R0.proveedor)}" placeholder="Ej: Lácteos Andinos"></div>` : ''}`;
+  sel.querySelectorAll('[data-org]').forEach(b => b.onclick = () => { R0.origen = b.dataset.org; const y = window.scrollY; vMercancia(); window.scrollTo(0, y); });
+  const rp = $('#rprov'); if (rp) rp.oninput = e => R0.proveedor = e.target.value;
 }
 
 /* ===== APP DEL CLIENTE ===== */
