@@ -423,7 +423,7 @@ function estadoTasa() {
   const t = S.tasaHoy || {}, h = hoy();
   if (!t.tasa) return { cls: 'bad', txt: 'Sin tasa', det: 'No hay tasa cargada' };
   const manual = /manual/i.test(String(t.fuente || ''));
-  if (t.fecha === h) return { cls: 'ok', txt: manual ? 'Tasa BCV hoy · M' : 'Tasa BCV hoy', det: (manual ? 'Escrita a mano' : 'Automática del BCV') + ' · ' + fdate(t.fecha) };
+  if (t.fecha === h) return { cls: 'ok', txt: manual ? 'Tasa hoy · a mano' : 'Tasa BCV hoy', det: (manual ? 'Escrita a mano' : 'Automática del BCV') + ' · ' + fdate(t.fecha) };
   return { cls: 'warn', txt: 'Tasa del ' + fdate(t.fecha), det: 'No es la de hoy' };
 }
 /** Todo lo que necesita atención del admin (campanita e Inicio). */
