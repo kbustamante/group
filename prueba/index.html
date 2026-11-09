@@ -1603,8 +1603,9 @@ function vPedidos() {
       </div>`).join('') || '<div class="empty">✅ No hay pagos por confirmar</div>'}
     </div>
     <div class="card"><h2>Atendidos (últimos 30 días)</h2><div class="tbl"><table>
-      <tr><th>Fecha</th><th>Cliente</th><th>Qué</th><th class="r">Monto</th><th>Estado</th></tr>
-      ${atendidos.map(x => `<tr><td>${fdate(x.Fecha)}</td><td>${esc(x.Cliente)}</td><td class="small">${x.pago ? '💵 Pago · ' + esc(String(x.Metodo).replace(/^Pago\s*/i, '')) : '🛒 Pedido'}</td><td class="r num">${x.pago ? usd(x.MontoUSD) : usd(x.TotalRef)}</td><td>${pill(x.Estado)}${x.Motivo ? ` <span class="small muted">${esc(x.Motivo)}</span>` : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nada todavía</td></tr>'}
+      <tr><th>Fecha</th><th>Cliente</th><th>Qué</th><th class="r">Monto</th><th>Estado</th><th>Observaciones</th></tr>
+      ${atendidos.map(x => { const obs = [x.pago ? (x.Referencia ? 'Ref. ' + x.Referencia : '') : x.Notas, x.Motivo].filter(Boolean);
+        return `<tr><td>${fdate(x.Fecha)}</td><td>${esc(x.Cliente)}</td><td class="small">${x.pago ? '💵 ' + esc(/^pago/i.test(String(x.Metodo)) ? x.Metodo : 'Pago · ' + x.Metodo) : '🛒 Pedido'}</td><td class="r num">${x.pago ? usd(x.MontoUSD) : usd(x.TotalRef)}</td><td>${pill(x.Estado)}</td><td class="small muted">${obs.map(esc).join(' · ') || '—'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="muted">Nada todavía</td></tr>'}
     </table></div></div>`;
   document.querySelectorAll('[data-conf]').forEach(b => b.onclick = () => {
     const p = S.pedidos.find(x => x.ID === b.dataset.conf);
