@@ -299,7 +299,7 @@ function bindRendimiento() {
 async function busy(btn, fn) {
   const txt = btn && btn.innerHTML;
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
-  try { return await fn(); } catch (e) { toast(e.message, true); throw e; } finally { if (btn) { btn.disabled = false; btn.innerHTML = txt; } }
+  try { return await fn(); } catch (e) { toast(e.message, true); } finally { if (btn) { btn.disabled = false; btn.innerHTML = txt; } } // el error ya se mostró: no queda como error suelto en la página
 }
 
 function hoy() { return (S && S.hoy) || new Date().toISOString().slice(0, 10); }
@@ -2172,7 +2172,7 @@ function vFunciones() {
 }
 
 /* ===== V11: registro de cambios ===== */
-let REG = { q: '', usuario: '', r: null };
+let REG = { q: '', usuario: '', archivo: false, r: null };
 function vRegistro() {
   const r = REG.r;
   $('#main').innerHTML = `<div class="card"><h2>Registro de cambios</h2>
@@ -2180,9 +2180,10 @@ function vRegistro() {
     <div class="row"><div style="flex:2"><input id="rq" placeholder="Buscar: anuló, cobro, nota 250, cliente…" value="${esc(REG.q)}"></div>
       <div><select id="ru"><option value="">Todos los usuarios</option>${(S.usuarios || []).map(u => `<option value="${esc(u.Usuario)}" ${u.Usuario === REG.usuario ? 'selected' : ''}>${esc(u.Nombre)}</option>`).join('')}</select></div>
       <button class="btn" id="rb" style="flex:none">Buscar</button></div>
+    <label style="display:flex;gap:6px;align-items:center;margin-top:6px;color:var(--ink)"><input type="checkbox" id="rarch" style="width:auto" ${REG.archivo ? 'checked' : ''}> Buscar también en lo archivado (más de 90 días)</label>
     <div id="rres" style="margin-top:12px">${r ? `<p class="small muted">${r.total > r.filas.length ? 'Últimos ' + r.filas.length + ' de ' + r.total : r.filas.length + ' movimiento(s)'}</p>
       <div class="tbl"><table><tr><th>Cuándo</th><th>Quién</th><th>Qué</th></tr>${r.filas.map(x => `<tr><td class="small" style="white-space:nowrap">${esc(String(x.CreadoEn).replace('T', ' ').slice(0, 16))}</td><td class="small">${esc(x.Usuario)}<div class="muted">${esc(NOMBRE_ROL(x.Perfil))}</div></td><td><b class="small">${esc(x.Accion)}</b>${x.Ref ? ` <span class="small muted">· ${esc(x.Ref)}</span>` : ''}<div class="small muted" style="word-break:break-word">${esc(resumenDet(x.Detalle))}</div></td></tr>`).join('') || '<tr><td class="muted">Nada con ese filtro</td></tr>'}</table></div>` : '<div class="empty small"><span class="spin"></span> Cargando…</div>'}</div></div>`;
-  const buscar = async () => { REG.q = $('#rq').value.trim(); REG.usuario = $('#ru').value; REG.r = await call('verRegistro', { q: REG.q, usuario: REG.usuario }); if (TAB === 'registro') vRegistro(); };
+  const buscar = async () => { REG.q = $('#rq').value.trim(); REG.usuario = $('#ru').value; REG.archivo = $('#rarch').checked; REG.r = await call('verRegistro', { q: REG.q, usuario: REG.usuario, archivo: REG.archivo }); if (TAB === 'registro') vRegistro(); };
   $('#rb').onclick = e => busy(e.target, buscar); $('#rq').onkeydown = e => { if (e.key === 'Enter') $('#rb').click(); };
   if (!r) buscar().catch(e => toast(e.message, true));
 }
@@ -2272,7 +2273,7 @@ function vAjustes() {
       <div class="row" style="margin-top:8px"><button class="btn" id="cmg" style="flex:none">Cerrar</button>${S.cierreHasta ? '<button class="btn sec" id="cmr" style="flex:none">Reabrir todo</button>' : ''}</div></div>` : ''}
     ${cardRendimiento()}
     <div class="card"><h2>Respaldo</h2>
-      <p class="small muted" style="margin-top:-6px">Cada domingo en la noche se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las últimas 8.</p>
+      <p class="small muted" style="margin-top:-6px">Todas las noches (10 p.m.) se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las de las últimas 2 semanas. Esa misma noche, lo del Registro de cambios con más de 90 días pasa a la hoja "RegistroArchivo".</p>
       <p class="small">Último respaldo: <b>${S.respaldo ? esc(S.respaldo) : 'todavía ninguno'}</b></p>
       <button class="btn sec" id="resp">Hacer un respaldo ahora</button></div>
     <div class="card"><h2>Alertas y cuenta</h2>
