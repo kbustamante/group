@@ -226,7 +226,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbyHC210YsoibDdg8DDwp3M7Arrj__hrBQbaqnmfK_ZRyml7Ba6z5N56ERr0WjA6oSUHTw/exec';
-const PANTALLA = 'V14'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V14.1'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -248,7 +248,7 @@ function store(k, v) { try { if (v === undefined) return localStorage.getItem(NS
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const n2 = n => Number(n || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const usd = n => '$' + n2(n);
+const usd = n => (Number(n) < -0.004 ? '−$' : '$') + n2(Math.abs(Number(n) || 0)); // V14.1: negativos como −$7,50
 const bs = n => 'Bs ' + n2(n);
 const r2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 function diaHabil(f) { let d = addDays(f, 1); while ([0, 6].includes(new Date(d + 'T12:00:00').getDay())) d = addDays(d, 1); return d; }
@@ -259,7 +259,7 @@ const mesDe = s => s.slice(0, 7);
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const mesNombre = m => MESES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
 
-function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3200); }
+function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = '', String(msg).length > 70 ? 7000 : 3200); }
 
 function call(action, data, conPin) {
   const req = TOKEN && !conPin ? { action, token: TOKEN, data: data || {} } : { action, usuario: USR, pin: PIN, data: data || {} };
@@ -884,11 +884,11 @@ function pagoCampos(P, tasa, px) {
   </div>`;
 }
 function porLocalDe(P) { return P.porLocal != null ? P.porLocal : false; } // V12: viene desmarcada; se marca solo si el pago entró por las cuentas del local
-function bindPago(P, px, rer) {
+function bindPago(P, px, rer, alCambiar) {
   $('#' + px + 'm').onchange = e => { P.metodo = e.target.value; P.porLocal = null; if (/Efectivo \$|Zelle/.test(P.metodo)) P.moneda = 'USD'; rer(); };
   $('#' + px + 'b').onchange = e => P.banco = e.target.value;
   document.querySelectorAll(`[data-${px}mon]`).forEach(b => b.onclick = () => { P.moneda = b.getAttribute('data-' + px + 'mon'); rer(); });
-  const upd = () => { const eqEl = $('#' + px + 'eq'); if (eqEl) { const t = num(P.tasa || ($('#' + px + 't') || {}).value); eqEl.textContent = usd(t ? num(P.monto) / t : 0); } };
+  const upd = () => { const eqEl = $('#' + px + 'eq'); if (eqEl) { const t = num(P.tasa || ($('#' + px + 't') || {}).value); eqEl.textContent = usd(t ? num(P.monto) / t : 0); } if (alCambiar) alCambiar(); };
   $('#' + px + 'v').oninput = e => { P.monto = e.target.value; upd(); };
   const t = $('#' + px + 't'); if (t) t.oninput = e => { P.tasa = e.target.value; upd(); };
   $('#' + px + 'r').oninput = e => P.referencia = e.target.value;
@@ -901,6 +901,35 @@ function cobroPayload(P, cliente, fecha, ventaId) {
 }
 
 /* ===== COBRAR ===== */
+/** V14.1: qué va a pasar con un pago, igual que en el servidor (guardarCobro_ + aplicarFavor_):
+ *  1) paga la nota elegida (o las más viejas primero); 2) lo que sobra, más el crédito que ya tuviera, paga las otras notas pendientes
+ *  (la más vieja primero); 3) lo que aún sobre queda a favor del cliente para su próxima compra. */
+function planCobro(montoUsd, pend, ventaId, favorPrevio) {
+  const notas = pend.map(v => ({ id: v.ID, nota: v.Nota || '-', fecha: v.Fecha, saldo: r2(Number(v.Saldo)) })).sort((a, b) => (a.fecha + a.nota) < (b.fecha + b.nota) ? -1 : 1);
+  let resto = r2(montoUsd); const pago = [], cred = [];
+  (ventaId ? notas.filter(n => n.id === ventaId) : notas).forEach(n => { if (resto <= 0.005) return; const x = r2(Math.min(resto, n.saldo)); n.saldo = r2(n.saldo - x); resto = r2(resto - x); pago.push({ n, x }); });
+  const sobrante = resto; let credito = r2(resto + (favorPrevio || 0));
+  notas.forEach(n => { if (credito <= 0.005 || n.saldo <= 0.005) return; const x = r2(Math.min(credito, n.saldo)); n.saldo = r2(n.saldo - x); credito = r2(credito - x); cred.push({ n, x }); });
+  return { pago, sobrante, cred, aFavor: credito };
+}
+function textoPlanCobro(pl) {
+  if (pl.sobrante <= 0.005) return '';
+  const est = n => n.saldo <= 0.005 ? 'queda pagada' : 'queda debiendo ' + usd(n.saldo);
+  const lista = arr => arr.map(({ n }) => `la nota ${n.nota} (${est(n)})`).join(arr.length > 2 ? ', ' : ' y ');
+  let t = pl.pago.length ? (pl.pago.length === 1 ? `La nota ${pl.pago[0].n.nota} ${est(pl.pago[0].n)}. ` : `Las notas ${pl.pago.map(p => p.n.nota).join(', ')} quedan pagadas. `) : '';
+  t += `Los ${usd(pl.sobrante)} de más `;
+  if (pl.cred.length) t += `pagan ${lista(pl.cred)}` + (pl.aFavor > 0.005 ? ` y quedan ${usd(pl.aFavor)} a favor para su próxima compra.` : '.');
+  else t += `quedan a favor del cliente para su próxima compra.`;
+  return t;
+}
+function textoCobroGuardado(r) {
+  const pag = (r.aplicado || []).filter(f => f.venta), fu = r.favorUsado || [];
+  let t = 'Cobro guardado';
+  if (pag.length) t += ' · ' + (pag.length === 1 ? `nota ${pag[0].nota}` : `notas ${pag.map(f => f.nota).join(', ')}`) + (pag.every(f => f.saldo <= 0.005) ? (pag.length === 1 ? ' pagada' : ' pagadas') : '');
+  if (fu.length) t += ` · lo que sobró (${usd(fu.reduce((a, f) => a + f.usd, 0))}) pagó ` + fu.map(f => `la nota ${f.nota}` + (f.saldo > 0.005 ? ` (debe ${usd(f.saldo)})` : '')).join(' y ');
+  if (r.aFavor > 0.005) t += ` · le quedan ${usd(r.aFavor)} a favor`;
+  return t;
+}
 function nuevoCobro(cliente) { return { fecha: hoy(), cliente: cliente || '', ventaId: '', metodo: 'Pago móvil', banco: 'Venezuela', moneda: 'Bs', monto: '', referencia: '', notas: '' }; }
 function vCobrar() {
   if (!COBRO) COBRO = nuevoCobro();
@@ -909,7 +938,9 @@ function vCobrar() {
   const saldo = pend.reduce((s, v) => s + Number(v.Saldo), 0);
   const tz = num(P.tasa || tasa), enBs = P.moneda === 'Bs' && tz > 0, aBs = x => n2(r2(Number(x) * tz)) + ' bolívares';
   const fav = favorDe(P.cliente);
-  const recientes = S.cobros.slice().sort((a, b) => (b.CreadoEn || b.Fecha) > (a.CreadoEn || a.Fecha) ? 1 : -1).slice(0, 25);
+  // V14.1: el uso de un crédito a favor son 2 filas que se compensan; en la lista se muestra solo la que dice a qué nota fue
+  const recientes = S.cobros.filter(c => !(c.Metodo === 'Saldo a favor' && Number(c.MontoUSD) < 0)).sort((a, b) => (b.CreadoEn || b.Fecha) > (a.CreadoEn || a.Fecha) ? 1 : -1).slice(0, 25);
+  const notaDe = id => (S.ventas.find(v => v.ID === id) || {}).Nota || '-';
   $('#main').innerHTML = `<div class="card">
     <h2>Registrar cobro al mayor</h2>
     <div class="row">
@@ -924,24 +955,27 @@ function vCobrar() {
       </table></div>
       <button class="btn sm sec" id="ptodo" style="margin-top:8px">Pagar todo: ${P.moneda === 'Bs' ? (enBs ? aBs(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo) : '—') : usd(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo)}</button>` : '<p class="small muted">Este cliente no tiene deudas; el pago quedará como saldo a favor (crédito para su próxima compra).</p>') : ''}
     ${pagoCampos(P, tasa, 'pp')}
+    <div id="ppplan" class="banner warn hide" style="margin:10px 0 0"></div>
     <div style="margin-top:10px"><label>Notas</label><input id="pn" value="${esc(P.notas)}"></div>
     <button class="btn acc full" style="margin-top:14px" id="pg">Guardar cobro</button>
   </div>
   <div class="card"><h2>Últimos cobros</h2><div class="tbl"><table>
     <tr><th>Fecha</th><th>Cliente</th><th class="r hm">Bs</th><th class="r">$</th><th></th><th></th></tr>
-    ${recientes.map(c => `<tr><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small muted">${esc(String(c.Metodo).replace(' (histórico)', ''))}${c.Banco ? ' · ' + esc(c.Banco) : ''}</div></td><td class="r num small hm">${c.MontoBs ? n2(c.MontoBs) : ''}</td><td class="r"><div class="num">${usd(c.MontoUSD)}</div>${c.MontoBs ? `<div class="num small muted solo-m">${bs(c.MontoBs)}</div>` : ''}</td><td>${String(c.PorLocal).toUpperCase() === 'SI' ? '<span class="pill p-mayor" title="Entró por cuentas del local">Local</span>' : ''}</td><td><button class="x" data-dc="${c.ID}" title="Eliminar">×</button></td></tr>`).join('')}
+    ${recientes.map(c => c.Metodo === 'Saldo a favor' ? `<tr class="muted"><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small">Crédito a favor usado en la nota ${esc(notaDe(c.VentaID))} · <b>no es dinero que entró</b></div></td><td class="hm"></td><td class="r"><div class="num">${usd(c.MontoUSD)}</div></td><td><span class="pill" style="background:var(--line)">Crédito</span></td><td><button class="x" data-dc="${c.ID}" title="Deshacer el uso del crédito">×</button></td></tr>` : `<tr><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small muted">${esc(String(c.Metodo).replace(' (histórico)', ''))}${c.Banco ? ' · ' + esc(c.Banco) : ''} · ${c.VentaID ? 'nota ' + esc(notaDe(c.VentaID)) : 'sobrante: pasó a crédito a favor'}</div></td><td class="r num small hm">${c.MontoBs ? n2(c.MontoBs) : ''}</td><td class="r"><div class="num">${usd(c.MontoUSD)}</div>${c.MontoBs ? `<div class="num small muted solo-m">${bs(c.MontoBs)}</div>` : ''}</td><td>${String(c.PorLocal).toUpperCase() === 'SI' ? '<span class="pill p-mayor" title="Entró por cuentas del local">Local</span>' : ''}</td><td><button class="x" data-dc="${c.ID}" title="Eliminar">×</button></td></tr>`).join('')}
   </table></div></div>`;
   $('#pc').onchange = e => { P.cliente = e.target.value.trim(); P.ventaId = ''; setTimeout(vCobrar); };
   $('#pf').onchange = e => { P.fecha = e.target.value; P.tasa = ''; vCobrar(); };
   $('#pn').oninput = e => P.notas = e.target.value;
   document.querySelectorAll('[name=pv]').forEach(r => r.onchange = () => { P.ventaId = r.value; vCobrar(); });
-  bindPago(P, 'pp', vCobrar);
+  const verPlan = () => { const el = $('#ppplan'); if (!el) return; const m = num(P.monto), t = num(P.tasa || tasa); const mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m;
+    const tx = P.cliente && pend.length && mu > 0 ? textoPlanCobro(planCobro(mu, pend, P.ventaId, fav)) : ''; el.textContent = tx; el.classList.toggle('hide', !tx); };
+  bindPago(P, 'pp', vCobrar, verPlan); verPlan();
   if ($('#ptodo')) $('#ptodo').onclick = () => { const x = P.ventaId ? Number((pend.find(v => v.ID === P.ventaId) || {}).Saldo) : saldo; if (P.moneda === 'Bs' && !enBs) return toast('Escribe la tasa primero'); P.monto = String(P.moneda === 'Bs' ? r2(x * tz) : r2(x)).replace('.', ','); vCobrar(); };
   $('#pg').onclick = e => busy(e.target, async () => {
     if (!P.cliente) throw new Error('Elige el cliente');
     if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
     const r = await call('guardarCobro', cobroPayload(P, P.cliente, P.fecha, P.ventaId));
-    toast('Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : ''));
+    toast(r.favorUsado ? textoCobroGuardado(r) : 'Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : ''));
     COBRO = nuevoCobro(); await recargar();
   });
   document.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { const r = await call('eliminarCobro', { id: b.dataset.dc }); toast(r && r.borrados > 1 ? 'Se borró el uso del crédito a favor (' + r.borrados + ' filas)' : 'Cobro eliminado'); await recargar(); }); });
