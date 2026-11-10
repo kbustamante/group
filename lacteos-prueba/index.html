@@ -226,7 +226,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V14.1'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V14.2'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -253,6 +253,8 @@ const bs = n => 'Bs ' + n2(n);
 const r2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 function diaHabil(f) { let d = addDays(f, 1); while ([0, 6].includes(new Date(d + 'T12:00:00').getDay())) d = addDays(d, 1); return d; }
 const num = v => { if (typeof v === 'number') return v; v = String(v || '').trim(); if (!v) return 0; if (v.indexOf(',') >= 0) v = v.replace(/\./g, '').replace(',', '.'); return Number(v) || 0; };
+// V14.2: en montos de dinero, "45.000" (sin coma) es cuarenta y cinco mil, como se escribe en Venezuela. No se usa para kilos ni tasa (ahí 12.500 kg o 899.270 son decimales).
+const numMonto = v => { if (typeof v === 'number') return v; const t = String(v || '').trim().replace(/\s/g, ''); return t.indexOf(',') < 0 && /^\d{1,3}(\.\d{3})+$/.test(t) ? Number(t.replace(/\./g, '')) : num(t); };
 const fdate = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4) : '';
 const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const mesDe = s => s.slice(0, 7);
@@ -687,8 +689,8 @@ function nuevoCierre() {
 function vCierre() {
   if (!CIERRE) CIERRE = nuevoCierre();
   const C = CIERRE, tasa = tasaPara(C.fecha) || (S.tasaHoy && S.tasaHoy.tasa);
-  const toU = m => C.moneda === 'Bs' ? (tasa ? num(m) / tasa : 0) : num(m);
-  const sum = f => C.lineas.filter(f).reduce((s, l) => s + num(l.monto), 0);
+  const toU = m => C.moneda === 'Bs' ? (tasa ? numMonto(m) / tasa : 0) : numMonto(m);
+  const sum = f => C.lineas.filter(f).reduce((s, l) => s + numMonto(l.monto), 0);
   const sec = tipo => `<h3>${TIPOS[tipo]}</h3>
     ${C.lineas.map((l, i) => l.tipo !== tipo ? '' : `<div class="linea">
       <input class="num" inputmode="decimal" placeholder="0,00" value="${esc(l.monto)}" data-l="${i}" data-k="monto">
@@ -732,7 +734,7 @@ function vCierre() {
   $('#cf').onchange = e => { C.fecha = e.target.value; rer(); };
   $('#cn').oninput = e => C.notas = e.target.value;
   $('#cg').onclick = e => busy(e.target, async () => {
-    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: 'Local', monto: num(l.monto) })).filter(l => l.monto > 0);
+    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: 'Local', monto: numMonto(l.monto) })).filter(l => l.monto > 0);
     if (!lineas.length) throw new Error('Escribe al menos un monto');
     const totalCierre = lineas.reduce((a, l) => a + l.monto, 0);
     if (C.moneda === 'USD' && totalCierre > LIMITE_USD && !e.target.dataset.okusd) {
@@ -865,14 +867,14 @@ function vVender() {
     const r = await call('guardarVenta', { fecha: V.fecha, cliente: V.cliente, nota: V.nota ? num(V.nota) : null, lineas, notas: V.notas, actualizarPrecios: V.actualizarPrecios, pedidoId: V.pedidoId || '' });
     const c2 = S.clientes.find(c => c.Nombre === V.cliente) || { Nombre: V.cliente, DiasCredito: 7 };
     if ((V.direccion || '') !== (c2.Direccion || '')) await call('guardarCliente', Object.assign({}, c2, { original: V.cliente, Direccion: V.direccion || '' }));
-    if (V.pago.activo && num(V.pago.monto) > 0) await call('guardarCobro', cobroPayload(V.pago, V.cliente, V.fecha, r.id));
+    if (V.pago.activo && numMonto(V.pago.monto) > 0) await call('guardarCobro', cobroPayload(V.pago, V.cliente, V.fecha, r.id));
     toast(`Venta nota ${r.nota} guardada · ${usd(r.total)}` + (r.favorUsado ? ` · se usaron ${usd(r.favorUsado)} a favor del cliente` : ''));
     VENTA = null; await recargar();
   });
 }
 
 function pagoCampos(P, tasa, px) {
-  const m = num(P.monto), eq = P.moneda === 'Bs' ? (num(P.tasa || tasa) ? m / num(P.tasa || tasa) : 0) : m;
+  const m = numMonto(P.monto), eq = P.moneda === 'Bs' ? (num(P.tasa || tasa) ? m / num(P.tasa || tasa) : 0) : m;
   return `<div class="grid g3" style="margin-top:8px">
     <div><label>Método</label><select id="${px}m">${METODOS.map(x => `<option ${x === P.metodo ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
     <div><label>Banco</label><select id="${px}b"><option value="">—</option>${BANCOS.map(x => `<option ${x === P.banco ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
@@ -888,7 +890,7 @@ function bindPago(P, px, rer, alCambiar) {
   $('#' + px + 'm').onchange = e => { P.metodo = e.target.value; P.porLocal = null; if (/Efectivo \$|Zelle/.test(P.metodo)) P.moneda = 'USD'; rer(); };
   $('#' + px + 'b').onchange = e => P.banco = e.target.value;
   document.querySelectorAll(`[data-${px}mon]`).forEach(b => b.onclick = () => { P.moneda = b.getAttribute('data-' + px + 'mon'); rer(); });
-  const upd = () => { const eqEl = $('#' + px + 'eq'); if (eqEl) { const t = num(P.tasa || ($('#' + px + 't') || {}).value); eqEl.textContent = usd(t ? num(P.monto) / t : 0); } if (alCambiar) alCambiar(); };
+  const upd = () => { const eqEl = $('#' + px + 'eq'); if (eqEl) { const t = num(P.tasa || ($('#' + px + 't') || {}).value); eqEl.textContent = usd(t ? numMonto(P.monto) / t : 0); } if (alCambiar) alCambiar(); };
   $('#' + px + 'v').oninput = e => { P.monto = e.target.value; upd(); };
   const t = $('#' + px + 't'); if (t) t.oninput = e => { P.tasa = e.target.value; upd(); };
   $('#' + px + 'r').oninput = e => P.referencia = e.target.value;
@@ -897,7 +899,7 @@ function bindPago(P, px, rer, alCambiar) {
 function cobroPayload(P, cliente, fecha, ventaId) {
   const tasa = P.moneda === 'Bs' ? num(P.tasa || tasaPara(fecha)) : null;
   return { fecha, cliente, ventaId: ventaId || '', metodo: P.metodo, banco: P.banco, referencia: P.referencia, notas: P.notas || '',
-    montoBs: P.moneda === 'Bs' ? num(P.monto) : 0, montoUSD: P.moneda === 'USD' ? num(P.monto) : 0, tasa, porLocal: porLocalDe(P) };
+    montoBs: P.moneda === 'Bs' ? numMonto(P.monto) : 0, montoUSD: P.moneda === 'USD' ? numMonto(P.monto) : 0, tasa, porLocal: porLocalDe(P) };
 }
 
 /* ===== COBRAR ===== */
@@ -967,13 +969,13 @@ function vCobrar() {
   $('#pf').onchange = e => { P.fecha = e.target.value; P.tasa = ''; vCobrar(); };
   $('#pn').oninput = e => P.notas = e.target.value;
   document.querySelectorAll('[name=pv]').forEach(r => r.onchange = () => { P.ventaId = r.value; vCobrar(); });
-  const verPlan = () => { const el = $('#ppplan'); if (!el) return; const m = num(P.monto), t = num(P.tasa || tasa); const mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m;
+  const verPlan = () => { const el = $('#ppplan'); if (!el) return; const m = numMonto(P.monto), t = num(P.tasa || tasa); const mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m;
     const tx = P.cliente && pend.length && mu > 0 ? textoPlanCobro(planCobro(mu, pend, P.ventaId, fav)) : ''; el.textContent = tx; el.classList.toggle('hide', !tx); };
   bindPago(P, 'pp', vCobrar, verPlan); verPlan();
   if ($('#ptodo')) $('#ptodo').onclick = () => { const x = P.ventaId ? Number((pend.find(v => v.ID === P.ventaId) || {}).Saldo) : saldo; if (P.moneda === 'Bs' && !enBs) return toast('Escribe la tasa primero'); P.monto = String(P.moneda === 'Bs' ? r2(x * tz) : r2(x)).replace('.', ','); vCobrar(); };
   $('#pg').onclick = e => busy(e.target, async () => {
     if (!P.cliente) throw new Error('Elige el cliente');
-    if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
+    if (!(numMonto(P.monto) > 0)) throw new Error('Escribe el monto');
     const r = await call('guardarCobro', cobroPayload(P, P.cliente, P.fecha, P.ventaId));
     toast(r.favorUsado ? textoCobroGuardado(r) : 'Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : ''));
     COBRO = nuevoCobro(); await recargar();
@@ -1306,7 +1308,7 @@ function vDebo() {
         ${fs.map(e => `<tr><td>${fdate(e.Fecha)}</td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)} · vencida</span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(tot)}"></div><div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
         <p class="small muted" style="margin:6px 0 0">El pago se aplica primero a la factura más vieja.</p></div>`; }).join('') || '<div class="card empty">✅ No le debes nada a ningún proveedor</div>'}`;
-  document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = num($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
+  document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = numMonto($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
     await call('pagarProveedor', { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value }); toast('Pago registrado a ' + provs[i]); await recargar(); }));
 }
 
@@ -1891,7 +1893,7 @@ function invProveedores() {
       <div class="row" style="margin:10px 0 16px"><div><label>Teléfono</label><input data-pvt="${i}" value="${esc(p.Telefono || '')}"></div><div style="flex:2"><label>Notas</label><input data-pvn="${i}" value="${esc(p.Notas || '')}"></div><button class="btn sm sec" data-pvg="${i}" style="flex:none">Guardar datos</button></div>
     </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo aquí.</div>'}
     <div class="row" style="margin-top:12px"><div style="flex:2"><label>Nuevo proveedor</label><input id="npv" placeholder="Nombre"></div><div><label>Teléfono</label><input id="npt"></div><button class="btn" id="npg2" style="flex:none">Agregar</button></div></div>`;
-  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: num($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
+  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: numMonto($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
   document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
   $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); });
 }
@@ -2036,16 +2038,16 @@ function vPagar() {
       <div><label>Monto ${P.moneda === 'Bs' ? 'Bs' : '$'}</label><input id="rpv" class="num big" inputmode="decimal" value="${esc(P.monto)}" placeholder="0,00"></div>
       <div><label>Referencia</label><input id="rpr" value="${esc(P.referencia)}" placeholder="últimos 4 o 6 dígitos"></div>
     </div>
-    ${P.moneda === 'Bs' && t ? `<p class="small muted" id="rpeq">≈ ${usd(num(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})</p>` : ''}
+    ${P.moneda === 'Bs' && t ? `<p class="small muted" id="rpeq">≈ ${usd(numMonto(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})</p>` : ''}
     <button class="btn acc full" style="margin-top:12px" id="rpg">Enviar reporte de pago</button></div>
     <div class="card"><h2>Mis pagos reportados</h2>${S.pagos.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b> · ${esc(p.Metodo)}${p.Referencia ? ' · ref. ' + esc(p.Referencia) : ''}${p.Motivo ? `<div class="small" style="color:var(--bad)">${esc(p.Motivo)}</div>` : ''}</div><div class="right"><b class="num">${p.MontoBs ? bs(p.MontoBs) : usd(p.MontoUSD)}</b><br>${pill(p.Estado)}</div></div>`).join('') || '<div class="empty small">Todavía no has reportado pagos.</div>'}</div></div>`;
   $('#rpf').onchange = e => P.fecha = e.target.value; $('#rpm').onchange = e => { P.metodo = e.target.value; if (/\$|Zelle/.test(P.metodo)) { P.moneda = 'USD'; vPagar(); } };
   $('#rpb').onchange = e => P.banco = e.target.value; $('#rpr').oninput = e => P.referencia = e.target.value;
-  $('#rpv').oninput = e => { P.monto = e.target.value; const q = $('#rpeq'); if (q && t) q.textContent = `≈ ${usd(num(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})`; };
+  $('#rpv').oninput = e => { P.monto = e.target.value; const q = $('#rpeq'); if (q && t) q.textContent = `≈ ${usd(numMonto(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})`; };
   document.querySelectorAll('[data-rpmon]').forEach(b => b.onclick = () => { P.moneda = b.dataset.rpmon; vPagar(); });
   $('#rpg').onclick = e => busy(e.target, async () => {
-    if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
-    await call('cliReportarPago', { fecha: P.fecha, metodo: P.metodo, banco: P.banco, referencia: P.referencia, montoBs: P.moneda === 'Bs' ? num(P.monto) : 0, montoUSD: P.moneda === 'USD' ? num(P.monto) : 0 });
+    if (!(numMonto(P.monto) > 0)) throw new Error('Escribe el monto');
+    await call('cliReportarPago', { fecha: P.fecha, metodo: P.metodo, banco: P.banco, referencia: P.referencia, montoBs: P.moneda === 'Bs' ? numMonto(P.monto) : 0, montoUSD: P.moneda === 'USD' ? numMonto(P.monto) : 0 });
     PAGO_CLI = null; toast('Pago reportado. Lo verificaremos pronto'); await recargar();
   });
 }
@@ -2160,8 +2162,8 @@ function vGastos() {
   $('#gmo').oninput = e => { G.monto = e.target.value; eq(); }; $('#gme').oninput = e => G.metodo = e.target.value;
   document.querySelectorAll('[data-gm]').forEach(b => b.onclick = () => { G.moneda = b.dataset.gm; vGastos(); });
   bindMes(vGastos);
-  $('#gg').onclick = e => busy(e.target, async () => { if (!G.categoria) throw new Error('Elige la categoría'); if (!(num(G.monto) > 0)) throw new Error('Escribe el monto');
-    await call('guardarGasto', { fecha: G.fecha, categoria: G.categoria, descripcion: G.descripcion, moneda: G.moneda, monto: num(G.monto), metodo: G.metodo });
+  $('#gg').onclick = e => busy(e.target, async () => { if (!G.categoria) throw new Error('Elige la categoría'); if (!(numMonto(G.monto) > 0)) throw new Error('Escribe el monto');
+    await call('guardarGasto', { fecha: G.fecha, categoria: G.categoria, descripcion: G.descripcion, moneda: G.moneda, monto: numMonto(G.monto), metodo: G.metodo });
     toast('Gasto guardado'); FILTRO.mes = mesDe(G.fecha); GASTO = null; await recargar(); });
   document.querySelectorAll('[data-gx]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Borrar?')) busy(b, async () => { await call('eliminarGasto', { id: b.dataset.gx }); toast('Gasto eliminado'); await recargar(); }); });
 }
