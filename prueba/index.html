@@ -226,7 +226,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V12'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V13'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -263,12 +263,37 @@ function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.classNa
 
 function call(action, data, conPin) {
   const req = TOKEN && !conPin ? { action, token: TOKEN, data: data || {} } : { action, usuario: USR, pin: PIN, data: data || {} };
+  const t0 = performance.now(); let msSrv = null;
+  const fin = ok => { anotarTiempo(action, performance.now() - t0, msSrv, ok); };
+  let p;
   if (window.google && google.script && google.script.run) {
-    return new Promise((res, rej) => google.script.run.withSuccessHandler(r => r && r.ok ? res(r.data) : rej(new Error(r ? r.error : 'Sin respuesta'))).withFailureHandler(rej).api(req));
-  }
-  if (!API_URL) return Promise.reject(new Error('Falta configurar API_URL en index.html'));
-  return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(req) })
-    .then(r => r.json()).then(r => { if (!r.ok) throw new Error(r.error); return r.data; });
+    p = new Promise((res, rej) => google.script.run.withSuccessHandler(r => { msSrv = r && r.ms; r && r.ok ? res(r.data) : rej(new Error(r ? r.error : 'Sin respuesta')); }).withFailureHandler(rej).api(req));
+  } else if (!API_URL) return Promise.reject(new Error('Falta configurar API_URL en index.html'));
+  else p = fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(req) })
+    .then(r => r.json()).then(r => { msSrv = r.ms; if (!r.ok) throw new Error(r.error); return r.data; });
+  return p.then(d => { fin(true); return d; }, e => { fin(false); throw e; });
+}
+/* V13: medidor de tiempos reales en este equipo (Ajustes → Rendimiento). Solo guarda tiempos, ningún dato del negocio. */
+const MEDIR = { entrar: 'Abrir la app', login: 'Abrir la app', datos: 'Recargar datos', guardarVenta: 'Guardar venta', guardarCobro: 'Guardar cobro', guardarCierre: 'Guardar cierre', guardarTasa: 'Guardar tasa', local: 'Abrir (local)', cliDatos: 'Abrir (cliente)' };
+function anotarTiempo(accion, ms, msSrv, ok) {
+  if (!MEDIR[accion]) return;
+  try { const l = JSON.parse(localStorage.getItem(NS + 'perf') || '[]'); l.push({ a: accion, ms: Math.round(ms), s: msSrv == null ? null : Math.round(msSrv), t: Date.now(), ok, v: PANTALLA });
+    localStorage.setItem(NS + 'perf', JSON.stringify(l.slice(-80))); } catch (e) {}
+}
+function tiemposMedidos() { try { return JSON.parse(localStorage.getItem(NS + 'perf') || '[]'); } catch (e) { return []; } }
+function cardRendimiento() {
+  const l = tiemposMedidos().filter(x => x.ok), grupos = {};
+  l.forEach(x => { const k = MEDIR[x.a]; (grupos[k] = grupos[k] || []).push(x); });
+  const seg = ms => (ms / 1000).toLocaleString('es-VE', { maximumFractionDigits: 1 }) + ' s';
+  const filas = Object.entries(grupos).map(([k, xs]) => { const ult = xs.slice(-5), prom = ult.reduce((a, x) => a + x.ms, 0) / ult.length, srv = ult.filter(x => x.s != null);
+    return `<tr><td>${esc(k)}</td><td class="r num">${seg(xs[xs.length - 1].ms)}</td><td class="r num">${seg(prom)}</td><td class="r num">${srv.length ? seg(srv.reduce((a, x) => a + x.s, 0) / srv.length) : '—'}</td><td class="r small muted">${xs.length}</td></tr>`; }).join('');
+  return `<div class="card"><h2>Rendimiento en este equipo</h2><p class="small muted" style="margin-top:-6px">Cuánto tarda cada operación aquí (incluye internet). "Servidor" es lo que tarda Google solo. Sirve para comparar versiones.</p>
+    <div class="tbl"><table><tr><th>Operación</th><th class="r">Última</th><th class="r">Promedio (últ. 5)</th><th class="r">Servidor</th><th class="r">Veces</th></tr>${filas || '<tr><td colspan="5" class="muted">Todavía no hay mediciones: usa la app y vuelve aquí.</td></tr>'}</table></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm sec" id="perfc" style="flex:none">Copiar tiempos</button><button class="btn sm sec" id="perfb" style="flex:none">Borrar mediciones</button></div></div>`;
+}
+function bindRendimiento() {
+  const c = $('#perfc'); if (c) c.onclick = () => { const txt = tiemposMedidos().map(x => [new Date(x.t).toLocaleString('es-VE'), x.v, MEDIR[x.a], x.ms + ' ms', x.s == null ? '' : 'srv ' + x.s + ' ms', x.ok ? '' : 'ERROR'].join(' · ')).join('\n'); navigator.clipboard.writeText(txt).then(() => toast('Tiempos copiados: pégalos en el chat'), () => toast('No se pudo copiar', true)); };
+  const b = $('#perfb'); if (b) b.onclick = () => { try { localStorage.removeItem(NS + 'perf'); } catch (e) {} render(); };
 }
 
 async function busy(btn, fn) {
@@ -2245,6 +2270,7 @@ function vAjustes() {
       <p class="small">Cerrado hasta: <b>${S.cierreHasta ? mesNombre(S.cierreHasta) : 'ningún mes'}</b></p>
       <div class="row"><div><label>Cerrar hasta (incluido)</label><select id="cmh">${mesesLista().filter(m => m < hoy().slice(0, 7)).slice(0, 18).map(m => `<option value="${m}" ${m === S.cierreHasta ? 'selected' : ''}>${mesNombre(m)}</option>`).join('')}</select></div></div>
       <div class="row" style="margin-top:8px"><button class="btn" id="cmg" style="flex:none">Cerrar</button>${S.cierreHasta ? '<button class="btn sec" id="cmr" style="flex:none">Reabrir todo</button>' : ''}</div></div>` : ''}
+    ${cardRendimiento()}
     <div class="card"><h2>Respaldo</h2>
       <p class="small muted" style="margin-top:-6px">Cada domingo en la noche se guarda una copia completa de la hoja en Drive, en la carpeta "Respaldos …" junto a la hoja. Se guardan las últimas 8.</p>
       <p class="small">Último respaldo: <b>${S.respaldo ? esc(S.respaldo) : 'todavía ninguno'}</b></p>
@@ -2286,6 +2312,7 @@ function vAjustes() {
   $('#dpv').onclick = () => { const d0 = S.datosPago; S.datosPago = $('#dpago').value.trim(); const c = deudasPorCliente()[0] || { cliente: 'CLIENTE EJEMPLO', saldo: 100, notas: [{ Nota: 123, Fecha: hoy(), Vence: hoy(), Saldo: 100 }] };
     const pre = $('#dpej'); pre.textContent = msgCobro(c); pre.classList.remove('hide'); S.datosPago = d0; };
   document.querySelectorAll('[data-ira]').forEach(a => a.onclick = e => { e.preventDefault(); TAB = a.dataset.ira; render(); });
+  bindRendimiento();
   const cmg = $('#cmg'); if (cmg) cmg.onclick = e => { if (!confirmar(e.target, '¿Cerrar ' + $('#cmh').value + '?')) return; busy(e.target, async () => { await call('cerrarMes', { hasta: $('#cmh').value }); toast('Mes cerrado'); await recargar(); }); };
   const cmr = $('#cmr'); if (cmr) cmr.onclick = e => { if (!confirmar(e.target, '¿Reabrir?')) return; busy(e.target, async () => { await call('cerrarMes', { hasta: '' }); toast('Meses reabiertos'); await recargar(); }); };
   const apg = $('#apg'); if (apg) apg.onclick = e => busy(e.target, async () => { await call('guardarConfig', { clave: 'AVISO_PRIVACIDAD', valor: $('#apv').value.trim() }); toast('Aviso guardado: los clientes lo verán al entrar'); await recargar(); });
