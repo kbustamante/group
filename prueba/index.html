@@ -226,7 +226,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V13'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V14'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -619,6 +619,7 @@ function mergeS(r) {
   if (r.gastos && S.gastos) add(S.gastos, r.gastos, x => x.ID);
 }
 function ventasActivas() { return S.ventas.filter(v => v.Estado !== 'Anulada'); }
+const favorDe = c => Number((S.favor || {})[c] || 0); // V14: crédito a favor (con servidor V13 no viene y vale 0)
 function deudasPorCliente() {
   const h = hoy(), m = {};
   ventasActivas().filter(v => Number(v.Saldo) > 0.01).forEach(v => {
@@ -790,6 +791,7 @@ function vVender() {
     </div>
     ${V.cliente && !cli ? '<p class="small" style="color:var(--warn)">Cliente nuevo: se agregará a la lista.</p>' : ''}
     ${V.cliente ? `<div style="margin-top:10px"><label>Dirección (opcional)</label><input id="vdir" value="${esc(V.direccion || '')}" placeholder="Dirección de entrega"></div>` : ''}
+    ${V.cliente && favorDe(V.cliente) ? `<p class="small" style="color:var(--ok)">Este cliente tiene <b class="num">${usd(favorDe(V.cliente))}</b> a favor: se descuentan solos de esta nota al guardar.</p>` : ''}
     ${deuda ? `<p class="small">Este cliente debe <b class="num">${usd(deuda.saldo)}</b>${deuda.vencido ? ` (<b style="color:var(--bad)">${usd(deuda.vencido)} vencido</b>)` : ''}.</p>` : ''}
     ${V.cliente && cli ? `<div style="margin-top:10px">${ult ? `<button class="btn sec full" id="vrep">↻ Repetir último pedido · nota ${esc(ult.Nota || '-')} del ${fdate(ult.Fecha)} (${usd(ult.Total)})</button>`
       : `<button class="btn sec full" id="vbus">${V.buscando ? '<span class="spin"></span>' : '↻ Buscar su último pedido en el historial'}</button>`}</div>` : ''}
@@ -864,7 +866,7 @@ function vVender() {
     const c2 = S.clientes.find(c => c.Nombre === V.cliente) || { Nombre: V.cliente, DiasCredito: 7 };
     if ((V.direccion || '') !== (c2.Direccion || '')) await call('guardarCliente', Object.assign({}, c2, { original: V.cliente, Direccion: V.direccion || '' }));
     if (V.pago.activo && num(V.pago.monto) > 0) await call('guardarCobro', cobroPayload(V.pago, V.cliente, V.fecha, r.id));
-    toast(`Venta nota ${r.nota} guardada · ${usd(r.total)}`);
+    toast(`Venta nota ${r.nota} guardada · ${usd(r.total)}` + (r.favorUsado ? ` · se usaron ${usd(r.favorUsado)} a favor del cliente` : ''));
     VENTA = null; await recargar();
   });
 }
@@ -905,6 +907,8 @@ function vCobrar() {
   const P = COBRO, tasa = tasaPara(P.fecha);
   const pend = ventasActivas().filter(v => v.Cliente === P.cliente && Number(v.Saldo) > 0.01).sort((a, b) => a.Fecha < b.Fecha ? -1 : 1);
   const saldo = pend.reduce((s, v) => s + Number(v.Saldo), 0);
+  const tz = num(P.tasa || tasa), enBs = P.moneda === 'Bs' && tz > 0, aBs = x => n2(r2(Number(x) * tz)) + ' bolívares';
+  const fav = favorDe(P.cliente);
   const recientes = S.cobros.slice().sort((a, b) => (b.CreadoEn || b.Fecha) > (a.CreadoEn || a.Fecha) ? 1 : -1).slice(0, 25);
   $('#main').innerHTML = `<div class="card">
     <h2>Registrar cobro al mayor</h2>
@@ -912,11 +916,13 @@ function vCobrar() {
       <div style="flex:2;min-width:200px"><label>Cliente</label><input id="pc" list="dl-cli2" value="${esc(P.cliente)}" placeholder="Escribe o elige"><datalist id="dl-cli2">${deudasPorCliente().map(d => `<option value="${esc(d.cliente)}">${usd(d.saldo)}</option>`).join('')}${S.clientes.map(c => `<option value="${esc(c.Nombre)}">`).join('')}</datalist></div>
       <div><label>Fecha del pago</label><input type="date" id="pf" value="${P.fecha}"></div>
     </div>
-    ${P.cliente ? (pend.length ? `<h3>Notas pendientes · debe ${usd(saldo)}</h3><div class="tbl"><table>
+    ${P.cliente && fav ? `<div class="banner ok" style="margin-top:10px">Este cliente tiene <b>${usd(fav)}</b> a favor (crédito para su próxima compra). Se descuenta solo cuando se le registra una venta.</div>` : ''}
+    ${P.cliente ? (pend.length ? `<h3>Notas pendientes · debe ${usd(saldo)}${enBs ? ` · <span class="num">${aBs(saldo)}</span> <span class="small muted" style="text-transform:none;font-weight:400">(tasa ${n2(tz)})</span>` : ''}</h3><div class="tbl"><table>
       <tr><th></th><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
       <tr><td><input type="radio" name="pv" value="" ${!P.ventaId ? 'checked' : ''} style="width:auto"></td><td colspan="4"><b>Aplicar a las más viejas primero</b></td></tr>
-      ${pend.map(v => `<tr><td><input type="radio" name="pv" value="${v.ID}" ${P.ventaId === v.ID ? 'checked' : ''} style="width:auto"></td><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < hoy() ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num">${usd(v.Saldo)}</td></tr>`).join('')}
-      </table></div>` : '<p class="small muted">Este cliente no tiene deudas; el pago quedará como saldo a favor.</p>') : ''}
+      ${pend.map(v => `<tr><td><input type="radio" name="pv" value="${v.ID}" ${P.ventaId === v.ID ? 'checked' : ''} style="width:auto"></td><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < hoy() ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num">${usd(v.Saldo)}${enBs ? `<div class="small muted">${aBs(v.Saldo)}</div>` : ''}</td></tr>`).join('')}
+      </table></div>
+      <button class="btn sm sec" id="ptodo" style="margin-top:8px">Pagar todo: ${P.moneda === 'Bs' ? (enBs ? aBs(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo) : '—') : usd(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo)}</button>` : '<p class="small muted">Este cliente no tiene deudas; el pago quedará como saldo a favor (crédito para su próxima compra).</p>') : ''}
     ${pagoCampos(P, tasa, 'pp')}
     <div style="margin-top:10px"><label>Notas</label><input id="pn" value="${esc(P.notas)}"></div>
     <button class="btn acc full" style="margin-top:14px" id="pg">Guardar cobro</button>
@@ -928,16 +934,17 @@ function vCobrar() {
   $('#pc').onchange = e => { P.cliente = e.target.value.trim(); P.ventaId = ''; setTimeout(vCobrar); };
   $('#pf').onchange = e => { P.fecha = e.target.value; P.tasa = ''; vCobrar(); };
   $('#pn').oninput = e => P.notas = e.target.value;
-  document.querySelectorAll('[name=pv]').forEach(r => r.onchange = () => P.ventaId = r.value);
+  document.querySelectorAll('[name=pv]').forEach(r => r.onchange = () => { P.ventaId = r.value; vCobrar(); });
   bindPago(P, 'pp', vCobrar);
+  if ($('#ptodo')) $('#ptodo').onclick = () => { const x = P.ventaId ? Number((pend.find(v => v.ID === P.ventaId) || {}).Saldo) : saldo; if (P.moneda === 'Bs' && !enBs) return toast('Escribe la tasa primero'); P.monto = String(P.moneda === 'Bs' ? r2(x * tz) : r2(x)).replace('.', ','); vCobrar(); };
   $('#pg').onclick = e => busy(e.target, async () => {
     if (!P.cliente) throw new Error('Elige el cliente');
     if (!(num(P.monto) > 0)) throw new Error('Escribe el monto');
     const r = await call('guardarCobro', cobroPayload(P, P.cliente, P.fecha, P.ventaId));
-    toast('Cobro guardado' + (r.aplicado.length > 1 ? ` · repartido en ${r.aplicado.length} notas` : ''));
+    toast('Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : ''));
     COBRO = nuevoCobro(); await recargar();
   });
-  document.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { await call('eliminarCobro', { id: b.dataset.dc }); toast('Cobro eliminado'); await recargar(); }); });
+  document.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { const r = await call('eliminarCobro', { id: b.dataset.dc }); toast(r && r.borrados > 1 ? 'Se borró el uso del crédito a favor (' + r.borrados + ' filas)' : 'Cobro eliminado'); await recargar(); }); });
 }
 function confirmar(btn, txt) { if (btn.dataset.ok) return true; btn.dataset.ok = 1; const o = btn.innerHTML; btn.innerHTML = txt; btn.style.color = 'var(--bad)'; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.ok; btn.innerHTML = o; btn.style.color = ''; } }, 2500); return false; }
 
@@ -952,13 +959,17 @@ function vDeudas() {
     <div class="card"><h2>Por cliente</h2>
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
-      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
+      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
-        <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
+        <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
       </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
-    </div>`;
+    </div>
+    ${Object.keys(S.favor || {}).filter(k => !d.some(x => x.cliente === k)).length ? `<div class="card"><h2>Clientes con crédito a favor</h2>
+      <p class="small muted" style="margin-top:-6px">Pagaron de más (o se les corrigió o devolvió una nota). Se les descuenta solo en su próxima compra.</p>
+      <div class="tbl"><table>${Object.keys(S.favor).filter(k => !d.some(x => x.cliente === k)).sort().map(k => `<tr><td>${esc(k)}</td><td class="r num"><b>${usd(S.favor[k])}</b></td></tr>`).join('')}</table></div></div>` : ''}`;
   bindCobrar(); bindHist();
+  document.querySelectorAll('[data-usarfav]').forEach(b => b.onclick = () => busy(b, async () => { const r = await call('usarFavor', { cliente: b.dataset.usarfav }); toast('Se usaron ' + usd(r.usado) + ' a favor en ' + r.notas + ' nota(s)'); await recargar(); }));
 }
 function bindHist() {
   document.querySelectorAll('[data-hist]').forEach(b => b.onclick = () => busy(b, async () => {
@@ -1944,7 +1955,7 @@ function vCuentas() {
   const pedAt = S.pedidos.filter(p => p.Estado !== 'Pendiente').slice(0, 5);
   if (!CONSULTA.hasta) { CONSULTA.hasta = h.slice(0, 7); CONSULTA.desde = addDays(h.slice(0, 7) + '-01', -80).slice(0, 7); }
   $('#main').innerHTML = `<div style="max-width:720px;margin:0 auto">
-    <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b></div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
+    <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b>${S.aFavor > 0.005 ? `<div class="small" style="color:var(--ok)">Tienes ${usd(S.aFavor)} a favor para tu próxima compra</div>` : ''}</div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
     ${d.notas.length ? `<div class="card"><h2>Notas pendientes</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
       ${d.notas.sort((a, b) => a.Vence < b.Vence ? -1 : 1).map(v => `<tr><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < h ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num"><b>${usd(v.Saldo)}</b></td></tr>`).join('')}</table></div>
       ${F('cliPagos') ? '<button class="btn acc full" style="margin-top:10px" id="irpag">Reportar un pago</button>' : ''}</div>` : '<div class="banner ok">✅ Estás al día. ¡Gracias!</div>'}
@@ -2231,13 +2242,18 @@ function vExcel() {
   });
 }
 
+/* V14: Ajustes en subventanas, para que las listas largas (tasas, productos, usuarios, clientes) no hagan una página interminable */
+const AJ_SECC = [['tasa', 'Tasa'], ['productos', 'Productos'], ['usuarios', 'Usuarios'], ['clientes', 'Clientes'], ['sistema', 'Sistema']];
+const AJ_DE = { 'Tasa BCV': 'tasa', 'Productos, precios y margen': 'productos', 'Usuarios': 'usuarios', 'Clientes': 'clientes', 'Unir clientes repetidos': 'clientes', 'Datos para cobrar': 'clientes', 'Aviso de privacidad (clientes)': 'clientes' };
+let AJ_TAB = (() => { try { return localStorage.getItem('ajTab') || 'tasa'; } catch (e) { return 'tasa'; } })(), AJ_TASAS_TODAS = false;
 function vAjustes() {
-  $('#main').innerHTML = `<div class="grid g2 st">
+  $('#main').innerHTML = `<div class="seg wrap" id="ajtabs" style="margin-bottom:14px">${AJ_SECC.map(([k, n]) => `<button data-aj="${k}" class="${AJ_TAB === k ? 'on plain' : ''}">${n}</button>`).join('')}</div>
+  <div class="grid g2 st">
     <div class="card"><h2>Tasa BCV</h2>
       <p class="small muted">Se busca sola a las 9 a.m., 5 p.m. y 7 p.m. (Caracas). En la tarde el BCV publica la del <b>día hábil siguiente</b> (su "Fecha Valor"): esa se guarda con la fecha de mañana y la cabecera sigue mostrando la de hoy. Si escribes una a mano, elige bien la fecha: la escrita a mano manda sobre la automática de ese día.</p>
       <div class="row"><div><label>Fecha</label><input type="date" id="tf" value="${hoy()}"></div><div><label>Tasa Bs/$</label><input id="tv" class="num" inputmode="decimal" placeholder="0,00"></div></div>
       <div class="row" style="margin-top:10px"><button class="btn" id="tg">Guardar tasa</button><button class="btn sec" id="tb">Buscar BCV ahora</button></div>
-      <h3>Historial</h3><div class="tbl" style="max-height:260px;overflow:auto"><table>${S.tasas.map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="r num">${n2(t.Tasa)}</td><td class="small muted">${esc(t.Fuente)}</td></tr>`).join('') || '<tr><td class="muted">Sin tasas aún</td></tr>'}</table></div>
+      <h3>Historial</h3><div class="tbl"><table>${S.tasas.slice(0, AJ_TASAS_TODAS ? S.tasas.length : 10).map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="r num">${n2(t.Tasa)}</td><td class="small muted">${esc(t.Fuente)}</td></tr>`).join('') || '<tr><td class="muted">Sin tasas aún</td></tr>'}</table></div>${S.tasas.length > 10 ? `<button class="btn sm sec" id="tvt" style="margin-top:8px">${AJ_TASAS_TODAS ? 'Ver solo las últimas 10' : 'Ver todas (' + S.tasas.length + ')'}</button>` : ''}
     </div>
     <div class="card" style="grid-column:1/-1"><h2>Productos, precios y margen</h2>
       <p class="small muted" style="margin-top:-6px">Margen objetivo = % de ganancia sobre el precio de venta (precio = costo ÷ (1 − margen)). Mínimo = avisa cuando el inventario baja de ahí. Parecidos = qué sugerirle al cliente si se agota (escribe los nombres separados por coma).</p><p class="small solo-m" style="color:var(--brand-2);margin:-4px 0 8px">↔ Desliza la tabla hacia los lados para ver todas las columnas.</p>
@@ -2280,6 +2296,9 @@ function vAjustes() {
       <p class="small muted">Todos los días a las 7 a.m. llega un correo a los administradores que tengan correo en Usuarios: deudas vencidas, cierre faltante, conciliación, inventario bajo, pedidos por confirmar y pagos a proveedores por vencer. Los pedidos y pagos de clientes avisan al momento.</p>
       <div class="row"><button class="btn sec" id="al">Enviar resumen ahora</button><button class="btn bad" id="lo">Cerrar sesión</button></div><p class="small muted" style="margin:10px 0 0">Pantalla ${PANTALLA} · servidor V${USER.version || '?'}</p></div>
   </div>`;
+  document.querySelectorAll('#main .st > .card').forEach(c => { const t = (c.querySelector('h2') || {}).textContent || ''; const k = AJ_DE[t.trim()] || 'sistema'; c.dataset.sec = k; c.classList.toggle('hide', k !== AJ_TAB); if (k === 'tasa') c.style.gridColumn = '1/-1'; });
+  document.querySelectorAll('#ajtabs [data-aj]').forEach(b => b.onclick = () => { AJ_TAB = b.dataset.aj; try { localStorage.setItem('ajTab', AJ_TAB); } catch (e) {} vAjustes(); });
+  if ($('#tvt')) $('#tvt').onclick = () => { AJ_TASAS_TODAS = !AJ_TASAS_TODAS; vAjustes(); };
   $('#tg').onclick = e => busy(e.target, async () => { tasaLocal(await call('guardarTasa', { fecha: $('#tf').value, tasa: num($('#tv').value) })); toast('Tasa guardada'); render(); });
   $('#tb').onclick = e => busy(e.target, async () => { const r = await call('buscarTasa'); toast(r.sinCambio ? 'Hay una tasa manual para ese día; se mantiene' : 'Tasa BCV: ' + n2(r.tasa)); await recargar(); });
   const codDe = t => { t = t.trim(); const p = S.productos.find(x => x.Nombre.toLowerCase() === t.toLowerCase() || x.Codigo === t.toUpperCase()); return p ? p.Codigo : t; };
