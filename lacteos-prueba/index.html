@@ -187,6 +187,60 @@ header .hrow{gap:12px}
 .pi:hover{background:#f7f3ea}.pi span:first-child{font-size:17px;width:22px;text-align:center;flex:none}.pi .pt{font-size:13.5px}.pi.rojo{color:#b91c1c}
 .pv{padding:8px 10px}
 .fab{display:none}
+/* V15: menú del admin con "Más ▾" y barra fija abajo para cliente y local */
+.mainnav #nmas{margin-left:auto;color:var(--brand)}.mainnav #nmas.on{border-bottom-color:var(--accent)}
+.mainnav .nin{overflow-x:hidden}
+.pi .ni{font-size:17px;width:22px;text-align:center}
+.botnav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:#fff;border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(29,36,51,.06);padding-bottom:env(safe-area-inset-bottom)}
+.botnav .bin2{display:flex;max-width:720px;margin:0 auto}
+.botnav button{flex:1;min-width:0;min-height:62px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:#556070;cursor:pointer;position:relative}
+.botnav button.on{color:var(--brand);font-weight:700}
+.botnav button.on::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+body.rolb main{padding-bottom:96px}body.rolb #toast{bottom:84px}
+/* V15: portal del cliente */
+.cwrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.chero{background:var(--brand);color:#fff;margin:-16px -16px -58px;padding:14px 20px 72px;display:flex;flex-direction:column;gap:2px}
+.chero .small{color:#c9d6e6}.chero h1{margin:0;font-size:24px}
+@media(max-width:560px){.chero{margin:-12px -12px -58px}}
+.ccard{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 2px 8px rgba(31,58,95,.08);display:flex;flex-direction:column;gap:6px}
+.ccard h2{margin:0;font-size:17px}.ccard.empty{color:var(--muted);text-align:center}
+.cdeuda{gap:8px}.clab{font-size:14px;color:#556070}.cmonto{font-size:34px;line-height:1.1}
+.cpills{display:flex;gap:8px;flex-wrap:wrap}.cpill{background:#eef2f7;color:var(--brand);border-radius:999px;padding:6px 12px;font-size:13px}
+.cpill.bad{background:#fbe3e1;color:#9b1c12;font-weight:700}.cpill.ok{background:var(--ok-bg);color:var(--ok);font-weight:700}
+.cbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:4px}
+.cbig{min-height:52px;font-size:16px;border-radius:12px}
+.chead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
+.cnota{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:56px;border:0;border-top:1px solid #ece6d9;background:none;padding:8px 0;text-align:left;cursor:pointer;color:var(--ink)}
+.cnota>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}.cnota .num{font-size:16px;white-space:nowrap}
+.cder{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.cbad{color:#9b1c12}
+.ctit{margin:0;font-size:21px;color:var(--brand)}
+.copc{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:62px;padding:10px 14px;border-radius:12px;border:1px solid #d9d2c3;background:#fff;text-align:left;cursor:pointer;color:var(--ink);margin-top:4px}
+.copc>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}.copc .num{font-size:16px;white-space:nowrap}
+.copc.on{border:2px solid var(--brand);background:#eef2f7}
+.cpagar{background:#fff6d6;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cpagar>span{display:flex;flex-direction:column;gap:2px;min-width:0}.cpagar b{font-size:20px}
+.cdato{border-top:1px solid #ece6d9;padding-top:8px;margin-top:6px;display:flex;flex-direction:column;gap:6px}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px}.crow>span{display:flex;flex-direction:column}
+.crow .btn,.cpagar .btn{min-height:44px;flex:none}
+.ctabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--brand);border-radius:12px;padding:4px;gap:4px}
+.ctabs button{min-height:42px;border:0;border-radius:9px;background:transparent;color:#fff;font-size:14px;cursor:pointer}
+.ctabs button.on{background:#fff;color:var(--brand);font-weight:700}
+.cfil{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cfil button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #d9d2c3;background:#fff;font-size:14px;cursor:pointer}
+.cfil button.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700}
+.cfil input{width:auto;min-height:40px}
+.cdet{background:#faf7f0;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.crow2{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+/* V15: cierre del local con total y "Guardar" siempre visibles abajo */
+.cbar{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom));z-index:14;background:#fff;border-top:1px solid #ece6d9;box-shadow:0 -2px 10px rgba(29,36,51,.06)}
+.cbar .cin{max-width:620px;margin:0 auto;padding:10px 16px;display:flex;flex-direction:column;gap:8px}
+.cbar .tot{padding:0}.cbar #ctot .banner{margin:0}
+body.rolb.concbar main{padding-bottom:250px}
+.cblk{background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 2px 8px rgba(31,58,95,.06);margin-bottom:12px}
+.cblk h3{margin:0 0 8px;display:flex;justify-content:space-between;font-size:16px;color:var(--ink);text-transform:none;letter-spacing:0}
+.cayer{background:#fff1cc;color:#5c3d00;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+
 .buscador{position:fixed;z-index:41;top:70px;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 24px));background:#fff;border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.25);overflow:hidden}
 .bin{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);color:var(--muted)}
 .bin input{border:0;outline:0;font-size:16px;padding:4px 0;flex:1;background:none;box-shadow:none}
@@ -226,7 +280,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V14.2'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V15'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -259,6 +313,8 @@ const fdate = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4
 const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const mesDe = s => s.slice(0, 7);
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MESES_L = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const mesLargo = m => MESES_L[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
 const mesNombre = m => MESES[Number(m.slice(5, 7)) - 1] + ' ' + m.slice(0, 4);
 
 function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = '', String(msg).length > 70 ? 7000 : 3200); }
@@ -399,11 +455,12 @@ const F = k => { if (!USER) return false; if (!USER.funciones) { const l = LEGAD
 const FS = (...ks) => ks.some(F);
 const V12 = () => Number(USER && USER.version) >= 12; // el servidor ya tiene la V12 (inventario nuevo)
 const AL = () => USER && (USER.rol === 'admin' || USER.rol === 'otro'); // admin y el 4.º perfil usan el menú grande
+const VISTA_F_V15 = { historial: [] };
 const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['venta', 'corregir', 'cobros'], subirv: ['subir'], cobrar: ['cobros'], deudas: ['cobros', 'whatsapp'],
   pedidos: ['pedidos'], cierre: ['cierre'], local: ['conciliacion'], subirl: ['subir'], entrada: ['compras'], debo: ['compras'], gastos: ['gastos'], proveedores: ['compras'],
   stock: ['inventario'], vencer: ['lotes'], traslado: ['inventario'], conteo: ['inventario'], movs: ['inventario'],
   r_mes: ['reportes'], reportes: ['reportes'], productos: ['reportes'], r_cobranza: ['reportes'], r_prov: ['reportes'], r_local: ['reportes'], r_inv: ['reportes'], ajustes: ['ajustes'], funciones: ['ajustes'], registro: ['ajustes'], excel: ['excel'],
-  mercancia: ['mercancia'], wa: ['whatsapp'], pedir: ['cliPedidos'], pagar: ['cliPagos'], cuentas: [] };
+  mercancia: ['mercancia'], wa: ['whatsapp'], pedir: ['cliPedidos'], pagar: ['cliPagos'], cuentas: [], historial: [] };
 const SOLO_V11 = ['funciones', 'registro', 'gastos', 'vencer', 'excel']; // pantallas que necesitan servidor V11 o más nuevo
 const puedeVer = k => (!SOLO_V11.includes(k) || !!(USER && USER.funciones)) && (!VISTA_F[k] || !VISTA_F[k].length || FS(...VISTA_F[k]));
 const NOMBRE_ROL = r => ({ admin: 'Administrador', empleado: 'Local', cliente: 'Cliente', otro: (USER && USER.perfilOtro) || (S && S.perfilOtro) || 'Otro perfil' }[r] || r);
@@ -411,8 +468,16 @@ const ULTIMA = {}; // última sub-pestaña usada de cada módulo
 function GV() { return GRUPOS.map(g => [g[0], g[1], g[2], g[3].filter(v => puedeVer(v[0])), g[4]]).filter(g => g[3].length); } // menú con lo permitido
 function BARRA() { const ks = GV().map(g => g[0]); return ['inicio', 'mayor', 'cobros', 'pedidos', 'local', 'compras', 'reportes'].filter(k => ks.includes(k)).slice(0, 4); }
 const grupoDe = tab => { const gv = GV(); return gv.find(g => g[3].some(v => v[0] === tab)) || gv[0] || GRUPOS[0]; };
-const TABS_LOCAL = [['cierre', 'Cierre del día'], ['mercancia', 'Mercancía'], ['wa', 'Cobrar']];
-const TABS_CLIENTE = [['pedir', 'Hacer pedido'], ['cuentas', 'Mis cuentas'], ['pagar', 'Reportar pago']];
+const TABS_LOCAL = [['cierre', 'Cierre'], ['mercancia', 'Mercancía'], ['wa', 'Cobrar']];
+const TABS_CLIENTE = [['cuentas', 'Inicio'], ['pedir', 'Pedir'], ['pagar', 'Pagar'], ['historial', 'Historial']]; // V15: barra fija abajo
+const ICO_B = { cuentas: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>', pedir: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l3 12h11l2-8H6"/>',
+  pagar: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>', historial: '<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>',
+  cierre: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>', mercancia: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  wa: '<path d="M21 12a9 9 0 0 1-13.4 7.9L3 21l1.2-4.4A9 9 0 1 1 21 12z"/>', nada: '<circle cx="12" cy="12" r="9"/>' };
+/** V15: barra fija abajo para el cliente y el local (como una app del celular). */
+function barraRol() {
+  return `<nav class="botnav" aria-label="Menú"><div class="bin2">${TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}" ${TAB === k ? 'aria-current="page"' : ''}><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICO_B[k] || ICO_B.nada}</svg><span>${esc(l)}</span></button>`).join('')}</div></nav>`;
+}
 function TABS() {
   const t = AL() ? GV().flatMap(g => g[3].map(([k, l]) => [k, l ? g[1] + ' · ' + l : g[1]])) : (USER.rol === 'cliente' ? TABS_CLIENTE : TABS_LOCAL).filter(([k]) => puedeVer(k));
   return t.length ? t : [['nada', 'Sin acceso']];
@@ -424,9 +489,11 @@ function render() {
   CHARTS.forEach(c => c.destroy()); CHARTS = []; cerrarPop(); cerrarBus();
   if (!TABS().some(t => t[0] === TAB)) TAB = TABS()[0][0];
   const np = AL() ? pendientesAdmin() : 0;
-  $('#app').innerHTML = `${cabecera()}${AL() ? subnav() : ''}<main id="main"></main>${AL() ? barraMovil(np) : ''}`;
+  $('#app').innerHTML = `${cabecera()}${AL() ? subnav() : ''}<main id="main"></main>${AL() ? barraMovil(np) : barraRol()}`;
   bindCabecera();
-  document.body.classList.toggle('adm', AL());
+  document.body.classList.toggle('adm', AL()); document.body.classList.toggle('rolb', !AL()); document.body.classList.toggle('cli', USER.rol === 'cliente');
+  if (AL()) ajustarMenu();
+  document.body.classList.remove('concbar');
   const ir = tab => { if (grupoDe(tab)[0] !== grupoDe(TAB)[0]) FILTRO = {}; TAB = tab; ULTIMA[grupoDe(tab)[0]] = tab; render(); };
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => ir(b.dataset.tab));
   document.querySelectorAll('[data-grupo]').forEach(b => b.onclick = () => { const g = GV().find(x => x[0] === b.dataset.grupo); ir(g[3].some(v => v[0] === ULTIMA[g[0]]) ? ULTIMA[g[0]] : g[3][0][0]); });
@@ -437,7 +504,7 @@ function render() {
      pedidos: vPedidos, stock: inv(invStock), entrada: inv(() => { invEntrada(); porCompletar(); }), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
      r_mes: vResumenMes, r_cobranza: vCobranza, r_prov: vRepProveedores, r_local: vRepLocal, r_inv: vRepInventario,
      gastos: vGastos, vencer: vVencer, wa: vCobrarLocal, nada: vNada, funciones: vFunciones, registro: vRegistro, excel: vExcel,
-     mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar }[TAB] || (() => {}))();
+     mercancia: vMercancia, pedir: vPedir, cuentas: vCuentas, pagar: vPagar, historial: vHistorial }[TAB] || (() => {}))();
   window.scrollTo(0, 0);
   veloSoloVer();
 }
@@ -485,10 +552,21 @@ function cabecera() {
       <button class="hicon" id="hbell" title="Avisos">${ICO.campana}${avs.length ? `<i class="hb">${avs.length}</i>` : ''}</button>` : ''}
       <button class="hav" id="hav" title="${esc(USER.nombre)}">${esc(iniciales(USER.nombre))}</button>
     </div></header>
-    <nav class="mainnav"><div class="nin">${adm ? GV().map(g => `<button data-grupo="${g[0]}" class="${grupoDe(TAB)[0] === g[0] ? 'on' : ''} ${g[0] === 'ajustes' ? 'der' : ''}"><span class="ni">${g[2]}</span>${g[4] || g[1]}${g[0] === 'pedidos' && pendientesAdmin() ? ` <span class="badge">${pendientesAdmin()}</span>` : ''}</button>`).join('')
-      : TABS().map(([k, l]) => `<button data-tab="${k}" class="${TAB === k ? 'on' : ''}">${l}</button>`).join('')}</div></nav></div>
+    ${adm ? `<nav class="mainnav"><div class="nin">${GV().map(g => `<button data-grupo="${g[0]}" class="${grupoDe(TAB)[0] === g[0] ? 'on' : ''} ${g[0] === 'ajustes' ? 'der' : ''}"><span class="ni">${g[2]}</span>${g[4] || g[1]}${g[0] === 'pedidos' && pendientesAdmin() ? ` <span class="badge">${pendientesAdmin()}</span>` : ''}</button>`).join('')}<button id="nmas" class="hide" aria-haspopup="true">Más ▾</button></div></nav>` : ''}</div>
     ${nuevo ? `<button class="fab" id="fab" title="Nuevo">${ICO.mas}</button>` : ''}`;
 }
+/** V15: en anchos intermedios (pantalla dividida, tablets) los módulos que no caben en la barra de arriba pasan a "Más ▾". Ninguno queda oculto. */
+function ajustarMenu() {
+  const nin = document.querySelector('.mainnav .nin'), mas = $('#nmas'); if (!nin || !mas) return;
+  const bs = [...nin.querySelectorAll('[data-grupo]')]; bs.forEach(b => b.classList.remove('hide')); mas.classList.add('hide');
+  if (!nin.offsetParent || nin.scrollWidth <= nin.clientWidth + 1) return;
+  mas.classList.remove('hide');
+  const ocultos = [];
+  for (let i = bs.length - 1; i >= 0 && nin.scrollWidth > nin.clientWidth + 1; i--) { if (bs[i].classList.contains('on') && i) continue; bs[i].classList.add('hide'); ocultos.unshift(bs[i]); }
+  mas.classList.toggle('on', ocultos.some(b => b.classList.contains('on')));
+  mas.onclick = () => popover(mas, `<div class="ph">Más módulos</div>${ocultos.map(b => `<button class="pi" data-gmas="${b.dataset.grupo}">${b.innerHTML}</button>`).join('')}`, d => d.querySelectorAll('[data-gmas]').forEach(x => x.onclick = () => { cerrarPop(); document.querySelector(`.mainnav [data-grupo="${x.dataset.gmas}"]`).click(); }));
+}
+let _rsz = 0; window.addEventListener('resize', () => { clearTimeout(_rsz); _rsz = setTimeout(() => { if (USER && AL()) ajustarMenu(); }, 120); });
 function cerrarPop() { document.querySelectorAll('.pop,.velo').forEach(x => x.remove()); document.removeEventListener('keydown', escPop); }
 function escPop(e) { if (e.key === 'Escape') cerrarPop(); }
 /** Menú flotante bajo un botón; en celular sale como hoja desde abajo. */
@@ -590,7 +668,7 @@ function barraMovil(np) {
     <button id="mas" class="${enBarra ? '' : 'on'}"><span class="i">${enBarra ? '☰' : g[2]}</span>${enBarra ? 'Más' : esc(g[1])}</button></div>
     <div class="sheet" id="sheet"><div class="box"><div class="grab"></div><div class="tiles">${resto.map(x => `<button data-grupo="${x[0]}" class="${g[0] === x[0] ? 'on' : ''}"><span class="i">${x[2]}</span>${x[1]}</button>`).join('')}</div></div></div>`;
 }
-function salir() { if (TOKEN) call('salir').catch(() => {}); document.body.classList.remove('adm'); CONSULTA = { desde: '', hasta: '', r: null }; IMPORT = null; IMPC = null; PIN = ''; store('pin', null); TOKEN = ''; store('tok', null); borrarVista(); USER = null; S = null; TAB = 'inicio'; quitarVelo(); renderLogin(); }
+function salir() { if (TOKEN) call('salir').catch(() => {}); document.body.classList.remove('adm', 'rolb', 'cli', 'concbar'); CONSULTA = { desde: '', hasta: '', r: null }; HIST = { tab: 'compras', filtro: '3m', mes: '', r: null, clave: '' }; PAGO_CLI = null; PEDIDO = null; VER_TODAS = false; IMPORT = null; IMPC = null; PIN = ''; store('pin', null); TOKEN = ''; store('tok', null); borrarVista(); USER = null; S = null; TAB = 'inicio'; quitarVelo(); renderLogin(); }
 
 /* ===== Cálculos compartidos ===== */
 function mismoCliente(nombre, q) { const n = String(nombre || '').toLowerCase().trim(); return n.includes(q) || (n.length >= 4 && q.includes(n)); }
@@ -686,20 +764,68 @@ function bindCobrar() { document.querySelectorAll('[data-cobrar]').forEach(b => 
 function nuevoCierre() {
   return { fecha: hoy(), moneda: 'USD', notas: '', lineas: [{ tipo: 'PDV', destino: 'Local', monto: '' }, { tipo: 'PM', destino: 'Local', monto: '' }] };
 }
+/** V15: cierre del día de la empleada: aviso si falta el de ayer, Hoy/Ayer y moneda arriba, un bloque por forma de pago, total y "Guardar cierre" fijos abajo. */
+function vCierreLocal(C, tasa, sec, sum, sym0, otra) {
+  const h = hoy(), ay = addDays(h, -1), sym = C.moneda === 'Bs' ? x => n2(x) + ' bolívares' : usd;
+  document.body.classList.add('concbar');
+  $('#main').innerHTML = `<div style="max-width:620px;margin:0 auto">
+    <h1 class="ctit" style="margin-bottom:10px">Cierre del día</h1>
+    <div id="avayer"></div>
+    <div class="grid g2" style="margin-bottom:12px">
+      <div class="seg" role="group" aria-label="Día" style="display:grid;grid-template-columns:1fr 1fr"><button data-dia="${h}" class="${C.fecha === h ? 'on plain' : ''}">Hoy ${fdate(h).slice(0, 5)}</button><button data-dia="${ay}" class="${C.fecha === ay ? 'on plain' : ''}">Ayer ${fdate(ay).slice(0, 5)}</button></div>
+      <div class="seg" role="group" aria-label="Moneda" style="display:grid;grid-template-columns:1fr 1fr"><button class="${C.moneda === 'Bs' ? 'on plain' : ''}" data-mon="Bs">Bolívares</button><button class="${C.moneda === 'USD' ? 'on plain' : ''}" data-mon="USD">Dólares</button></div>
+    </div>
+    <p class="small muted" style="margin:-4px 0 10px">Anota todo lo que entró en el día. Puedes escribir los miles con punto (45.000). Tasa del ${fdate(C.fecha)}: <b class="mono">${tasa ? n2(tasa) : 'sin tasa'}</b></p>
+    <div id="aviso"></div>
+    ${sec('PDV')}${sec('PM')}${sec('EFE')}
+    <div class="cblk"><h3>Notas</h3><textarea id="cn" rows="2" placeholder="Algo que debamos saber (opcional)">${esc(C.notas)}</textarea></div>
+  </div>
+  <div class="cbar"><div class="cin"><div id="ctot"></div><button class="btn acc full cbig" id="cg">Guardar cierre</button></div></div>`;
+  const pintarTot = () => {
+    const lo = sum(() => true), porTipo = t => sum(l => l.tipo === t);
+    document.querySelectorAll('[data-sub]').forEach(e => { const v = porTipo(e.dataset.sub); e.textContent = v ? sym(v) : ''; });
+    $('#ctot').innerHTML = `<div class="tot big" style="align-items:baseline"><span>Total del día</span><span style="display:flex;flex-direction:column;align-items:flex-end"><span class="num">${sym(lo)}</span>${tasa ? `<span class="small muted">≈ ${otra(lo)} · tasa ${n2(tasa)}</span>` : ''}</span></div>
+      ${C.moneda === 'USD' && lo > LIMITE_USD ? `<div class="banner warn" style="margin-top:6px">⚠️ <b>¿Seguro que son dólares?</b> ${usd(lo)} es mucho para un día; parece un monto en bolívares. <button class="btn sm" id="cabs" style="margin-top:6px;display:block">Son bolívares: cambiar</button></div>` : ''}`;
+    const cb = $('#cabs'); if (cb) cb.onclick = () => { C.moneda = 'Bs'; rer(); };
+  };
+  pintarTot();
+  const rer = () => { const y = window.scrollY; vCierre(); window.scrollTo(0, y); };
+  document.querySelectorAll('[data-k]').forEach(el => el.oninput = () => { C.lineas[el.dataset.l][el.dataset.k] = el.value; pintarTot(); });
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { C.lineas.splice(b.dataset.del, 1); rer(); });
+  document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { C.lineas.push({ tipo: b.dataset.add, destino: 'Local', monto: '' }); rer(); const e2 = document.querySelector(`[data-l="${C.lineas.length - 1}"][data-k="monto"]`); if (e2) e2.focus(); });
+  document.querySelectorAll('[data-mon]').forEach(b => b.onclick = () => { C.moneda = b.dataset.mon; rer(); });
+  document.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => { C.fecha = b.dataset.dia; rer(); });
+  $('#cn').oninput = e => C.notas = e.target.value;
+  $('#cg').onclick = e => busy(e.target, async () => {
+    const lineas = C.lineas.map(l => ({ tipo: l.tipo, destino: 'Local', monto: numMonto(l.monto) })).filter(l => l.monto > 0);
+    if (!lineas.length) throw new Error('Escribe al menos un monto');
+    const totalCierre = lineas.reduce((a, l) => a + l.monto, 0);
+    if (C.moneda === 'USD' && totalCierre > LIMITE_USD && !e.target.dataset.okusd) { e.target.dataset.okusd = 1; throw new Error('¿Seguro que son dólares (' + usd(totalCierre) + ')? Si sí, toca Guardar otra vez. Si son bolívares, cambia arriba a "Bolívares".'); }
+    const r = await call('guardarCierre', { fecha: C.fecha, moneda: C.moneda, notas: C.notas, lineas });
+    toast('Cierre guardado ✓'); CIERRE = null; document.body.classList.remove('concbar');
+    $('#main').innerHTML = `<div class="card login" style="margin-top:8vh"><div class="logo" style="background:var(--ok-bg)">✅</div><h2>Cierre del ${fdate(r.fecha)} guardado</h2><p class="muted">Si te equivocaste, vuelve a registrarlo y se reemplaza.</p><button class="btn sec full" id="otro">Registrar de nuevo</button></div>`;
+    $('#otro').onclick = () => vCierre();
+  });
+  call('cierreDelDia', { fecha: C.fecha }).then(r => { const a = $('#aviso'); if (a && r && r.existe) a.innerHTML = `<div class="banner warn">Ya hay un cierre para este día${r.empleado ? ' (de ' + esc(r.empleado) + ')' : ''}. Si guardas, se reemplaza.</div>`; }).catch(() => {});
+  if (C.fecha === h) call('cierreDelDia', { fecha: ay }).then(r => { const a = $('#avayer'); if (a && !(r && r.existe) && C.fecha === h) { a.innerHTML = `<div class="cayer"><span><b>Falta el cierre de ayer</b> (${fdate(ay).slice(0, 5)})</span><button class="btn" id="hacer">Hacerlo ahora</button></div>`; $('#hacer').onclick = () => { C.fecha = ay; rer(); }; } }).catch(() => {});
+}
 function vCierre() {
   if (!CIERRE) CIERRE = nuevoCierre();
   const C = CIERRE, tasa = tasaPara(C.fecha) || (S.tasaHoy && S.tasaHoy.tasa);
   const toU = m => C.moneda === 'Bs' ? (tasa ? numMonto(m) / tasa : 0) : numMonto(m);
   const sum = f => C.lineas.filter(f).reduce((s, l) => s + numMonto(l.monto), 0);
-  const sec = tipo => `<h3>${TIPOS[tipo]}</h3>
-    ${C.lineas.map((l, i) => l.tipo !== tipo ? '' : `<div class="linea">
-      <input class="num" inputmode="decimal" placeholder="0,00" value="${esc(l.monto)}" data-l="${i}" data-k="monto">
+  const esAdm = USER.rol === 'admin';
+  const OTRO = { PDV: '+ Otro punto', PM: '+ Otro pago móvil', EFE: '+ Otro monto en efectivo' };
+  const sec = tipo => { const inner = `${C.lineas.map((l, i) => l.tipo !== tipo ? '' : `<div class="linea">
+      <input class="num${esAdm ? '' : ' big'}" inputmode="decimal" placeholder="0,00" value="${esc(l.monto)}" data-l="${i}" data-k="monto" aria-label="${TIPOS[tipo]}">
       <button class="x" data-del="${i}" title="Quitar">×</button>
     </div>`).join('')}
-    <button class="btn sm sec" data-add="${tipo}">+ Agregar ${TIPOS[tipo].toLowerCase()}</button>`;
+    <button class="btn sm sec" data-add="${tipo}">${esAdm ? '+ Agregar ' + TIPOS[tipo].toLowerCase() : OTRO[tipo]}</button>`;
+    return esAdm ? `<h3>${TIPOS[tipo]}</h3>${inner}` : `<div class="cblk"><h3>${TIPOS[tipo]}<span class="num" data-sub="${tipo}"></span></h3>${inner}</div>`; };
   const sym = C.moneda === 'Bs' ? bs : usd;
   const otra = m => C.moneda === 'Bs' ? usd(tasa ? m / tasa : 0) : bs(tasa ? m * tasa : 0);
   const esAdmin = USER.rol === 'admin';
+  if (!esAdmin) return vCierreLocal(C, tasa, sec, sum, sym, otra);
   $('#main').innerHTML = `<div class="card" style="max-width:620px;margin:0 auto 14px">
     <h2>Cierre del día</h2>
     <p class="small muted" style="margin-top:-6px">Anota todo lo que entró en el día por punto de venta, pago móvil y efectivo. ${esAdmin ? 'Los pagos de clientes al mayor que entraron por las cuentas del local se registran en <b>Cobros</b> (marcando "entró por las cuentas del local") y la app los descuenta de la venta del local.' : 'Si algún pago era de un cliente al mayor, no pasa nada: el administrador lo registra aparte.'}</p>
@@ -1983,37 +2109,6 @@ function vPedir() {
   });
   document.querySelectorAll('[data-pcan]').forEach(b => b.onclick = () => { if (confirmar(b, '¿Seguro?')) busy(b, async () => { await call('cliCancelarPedido', { id: b.dataset.pcan }); toast('Pedido cancelado'); await recargar(); }); });
 }
-function vCuentas() {
-  const d = deudaCliente(), h = hoy();
-  const det = {}; S.detalle.forEach(x => (det[x.VentaID] = det[x.VentaID] || []).push(x));
-  const cob = {}; S.cobros.forEach(x => (cob[x.VentaID] = cob[x.VentaID] || []).push(x));
-  const vs = S.ventas.slice().sort((a, b) => (a.Fecha + a.ID) < (b.Fecha + b.ID) ? 1 : -1);
-  const pedAt = S.pedidos.filter(p => p.Estado !== 'Pendiente').slice(0, 5);
-  if (!CONSULTA.hasta) { CONSULTA.hasta = h.slice(0, 7); CONSULTA.desde = addDays(h.slice(0, 7) + '-01', -80).slice(0, 7); }
-  $('#main').innerHTML = `<div style="max-width:720px;margin:0 auto">
-    <div class="grid g2" style="margin-bottom:14px"><div class="kpi"><small>Debes en total</small><b>${usd(d.saldo)}</b>${S.aFavor > 0.005 ? `<div class="small" style="color:var(--ok)">Tienes ${usd(S.aFavor)} a favor para tu próxima compra</div>` : ''}</div><div class="kpi ${d.vencido > 0.01 ? 'bad' : 'ok'}"><small>Vencido</small><b>${usd(d.vencido)}</b></div></div>
-    ${d.notas.length ? `<div class="card"><h2>Notas pendientes</h2><div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Saldo</th></tr>
-      ${d.notas.sort((a, b) => a.Vence < b.Vence ? -1 : 1).map(v => `<tr><td>${esc(v.Nota || '-')}</td><td>${fdate(v.Fecha)}</td><td>${v.Vence < h ? `<span class="pill p-bad">${fdate(v.Vence)}</span>` : fdate(v.Vence)}</td><td class="r num"><b>${usd(v.Saldo)}</b></td></tr>`).join('')}</table></div>
-      ${F('cliPagos') ? '<button class="btn acc full" style="margin-top:10px" id="irpag">Reportar un pago</button>' : ''}</div>` : '<div class="banner ok">✅ Estás al día. ¡Gracias!</div>'}
-    ${pedAt.length ? `<div class="card"><h2>Mis pedidos recientes</h2>${pedAt.map(p => { const desp = (S.despachos || []).filter(x => x.VentaID === p.VentaID);
-      return `<div class="cli"><div><b>${fdate(p.Fecha)}</b>${p.Nota ? ` · nota <b>${esc(p.Nota)}</b>` : ''}
-        <div class="small muted">Pediste: ${S.pedidoLineas.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div>
-        ${desp.length ? `<div class="small">Despachado: ${desp.map(x => esc(x.Producto) + ' <b>' + n2(x.Kg) + ' kg</b>').join(' · ')}${p.TotalVenta ? ' · <b class="num">' + usd(p.TotalVenta) + '</b>' : ''}</div>` : ''}
-        ${p.Motivo ? `<div class="small">${esc(p.Motivo)}</div>` : ''}</div><span class="pill ${p.Estado === 'Confirmado' ? 'p-ok' : 'p-bad'}">${p.Estado === 'Confirmado' ? 'Despachado' : esc(p.Estado)}</span></div>`; }).join('')}</div>` : ''}
-    <div class="card"><h2>Mis últimas compras</h2>${tablaCompras(vs.slice(0, 6), det, cob, 'Todavía no tienes compras')}
-      ${S.totalCompras > 6 ? `<p class="small muted" style="margin:8px 0 0">Te mostramos las 6 más recientes de ${S.totalCompras}. Para ver otras, consúltalas por mes aquí abajo.</p>` : ''}</div>
-    ${S.totalCompras > 6 ? `<div class="card"><h2>Consultar compras anteriores</h2>
-      <div class="row"><div><label>Desde</label><input type="month" id="cqd" value="${esc(CONSULTA.desde)}" min="${esc((S.primeraCompra || '').slice(0, 7))}" max="${h.slice(0, 7)}"></div>
-        <div><label>Hasta</label><input type="month" id="cqh" value="${esc(CONSULTA.hasta)}" min="${esc((S.primeraCompra || '').slice(0, 7))}" max="${h.slice(0, 7)}"></div>
-        <button class="btn" id="cqb" style="flex:none">Consultar</button></div>
-      <p class="small muted" style="margin:6px 0 0">Hasta 12 meses por consulta.${S.primeraCompra ? ' Tu primera compra fue el ' + fdate(S.primeraCompra) + '.' : ''}</p>
-      ${CONSULTA.r ? `<h3>${CONSULTA.r.ventas.length} compra(s) · ${mesNombre(CONSULTA.r.desde)} a ${mesNombre(CONSULTA.r.hasta)} · ${usd(CONSULTA.r.ventas.reduce((a, v) => a + Number(v.Total), 0))}</h3>${tablaCompras(CONSULTA.r.ventas, agrupar(CONSULTA.r.detalle), agrupar(CONSULTA.r.cobros), 'No compraste en esos meses', 'q')}` : ''}
-    </div>` : ''}</div>`;
-  document.querySelectorAll('[data-cv]').forEach(tr => tr.onclick = () => $('#cvd-' + tr.dataset.cv).classList.toggle('hide'));
-  const ip = $('#irpag'); if (ip) ip.onclick = () => { TAB = 'pagar'; render(); };
-  const cq = $('#cqb'); if (cq) cq.onclick = e => busy(e.target, async () => { CONSULTA.desde = $('#cqd').value; CONSULTA.hasta = $('#cqh').value; if (!CONSULTA.desde || !CONSULTA.hasta) throw new Error('Elige los dos meses');
-    CONSULTA.r = await call('cliHistorial', { desde: CONSULTA.desde, hasta: CONSULTA.hasta }); vCuentas(); const h3 = document.querySelector('#main h3:last-of-type'); if (h3) h3.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-}
 const agrupar = rows => { const o = {}; (rows || []).forEach(x => (o[x.VentaID] = o[x.VentaID] || []).push(x)); return o; };
 let CONSULTA = { desde: '', hasta: '', r: null };
 function tablaCompras(vs, det, cob, vacio, pre = '') {
@@ -2023,33 +2118,169 @@ function tablaCompras(vs, det, cob, vacio, pre = '') {
         ${(cob[v.ID] || []).map(c => `<div class="small muted">💵 ${fdate(c.Fecha)} · ${esc(c.Metodo)} · ${usd(c.MontoUSD)}</div>`).join('')}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">${vacio}</td></tr>`}
     </table></div>`;
 }
+/* ===== V15: portal del cliente (Inicio · Pedir · Pagar · Historial) ===== */
+const tasaCli = () => Number(S.tasaHoy && S.tasaHoy.tasa) || 0;
+const enBs = x => { const t = tasaCli(); return t ? n2(r2(Number(x) * t)) + ' bolívares' : ''; };
+const ordenNotas = ns => { const h = hoy(); return ns.slice().sort((a, b) => ((a.Vence < h) === (b.Vence < h) ? (a.Vence < b.Vence ? -1 : 1) : (a.Vence < h ? -1 : 1))); };
+const ultimaCompra = () => S.ventas.filter(v => S.detalle.some(d => d.VentaID === v.ID)).sort((a, b) => (a.Fecha + a.ID) < (b.Fecha + b.ID) ? 1 : -1)[0];
+let VER_TODAS = false;
+function irPagar(sel) { PAGO_CLI = null; nuevoPagoCli(); PAGO_CLI.sel = sel || 'todo'; TAB = 'pagar'; render(); }
+function repetirUltimo() {
+  const ult = ultimaCompra(); if (!ult) return;
+  PEDIDO = { lineas: S.detalle.filter(x => x.VentaID === ult.ID).filter(x => S.productos.some(p => p.Codigo === x.Codigo)).map(x => ({ codigo: x.Codigo, kg: String(x.Kg) })), notas: '', faltantes: null };
+  TAB = 'pedir'; render(); toast('Revisa los kilos y envía');
+}
+function vCuentas() {
+  const d = deudaCliente(), h = hoy(), t = tasaCli(), fav = Number(S.aFavor) || 0;
+  const notas = ordenNotas(d.notas), prox = notas.filter(v => v.Vence >= h).sort((a, b) => a.Vence < b.Vence ? -1 : 1)[0];
+  const ver = VER_TODAS ? notas : notas.slice(0, 3), ult = ultimaCompra();
+  const nombre = String(USER.nombre || '').split(/\s+/)[0];
+  $('#main').innerHTML = `<div class="cwrap">
+    <div class="chero"><h1>Hola, ${esc(nombre)}</h1></div>
+    <section class="ccard cdeuda" id="cdeuda">
+      <span class="clab">Debes en total</span>
+      <b class="cmonto num">${usd(d.saldo)}</b>
+      ${t && d.saldo > 0.005 ? `<span class="small muted">≈ ${n2(r2(d.saldo * t))} bolívares · tasa BCV ${n2(t)}</span>` : ''}
+      <div class="cpills">${d.vencido > 0.01 ? `<span class="cpill bad">Vencido ${usd(d.vencido)}</span>` : ''}${prox ? `<span class="cpill">Próximo vence ${fdate(prox.Vence).slice(0, 5)}</span>` : ''}${fav > 0.005 ? `<span class="cpill ok">Tienes ${usd(fav)} a favor para tu próxima compra</span>` : ''}${d.saldo <= 0.005 ? '<span class="cpill ok">✓ Estás al día. ¡Gracias!</span>' : ''}</div>
+      <div class="cbtns">${F('cliPagos') ? '<button class="btn acc cbig" id="cpag">Pagar</button>' : ''}${F('cliPedidos') ? '<button class="btn sec cbig" id="cped">Hacer pedido</button>' : ''}</div>
+    </section>
+    ${notas.length ? `<section class="ccard"><div class="chead"><h2>Por pagar</h2><span class="small muted">${notas.length} nota${notas.length > 1 ? 's' : ''}</span></div>
+      ${ver.map(v => `<button class="cnota" data-pnota="${v.ID}"><span><b>Nota ${esc(v.Nota || '-')}</b><span class="small ${v.Vence < h ? 'cbad' : 'muted'}">${v.Vence < h ? 'Venció el' : 'Vence el'} ${fdate(v.Vence).slice(0, 5)}</span></span><span class="num">${usd(v.Saldo)}</span></button>`).join('')}
+      ${notas.length > 3 ? `<button class="btn sec full" id="cvert" style="margin-top:8px">${VER_TODAS ? 'Ver menos' : 'Ver todas (' + notas.length + ')'}</button>` : ''}
+      ${F('cliPagos') ? '<p class="small muted" style="margin:6px 0 0">Toca una nota para pagarla.</p>' : ''}</section>` : ''}
+    ${ult && F('cliPedidos') ? `<section class="ccard"><h2>Pedir de nuevo</h2><p class="small muted" style="margin:0 0 10px">Lo mismo que en la nota ${esc(ult.Nota || '-')} del ${fdate(ult.Fecha).slice(0, 5)}: ${S.detalle.filter(x => x.VentaID === ult.ID).map(x => esc(x.Producto) + ' ' + n2(x.Kg) + ' kg').join(' · ')}. Revisas los kilos y lo envías.</p>
+      <button class="btn sec full cbig" id="crep">Repetir último pedido</button></section>` : ''}
+  </div>`;
+  const cp = $('#cpag'); if (cp) cp.onclick = () => irPagar('todo');
+  const ce = $('#cped'); if (ce) ce.onclick = () => { TAB = 'pedir'; render(); };
+  const cr = $('#crep'); if (cr) cr.onclick = repetirUltimo;
+  const cv = $('#cvert'); if (cv) cv.onclick = () => { VER_TODAS = !VER_TODAS; vCuentas(); };
+  document.querySelectorAll('[data-pnota]').forEach(b => b.onclick = () => { if (F('cliPagos')) irPagar('nota:' + b.dataset.pnota); });
+}
+
 let PAGO_CLI = null;
-function vPagar() {
-  if (!PAGO_CLI) PAGO_CLI = { fecha: hoy(), metodo: 'Pago móvil', banco: 'Venezuela', moneda: 'Bs', monto: '', referencia: '' };
-  const P = PAGO_CLI, t = S.tasaHoy && S.tasaHoy.tasa, d = deudaCliente();
-  const pill = e => `<span class="pill ${e === 'Confirmado' ? 'p-ok' : e === 'Pendiente' ? 'p-warn' : 'p-bad'}">${e === 'Pendiente' ? 'Por verificar' : e}</span>`;
-  $('#main').innerHTML = `<div style="max-width:620px;margin:0 auto"><div class="card"><h2>Reportar un pago</h2>
-    <p class="small muted" style="margin-top:-6px">Debes ${usd(d.saldo)}. Cuando verifiquemos tu pago, lo aplicamos a tus notas más viejas.</p>
-    <div class="grid g2">
-      <div><label>Fecha del pago</label><input type="date" id="rpf" value="${P.fecha}"></div>
-      <div><label>Cómo pagaste</label><select id="rpm">${['Pago móvil', 'Transferencia', 'Punto de venta', 'Efectivo $', 'Efectivo Bs', 'Zelle'].map(x => `<option ${x === P.metodo ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
-      <div><label>Banco</label><select id="rpb"><option value="">—</option>${BANCOS.map(x => `<option ${x === P.banco ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
-      <div><label>Moneda</label><div class="seg"><button class="${P.moneda === 'Bs' ? 'on plain' : ''}" data-rpmon="Bs">Bolívares</button><button class="${P.moneda === 'USD' ? 'on plain' : ''}" data-rpmon="USD">Dólares</button></div></div>
-      <div><label>Monto ${P.moneda === 'Bs' ? 'Bs' : '$'}</label><input id="rpv" class="num big" inputmode="decimal" value="${esc(P.monto)}" placeholder="0,00"></div>
-      <div><label>Referencia</label><input id="rpr" value="${esc(P.referencia)}" placeholder="últimos 4 o 6 dígitos"></div>
-    </div>
-    ${P.moneda === 'Bs' && t ? `<p class="small muted" id="rpeq">≈ ${usd(numMonto(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})</p>` : ''}
-    <button class="btn acc full" style="margin-top:12px" id="rpg">Enviar reporte de pago</button></div>
-    <div class="card"><h2>Mis pagos reportados</h2>${S.pagos.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b> · ${esc(p.Metodo)}${p.Referencia ? ' · ref. ' + esc(p.Referencia) : ''}${p.Motivo ? `<div class="small" style="color:var(--bad)">${esc(p.Motivo)}</div>` : ''}</div><div class="right"><b class="num">${p.MontoBs ? bs(p.MontoBs) : usd(p.MontoUSD)}</b><br>${pill(p.Estado)}</div></div>`).join('') || '<div class="empty small">Todavía no has reportado pagos.</div>'}</div></div>`;
-  $('#rpf').onchange = e => P.fecha = e.target.value; $('#rpm').onchange = e => { P.metodo = e.target.value; if (/\$|Zelle/.test(P.metodo)) { P.moneda = 'USD'; vPagar(); } };
-  $('#rpb').onchange = e => P.banco = e.target.value; $('#rpr').oninput = e => P.referencia = e.target.value;
-  $('#rpv').oninput = e => { P.monto = e.target.value; const q = $('#rpeq'); if (q && t) q.textContent = `≈ ${usd(numMonto(P.monto) / t)} a la tasa BCV de hoy (${n2(t)})`; };
-  document.querySelectorAll('[data-rpmon]').forEach(b => b.onclick = () => { P.moneda = b.dataset.rpmon; vPagar(); });
-  $('#rpg').onclick = e => busy(e.target, async () => {
-    if (!(numMonto(P.monto) > 0)) throw new Error('Escribe el monto');
-    await call('cliReportarPago', { fecha: P.fecha, metodo: P.metodo, banco: P.banco, referencia: P.referencia, montoBs: P.moneda === 'Bs' ? numMonto(P.monto) : 0, montoUSD: P.moneda === 'USD' ? numMonto(P.monto) : 0 });
-    PAGO_CLI = null; toast('Pago reportado. Lo verificaremos pronto'); await recargar();
+function nuevoPagoCli() { if (!PAGO_CLI) PAGO_CLI = { sel: 'todo', otroMoneda: 'Bs', monto: '', fecha: hoy(), metodo: 'Pago móvil', banco: '', referencia: '' }; return PAGO_CLI; }
+/** Lee los "datos para cobrar" de Ajustes y separa teléfono, cédula/RIF y banco para poder copiarlos. */
+function datosPagoPartes(txt) {
+  return String(txt || '').split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => {
+    const tel = (l.match(/(?:\+?58[\s-]?)?0?4\d{2}[\s.-]?\d{3}[\s.-]?\d{4}/) || [])[0], doc = (l.match(/\b[VJEGP][\s.-]?\d[\d.]{5,11}\b/i) || [])[0];
+    return { linea: l, tel: tel ? tel.trim() : '', doc: doc ? doc.trim() : '' };
   });
+}
+function copiar(txt, btn) {
+  const ok = () => { toast('Copiado: ' + txt); if (btn) { const o = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => { btn.textContent = o; }, 1500); } };
+  const viejo = () => { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('No se pudo copiar: ' + txt, true); } ta.remove(); };
+  try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(ok, viejo); else viejo(); } catch (e) { viejo(); }
+}
+const METODOS_CLI = ['Pago móvil', 'Transferencia', 'Zelle', 'Efectivo $', 'Efectivo Bs', 'Punto de venta'];
+function vPagar() {
+  const P = nuevoPagoCli(), d = deudaCliente(), t = tasaCli(), h = hoy(), notas = ordenNotas(d.notas);
+  if (!d.saldo && P.sel !== 'otro') P.sel = 'otro';
+  if (P.sel === 'vencido' && !(d.vencido > 0.01)) P.sel = 'todo';
+  if (P.sel.startsWith('nota:') && !notas.some(v => 'nota:' + v.ID === P.sel)) P.sel = 'todo';
+  const ops = [];
+  if (d.saldo > 0.005) ops.push({ k: 'todo', tit: 'Todo lo que debo', det: notas.length + ' nota' + (notas.length > 1 ? 's' : ''), usd: d.saldo });
+  if (d.vencido > 0.01 && d.vencido < d.saldo - 0.005) ops.push({ k: 'vencido', tit: 'Solo lo vencido', det: notas.filter(v => v.Vence < h).map(v => 'Nota ' + (v.Nota || '-')).join(', '), usd: d.vencido });
+  if (notas.length > 1) notas.forEach(v => ops.push({ k: 'nota:' + v.ID, tit: 'Nota ' + (v.Nota || '-'), det: (v.Vence < h ? 'Venció el ' : 'Vence el ') + fdate(v.Vence).slice(0, 5), usd: Number(v.Saldo) }));
+  ops.push({ k: 'otro', tit: 'Otro monto', det: 'Escribes cuánto vas a pagar', usd: null });
+  const enDolares = /Zelle|Efectivo \$/.test(P.metodo);
+  const selOp = ops.find(o => o.k === P.sel) || ops[0];
+  const montoUsd = selOp.k === 'otro' ? (P.otroMoneda === 'Bs' ? (t ? numMonto(P.monto) / t : 0) : numMonto(P.monto)) : selOp.usd;
+  const montoBs = selOp.k === 'otro' && P.otroMoneda === 'Bs' ? numMonto(P.monto) : (t ? r2(montoUsd * t) : 0);
+  const partes = datosPagoPartes(S.datosPago);
+  const pill = e => `<span class="pill ${e === 'Confirmado' ? 'p-ok' : e === 'Pendiente' ? 'p-warn' : 'p-bad'}">${e === 'Pendiente' ? 'Por verificar' : esc(e)}</span>`;
+  $('#main').innerHTML = `<div class="cwrap">
+    <h1 class="ctit">Pagar</h1>
+    <section class="ccard"><h2>1. ¿Cuánto vas a pagar?</h2>
+      ${ops.map(o => `<button class="copc ${o.k === selOp.k ? 'on' : ''}" data-psel="${o.k}" aria-pressed="${o.k === selOp.k}"><span><b>${esc(o.tit)}</b><span class="small muted">${esc(o.det)}${o.usd != null && t ? ' · ≈ ' + n2(r2(o.usd * t)) + ' bolívares' : ''}</span></span><span class="num">${o.usd != null ? usd(o.usd) : ''}</span></button>`).join('')}
+      ${selOp.k === 'otro' ? `<div class="row" style="margin-top:8px"><div><label>Monto en ${P.otroMoneda === 'Bs' ? 'bolívares' : 'dólares'}</label><input id="rpv" class="num big" inputmode="decimal" value="${esc(P.monto)}" placeholder="0,00"></div>
+        <div style="flex:none"><label>Moneda</label><div class="seg"><button class="${P.otroMoneda === 'Bs' ? 'on plain' : ''}" data-rpmon="Bs">Bolívares</button><button class="${P.otroMoneda === 'USD' ? 'on plain' : ''}" data-rpmon="USD">Dólares</button></div></div></div>
+        <p class="small muted" id="rpeq" style="margin:6px 0 0">${t ? (P.otroMoneda === 'Bs' ? '≈ ' + usd(montoUsd) : '≈ ' + n2(montoBs) + ' bolívares') + ' a la tasa BCV de hoy (' + n2(t) + ')' : ''}</p>` : ''}
+      ${d.saldo > 0.005 ? '' : '<p class="small muted" style="margin:6px 0 0">No debes nada. Si pagas por adelantado, queda a favor para tu próxima compra.</p>'}
+    </section>
+    <section class="ccard"><h2>2. Paga a esta cuenta</h2>
+      ${!enDolares && t ? `<div class="cpagar"><span><span class="small muted">Monto a pagar</span><b class="num" id="cbsmonto">${n2(montoBs)}</b><span class="small muted">bolívares · tasa BCV de hoy ${n2(t)}</span></span><button class="btn sec" id="cpbs" ${montoBs > 0 ? '' : 'disabled'}>Copiar</button></div>`
+        : `<div class="cpagar"><span><span class="small muted">Monto a pagar</span><b class="num">${usd(montoUsd)}</b><span class="small muted">en dólares</span></span></div>`}
+      ${partes.length ? partes.map((x, i) => `<div class="cdato"><span class="small">${esc(x.linea)}</span>
+          ${x.tel ? `<span class="crow"><span><span class="small muted">Teléfono</span><b class="num">${esc(x.tel)}</b></span><button class="btn sm sec" data-copiar="${esc(x.tel)}">Copiar</button></span>` : ''}
+          ${x.doc ? `<span class="crow"><span><span class="small muted">Cédula o RIF</span><b class="num">${esc(x.doc)}</b></span><button class="btn sm sec" data-copiar="${esc(x.doc)}">Copiar</button></span>` : ''}</div>`).join('')
+        : `<p class="small muted" style="margin:8px 0 0">${S.datosPago === undefined ? 'Pídenos por WhatsApp los datos de la cuenta para pagar.' : 'Todavía no tenemos datos de pago cargados. Pídelos por WhatsApp.'}</p>`}
+    </section>
+    <section class="ccard"><h2>3. Avísanos que pagaste</h2>
+      <div class="grid g2">
+        <div><label for="rpf">Fecha del pago</label><input type="date" id="rpf" value="${P.fecha}" max="${h}"></div>
+        <div><label for="rpm">Cómo pagaste</label><select id="rpm">${METODOS_CLI.map(x => `<option ${x === P.metodo ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        <div><label for="rpb">Desde qué banco</label><select id="rpb"><option value="">—</option>${BANCOS.map(x => `<option ${x === P.banco ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+        <div><label for="rpr">Referencia (últimos 4 a 6 números)</label><input id="rpr" class="num" inputmode="numeric" value="${esc(P.referencia)}" placeholder="Ej: 4821"></div>
+      </div>
+      <button class="btn acc full cbig" style="margin-top:12px" id="rpg">Enviar aviso de pago${montoUsd > 0 ? ' · ' + (enDolares ? usd(montoUsd) : n2(montoBs) + ' bolívares') : ''}</button>
+      <p class="small muted" style="margin:8px 0 0">Cuando lo verifiquemos, se aplica a tus notas. Te avisamos aquí mismo.</p>
+    </section>
+    <section class="ccard"><h2>Pagos avisados</h2>${S.pagos.length ? S.pagos.slice(0, 8).map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b> · ${esc(p.Metodo)}${p.Referencia ? ' · ref. ' + esc(p.Referencia) : ''}${p.Motivo ? `<div class="small" style="color:var(--bad)">${esc(p.Motivo)}</div>` : ''}</div><div class="right"><b class="num">${p.MontoBs ? n2(p.MontoBs) + ' bolívares' : usd(p.MontoUSD)}</b><br>${pill(p.Estado)}</div></div>`).join('') : '<div class="empty small">Todavía no has avisado pagos.</div>'}</section>
+  </div>`;
+  const rer = () => { const y = window.scrollY; vPagar(); window.scrollTo(0, y); };
+  document.querySelectorAll('[data-psel]').forEach(b => b.onclick = () => { P.sel = b.dataset.psel; rer(); });
+  document.querySelectorAll('[data-rpmon]').forEach(b => b.onclick = () => { P.otroMoneda = b.dataset.rpmon; rer(); });
+  const rv = $('#rpv'); if (rv) rv.oninput = e => { P.monto = e.target.value; const q = $('#rpeq'), mu = P.otroMoneda === 'Bs' ? (t ? numMonto(P.monto) / t : 0) : numMonto(P.monto), mb = P.otroMoneda === 'Bs' ? numMonto(P.monto) : r2(mu * t);
+    if (q && t) q.textContent = (P.otroMoneda === 'Bs' ? '≈ ' + usd(mu) : '≈ ' + n2(mb) + ' bolívares') + ' a la tasa BCV de hoy (' + n2(t) + ')'; const cb = $('#cbsmonto'); if (cb) cb.textContent = n2(mb); const cpb = $('#cpbs'); if (cpb) cpb.disabled = !(mb > 0);
+    const g = $('#rpg'); if (g) g.textContent = 'Enviar aviso de pago' + (mu > 0 ? ' · ' + (enDolares ? usd(mu) : n2(mb) + ' bolívares') : ''); };
+  const cpb = $('#cpbs'); if (cpb) cpb.onclick = () => { const mb = selOp.k === 'otro' && P.otroMoneda === 'Bs' ? numMonto(P.monto) : r2((selOp.k === 'otro' ? numMonto(P.monto) : selOp.usd) * t); copiar(String(r2(mb).toFixed(2)).replace('.', ','), cpb); };
+  document.querySelectorAll('[data-copiar]').forEach(b => b.onclick = () => copiar(b.dataset.copiar, b));
+  $('#rpf').onchange = e => P.fecha = e.target.value; $('#rpm').onchange = e => { P.metodo = e.target.value; rer(); };
+  $('#rpb').onchange = e => P.banco = e.target.value; $('#rpr').oninput = e => P.referencia = e.target.value;
+  $('#rpg').onclick = e => busy(e.target, async () => {
+    const mu = selOp.k === 'otro' ? (P.otroMoneda === 'Bs' ? (t ? numMonto(P.monto) / t : 0) : numMonto(P.monto)) : selOp.usd;
+    const mb = selOp.k === 'otro' && P.otroMoneda === 'Bs' ? numMonto(P.monto) : (t ? r2(mu * t) : 0);
+    if (!(mu > 0 || mb > 0)) throw new Error('Escribe cuánto pagaste');
+    const dolares = enDolares || (selOp.k === 'otro' && P.otroMoneda === 'USD') || !mb;
+    await call('cliReportarPago', { fecha: P.fecha, metodo: P.metodo, banco: P.banco, referencia: P.referencia, montoBs: dolares ? 0 : mb, montoUSD: dolares ? r2(mu) : 0 });
+    PAGO_CLI = null; toast('¡Listo! Avisaste tu pago. Lo verificaremos pronto'); await recargar();
+  });
+}
+
+let HIST = { tab: 'compras', filtro: '3m', mes: '', r: null, clave: '' };
+function rangoHist() {
+  const m = hoy().slice(0, 7);
+  if (HIST.filtro === 'anio') return [m.slice(0, 4) + '-01', m];
+  if (HIST.filtro === 'mes' && HIST.mes) return [HIST.mes, HIST.mes];
+  return [addDays(m + '-01', -62).slice(0, 7), m];
+}
+function vHistorial() {
+  const [desde, hasta] = rangoHist(), clave = desde + '|' + hasta;
+  if (HIST.clave !== clave) {
+    HIST.clave = clave; HIST.r = null;
+    $('#main').innerHTML = `<div class="cwrap"><h1 class="ctit">Historial</h1><div class="ccard"><span class="spin"></span> Buscando…</div></div>`;
+    call('cliHistorial', { desde, hasta }).then(r => { HIST.r = r; if (TAB === 'historial') vHistorial(); }).catch(e => { HIST.clave = ''; toast(e.message, true); });
+    return;
+  }
+  if (!HIST.r) return;
+  const r = HIST.r, h = hoy(), det = agrupar(r.detalle), cob = agrupar(r.cobros);
+  const enR = f => String(f).slice(0, 7) >= desde && String(f).slice(0, 7) <= hasta;
+  const pedidos = r.pedidos || S.pedidos.filter(p => enR(p.Fecha)), pLin = r.pedidoLineas || S.pedidoLineas, pagos = r.pagos || S.pagos.filter(p => enR(p.Fecha));
+  const porMes = (rows, f) => { const o = {}; rows.forEach(x => (o[String(f(x)).slice(0, 7)] = o[String(f(x)).slice(0, 7)] || []).push(x)); return Object.keys(o).sort().reverse().map(k => [k, o[k]]); };
+  const est = v => Number(v.Saldo) > 0.01 ? (v.Vence < h ? '<span class="pill p-bad">Vencida</span>' : '<span class="pill p-warn">Debe</span>') : '<span class="pill p-ok">Pagada</span>';
+  const estP = p => p.Estado === 'Pendiente' ? '<span class="pill p-warn">En espera</span>' : p.Estado === 'Confirmado' ? `<span class="pill p-ok">Despachado${p.Nota ? ' · nota ' + esc(p.Nota) : ''}</span>` : `<span class="pill p-bad">${esc(p.Estado)}</span>`;
+  const estPg = e => `<span class="pill ${e === 'Confirmado' ? 'p-ok' : e === 'Pendiente' ? 'p-warn' : 'p-bad'}">${e === 'Pendiente' ? 'Por verificar' : esc(e)}</span>`;
+  let cuerpo = '';
+  if (HIST.tab === 'compras') cuerpo = porMes(r.ventas, v => v.Fecha).map(([m, vs]) => `<section class="ccard"><div class="chead"><h2>${mesLargo(m)}</h2><span class="small muted">${vs.length} compra${vs.length > 1 ? 's' : ''} · ${usd(vs.reduce((a, v) => a + Number(v.Total), 0))}</span></div>
+      ${vs.map(v => `<button class="cnota" data-hv="${v.ID}" aria-expanded="false"><span><b>Nota ${esc(v.Nota || '-')} · ${fdate(v.Fecha).slice(0, 5)}</b><span class="small muted">Toca para ver productos y pagos</span></span><span class="cder"><span class="num">${usd(v.Total)}</span>${est(v)}</span></button>
+        <div class="cdet hide" id="hv-${v.ID}">${(det[v.ID] || []).map(x => `<div class="crow2"><span>${esc(x.Producto)} · ${n2(x.Kg)} kg × ${usd(x.Precio)}</span><span class="num">${usd(x.Subtotal)}</span></div>`).join('')}
+          ${(cob[v.ID] || []).map(c => `<div class="crow2 small muted"><span>Pago ${fdate(c.Fecha)} · ${esc(String(c.Metodo).replace(' (histórico)', ''))}</span><span class="num">${usd(c.MontoUSD)}</span></div>`).join('') || (Number(v.Saldo) > 0.01 ? '' : '')}
+          ${Number(v.Saldo) > 0.01 ? `<div class="crow2"><b>Falta por pagar</b><b class="num">${usd(v.Saldo)}</b></div>` : ''}</div>`).join('')}</section>`).join('') || '<div class="ccard empty">No tienes compras en estos meses.</div>';
+  if (HIST.tab === 'pedidos') cuerpo = porMes(pedidos, p => p.Fecha).map(([m, ps]) => `<section class="ccard"><div class="chead"><h2>${mesLargo(m)}</h2><span class="small muted">${ps.length} pedido${ps.length > 1 ? 's' : ''}</span></div>
+      ${ps.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b><div class="small muted">${pLin.filter(l => l.PedidoID === p.ID).map(l => esc(l.Producto) + ' ' + n2(l.Kg) + ' kg').join(' · ')}</div>${p.Motivo ? `<div class="small">${esc(p.Motivo)}</div>` : ''}</div><div class="right">${estP(p)}${p.TotalVenta ? `<br><b class="num">${usd(p.TotalVenta)}</b>` : ''}</div></div>`).join('')}</section>`).join('') || '<div class="ccard empty">No hiciste pedidos en estos meses.</div>';
+  if (HIST.tab === 'pagos') cuerpo = porMes(pagos, p => p.Fecha).map(([m, ps]) => `<section class="ccard"><div class="chead"><h2>${mesLargo(m)}</h2><span class="small muted">${ps.length} pago${ps.length > 1 ? 's' : ''} avisado${ps.length > 1 ? 's' : ''}</span></div>
+      ${ps.map(p => `<div class="cli"><div><b>${fdate(p.Fecha)}</b> · ${esc(p.Metodo)}${p.Referencia ? ' · ref. ' + esc(p.Referencia) : ''}${p.Motivo ? `<div class="small" style="color:var(--bad)">${esc(p.Motivo)}</div>` : ''}</div><div class="right"><b class="num">${p.MontoBs ? n2(p.MontoBs) + ' bolívares' : usd(p.MontoUSD)}</b><br>${estPg(p.Estado)}</div></div>`).join('')}</section>`).join('') || '<div class="ccard empty">No avisaste pagos en estos meses.</div>';
+  $('#main').innerHTML = `<div class="cwrap"><h1 class="ctit">Historial</h1>
+    <div class="ctabs" role="tablist">${[['compras', 'Compras'], ['pedidos', 'Pedidos'], ['pagos', 'Pagos']].map(([k, l]) => `<button role="tab" data-htab="${k}" class="${HIST.tab === k ? 'on' : ''}" aria-selected="${HIST.tab === k}">${l}</button>`).join('')}</div>
+    <div class="cfil">${[['3m', 'Últimos 3 meses'], ['anio', 'Este año'], ['mes', 'Elegir mes']].map(([k, l]) => `<button data-hfil="${k}" class="${HIST.filtro === k ? 'on' : ''}">${l}</button>`).join('')}
+      ${HIST.filtro === 'mes' ? `<input type="month" id="hmes" aria-label="Mes" value="${esc(HIST.mes || hoy().slice(0, 7))}" max="${hoy().slice(0, 7)}" ${S.primeraCompra ? `min="${esc(S.primeraCompra.slice(0, 7))}"` : ''}>` : ''}</div>
+    <p class="small muted" style="margin:0 0 10px">${desde === hasta ? mesLargo(desde) : mesLargo(desde) + ' a ' + mesLargo(hasta)}</p>
+    ${cuerpo}</div>`;
+  document.querySelectorAll('[data-htab]').forEach(b => b.onclick = () => { HIST.tab = b.dataset.htab; vHistorial(); });
+  document.querySelectorAll('[data-hfil]').forEach(b => b.onclick = () => { HIST.filtro = b.dataset.hfil; if (HIST.filtro === 'mes' && !HIST.mes) HIST.mes = hoy().slice(0, 7); vHistorial(); });
+  const hm = $('#hmes'); if (hm) hm.onchange = e => { if (e.target.value) { HIST.mes = e.target.value; vHistorial(); } };
+  document.querySelectorAll('[data-hv]').forEach(b => b.onclick = () => { const el = $('#hv-' + b.dataset.hv); el.classList.toggle('hide'); b.setAttribute('aria-expanded', String(!el.classList.contains('hide'))); });
 }
 
 /* ===== AJUSTES ===== */
