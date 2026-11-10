@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ventas Lácteos</title><meta name="theme-color" content="#1f3a5f"><link rel="icon" href="icon-192.png">
+<title>Empresas del grupo</title><meta name="theme-color" content="#1f3a5f"><link rel="icon" href="lacteos/icon-192.png">
 <style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f3ea;font:16px/1.45 system-ui,sans-serif;color:#1d2433}
-.c{max-width:360px;width:calc(100% - 32px);text-align:center}
+.c{max-width:380px;width:calc(100% - 32px);text-align:center}
 a{display:flex;align-items:center;gap:14px;text-align:left;text-decoration:none;color:inherit;background:#fffdf8;border:1px solid #e7e0d0;border-radius:16px;padding:14px;margin:12px 0}
 img{width:56px;height:56px;border-radius:14px}b{display:block;font-size:17px}small{color:#6b7280}
 </style></head><body><div class="c">
-<h2>Ventas Lácteos</h2><p><small>Elige la app que quieres abrir o instalar</small></p>
-<a href="real/"><img src="real/icon-192.png" alt=""><span><b>Lácteos</b><small>App real del negocio</small></span></a>
-<a href="prueba/"><img src="prueba/icon-192.png" alt=""><span><b>PRUEBA Lácteos</b><small>Copia para hacer pruebas</small></span></a>
+<h2>Empresas del grupo</h2><p><small>Elige la empresa para abrir o instalar su app</small></p>
+<a href="lacteos/"><img src="lacteos/icon-192.png" alt=""><span><b>Lácteos</b><small>Ventas al mayor, cobros, inventario y cierre del local</small></span></a>
 </div>
 <script>
-// Apaga la app vieja que estaba instalada en /lacteos/ (ahora vive en /real/)
-if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => { if (/\/lacteos\/$/.test(r.scope)) r.unregister(); }));
+// Apaga cualquier app vieja que hubiera quedado instalada en la raíz del grupo
+if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => { if (new URL(r.scope).pathname === location.pathname.replace(/index\.html$/, '')) r.unregister(); }));
 </script>
 </body></html>
