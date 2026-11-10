@@ -856,7 +856,7 @@ function pagoCampos(P, tasa, px) {
     <div style="grid-column:span 2"><label>&nbsp;</label><label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px"><input type="checkbox" id="${px}pl" style="width:auto" ${porLocalDe(P) ? 'checked' : ''}> Entró por las cuentas del local (punto o pago móvil del local)</label></div>
   </div>`;
 }
-function porLocalDe(P) { return P.porLocal != null ? P.porLocal : /móvil|Punto/.test(P.metodo); }
+function porLocalDe(P) { return P.porLocal != null ? P.porLocal : false; } // V12: viene desmarcada; se marca solo si el pago entró por las cuentas del local
 function bindPago(P, px, rer) {
   $('#' + px + 'm').onchange = e => { P.metodo = e.target.value; P.porLocal = null; if (/Efectivo \$|Zelle/.test(P.metodo)) P.moneda = 'USD'; rer(); };
   $('#' + px + 'b').onchange = e => P.banco = e.target.value;
@@ -1604,7 +1604,7 @@ function vPedidos() {
           <div class="right"><b class="num">${p.MontoBs ? bs(p.MontoBs) : usd(p.MontoUSD)}</b>${p.MontoBs && Number(p.MontoUSD) ? `<div class="small muted num">≈ ${usd(p.MontoUSD)}</div>` : ''}</div></div>
         <div class="row" style="margin-top:8px">
           ${p.MontoBs ? `<div style="max-width:140px"><label>Tasa</label><input class="num" data-ptasa="${p.ID}" value="${(Number(p.Tasa) || tasaPara(p.Fecha) || 0) ? (Number(p.Tasa) || tasaPara(p.Fecha)).toFixed(2) : ''}"></div>` : ''}
-          <label style="display:flex;gap:6px;align-items:center;flex:2;color:var(--ink)"><input type="checkbox" data-plocal="${p.ID}" style="width:auto" ${/móvil|punto/i.test(p.Metodo) ? 'checked' : ''}> Entró por las cuentas del local</label></div>
+          <label style="display:flex;gap:6px;align-items:center;flex:2;color:var(--ink)"><input type="checkbox" data-plocal="${p.ID}" style="width:auto"> Entró por las cuentas del local (márcalo solo si pagó al punto o pago móvil del local)</label></div>
         <div class="row" style="margin-top:8px"><button class="btn acc" data-pconf="${p.ID}">Confirmar pago</button><input data-pmot="${p.ID}" placeholder="Motivo si lo rechazas" style="flex:2"><button class="btn bad" data-prech="${p.ID}" style="flex:none">Rechazar</button></div>
       </div>`).join('') || '<div class="empty">✅ No hay pagos por confirmar</div>'}
     </div>
