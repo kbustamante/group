@@ -72,6 +72,7 @@ td.r,th.r{text-align:right}
 .p-local{background:#e6eef8;color:var(--local)}.p-mayor{background:#fbefd9;color:var(--mayor)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
 .seg button{border:0;background:none;padding:9px 12px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg.ord button{padding:7px 11px;font-size:13px}.seg.ord button.on{background:var(--brand);color:#fff}
 .seg button.on.local{background:var(--local);color:#fff}.seg button.on.mayor{background:var(--mayor);color:#fff}
 .seg button.on.plain{background:var(--brand);color:#fff}
 .linea{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px}
@@ -145,7 +146,12 @@ html,body{max-width:100%;overflow-x:hidden}
   body.adm main{padding-bottom:90px}
   body.adm #toast{bottom:86px}
 }
+/* V16.1: cantidad + unidad en una sola línea, unidad pequeña */
+.sm-only{display:none}@media(max-width:560px){.sm-only{display:block}}
+.qty{white-space:nowrap}.qty small{font-size:.78em;color:var(--muted);font-family:inherit}
+table.inv td,table.inv th{vertical-align:middle}table.inv tr.totrow td{border-top:2px solid var(--line);font-weight:700}
 @media(max-width:560px){
+  table.inv td,table.inv th{padding-left:6px;padding-right:6px}
   .hm{display:none!important}
   .solo-m{display:block}
   td .num{white-space:nowrap}
@@ -282,7 +288,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.1'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -318,6 +324,7 @@ const nInt = x => Math.round(Number(x) || 0).toLocaleString('es-VE');
 const cant = (c, x) => esUnd(c) ? nInt(x) + ' und' : n2(x) + ' kg';
 const codDeNombre = n => (((S && S.productos) || []).find(p => p.Nombre === n) || {}).Codigo || '';
 const sumaCant = (rows, cod = r => r.codigo, q = r => num(r.kg)) => { let k = 0, u = 0; rows.forEach(r => { if (esUnd(cod(r))) u += Number(q(r)) || 0; else k += Number(q(r)) || 0; }); return [k || !u ? n2(k) + ' kg' : '', u ? nInt(u) + ' und' : ''].filter(Boolean).join(' · '); };
+const cantH = (c, x) => { const u = esUnd(c); return `<span class="qty">${u ? nInt(x) : n2(x)} <small>${u ? 'und' : 'kg'}</small></span>`; };
 const cantR = r => cant(r.Codigo || codDeNombre(r.Producto), r.Kg);
 const lblCant = c => esUnd(c) ? 'Unidades' : 'Kg';
 const modoCant = c => esUnd(c) ? 'numeric' : 'decimal';
@@ -716,7 +723,8 @@ const favorDe = c => Number((S.favor || {})[c] || 0); // V14: crédito a favor (
 function deudasPorCliente() {
   const h = hoy(), m = {};
   ventasActivas().filter(v => Number(v.Saldo) > 0.01).forEach(v => {
-    const c = m[v.Cliente] = m[v.Cliente] || { cliente: v.Cliente, saldo: 0, vencido: 0, notas: [], venceMin: '9999' };
+    const c = m[v.Cliente] = m[v.Cliente] || { cliente: v.Cliente, saldo: 0, vencido: 0, notas: [], venceMin: '9999', fechaMin: '9999' };
+    if (String(v.Fecha) < c.fechaMin) c.fechaMin = String(v.Fecha);
     c.saldo += Number(v.Saldo); c.notas.push(v);
     if (v.Vence < h) c.vencido += Number(v.Saldo);
     if (v.Vence < c.venceMin) c.venceMin = v.Vence;
@@ -1124,17 +1132,20 @@ function vCobrar() {
 function confirmar(btn, txt) { if (btn.dataset.ok) return true; btn.dataset.ok = 1; const o = btn.innerHTML; btn.innerHTML = txt; btn.style.color = 'var(--bad)'; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.ok; btn.innerHTML = o; btn.style.color = ''; } }, 2500); return false; }
 
 /* ===== DEUDAS ===== */
+let ORDEN_DEUDAS = 'antigua'; // V16.1 (Marlo): por defecto, el cliente con la nota pendiente más vieja primero
 function vDeudas() {
-  const d = deudasPorCliente(), h = hoy();
+  const h = hoy(), d = deudasPorCliente().map(c => ({ ...c, notas: [...c.notas].sort((a, b) => String(a.Fecha).localeCompare(String(b.Fecha)) || (Number(a.Nota) || 0) - (Number(b.Nota) || 0)) }));
+  if (ORDEN_DEUDAS === 'antigua') d.sort((a, b) => a.fechaMin.localeCompare(b.fechaMin) || b.saldo - a.saldo);
   const tot = d.reduce((s, x) => s + x.saldo, 0), ven = d.reduce((s, x) => s + x.vencido, 0);
   $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
       <div class="kpi"><small>Total por cobrar</small><b>${usd(tot)}</b></div>
       <div class="kpi bad"><small>Vencido</small><b>${usd(ven)}</b></div>
       <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
-    <div class="card"><h2>Por cliente</h2>
+    <div class="card"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0;flex:none">Por cliente</h2>
+      <div class="seg ord" style="flex:none"><button class="${ORDEN_DEUDAS === 'antigua' ? 'on' : ''}" data-ordd="antigua">Más antigua</button><button class="${ORDEN_DEUDAS === 'monto' ? 'on' : ''}" data-ordd="monto">Más vencido</button></div></div>
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
-      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
+      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
@@ -1144,6 +1155,7 @@ function vDeudas() {
       <p class="small muted" style="margin-top:-6px">Pagaron de más (o se les corrigió o devolvió una nota). Se les descuenta solo en su próxima compra.</p>
       <div class="tbl"><table>${Object.keys(S.favor).filter(k => !d.some(x => x.cliente === k)).sort().map(k => `<tr><td>${esc(k)}</td><td class="r num"><b>${usd(S.favor[k])}</b></td></tr>`).join('')}</table></div></div>` : ''}`;
   bindCobrar(); bindHist();
+  document.querySelectorAll('[data-ordd]').forEach(b => b.onclick = () => { ORDEN_DEUDAS = b.dataset.ordd; vDeudas(); });
   document.querySelectorAll('[data-usarfav]').forEach(b => b.onclick = () => busy(b, async () => { const r = await call('usarFavor', { cliente: b.dataset.usarfav }); toast('Se usaron ' + usd(r.usado) + ' a favor en ' + r.notas + ' nota(s)'); await recargar(); }));
 }
 function bindHist() {
@@ -1848,7 +1860,10 @@ const pct = m => (Math.round(m * 1000) / 10).toLocaleString('es-VE') + '%';
 function invStock() {
   const prods = S.productos.filter(p => String(p.Activo).toUpperCase() !== 'NO');
   const reservado = c => r2(Number(S.productos.find(p => p.Codigo === c).Stock || 0) - Number(S.disponible[c] || 0));
-  const valor = prods.reduce((s, p) => s + Math.max(0, Number(p.Stock) || 0) * (Number(p.Costo) || 0), 0);
+  const vDe = p => Math.max(0, Number(p.Stock) || 0) * (Number(p.Costo) || 0); // V16.1: valor al costo de cada producto
+  const valor = prods.reduce((s, p) => s + vDe(p), 0);
+  const kgTot = prods.reduce((s, p) => s + (esUnd(p.Codigo) ? 0 : Math.max(0, Number(p.Stock) || 0)), 0), undCod = (prods.find(p => esUnd(p.Codigo)) || {}).Codigo, undTot = prods.reduce((s, p) => s + (esUnd(p.Codigo) ? Math.max(0, Number(p.Stock) || 0) : 0), 0);
+  const contado = p => !(S.controlados && !S.controlados.includes(p.Codigo)) || Number(p.Stock); const orden = [...prods.filter(contado), ...prods.filter(p => !contado(p))]; // los "sin contar" al final
   const bajos = prods.filter(p => Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
   const sinConteo = !S.movimientos.some(m => m.Tipo === 'Inventario inicial') && prods.every(p => !Number(p.Stock));
   $('#inv').innerHTML = `${sinConteo ? '<div class="banner warn">📦 Todavía no hay inventario cargado. Empieza por <b>Conteo</b>: pesa (o cuenta) lo que hay y escribe la cantidad de cada producto.</div>' : ''}
@@ -1856,14 +1871,18 @@ function invStock() {
       <div class="kpi"><small>Kilos en inventario</small><b>${n2(prods.reduce((s, p) => s + (esUnd(p.Codigo) ? 0 : Math.max(0, Number(p.Stock) || 0)), 0))}</b>${prods.some(p => esUnd(p.Codigo) && Number(p.Stock) > 0) ? `<div class="small muted">y ${nInt(prods.reduce((s, p) => s + (esUnd(p.Codigo) ? Math.max(0, Number(p.Stock) || 0) : 0), 0))} unidades</div>` : ''}</div>
       <div class="kpi"><small>Valor al costo</small><b>${usd(valor)}</b></div>
       <div class="kpi ${bajos.length ? 'bad' : ''}"><small>Bajo el mínimo</small><b>${bajos.length}</b></div></div>
-    <div class="card"><div class="tbl"><table>
-      <tr><th>Producto</th><th class="r">Stock</th><th class="r">Reserv<span class="hm">ado</span></th><th class="r">Dispon<span class="hm">ible</span></th><th class="r hm">Mínimo</th><th class="r hm">Costo</th><th class="r hm">Precio</th><th class="r">Margen</th></tr>
-      ${prods.map(p => { const st = Number(p.Stock) || 0, mi = Number(p.Minimo) || 0, m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0;
+    <div class="card"><div class="tbl"><table class="inv">
+      <tr><th>Producto</th><th class="r">Stock</th><th class="r hm">Reservado</th><th class="r hm">Disponible</th><th class="r hm">Mínimo</th><th class="r hm">Costo</th><th class="r hm">Precio</th><th class="r">Valor</th><th class="r">Margen</th></tr>
+      ${orden.map(p => { const st = Number(p.Stock) || 0, mi = Number(p.Minimo) || 0, m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0, rs = reservado(p.Codigo);
         const sc = S.controlados && !S.controlados.includes(p.Codigo);
-        return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}${st < -0.001 ? ' <span class="pill p-bad" title="Haz un conteo para corregirlo">negativo</span>' : ''}</td><td class="r num">${sc ? '<span class="small muted">sin contar</span>' : `<b style="${st < -0.001 ? 'color:var(--bad)' : ''}">${cant(p.Codigo, st)}</b>`}</td><td class="r num muted">${reservado(p.Codigo) ? n2(reservado(p.Codigo)) : ''}</td><td class="r num">${cant(p.Codigo, S.disponible[p.Codigo])}</td>
-          <td class="r num muted hm">${mi ? n2(mi) : ''}</td><td class="r num hm">${n2(p.Costo)}</td><td class="r num hm">${n2(p.Precio)}</td>
+        return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}${st < -0.001 ? ' <span class="pill p-bad" title="Haz un conteo para corregirlo">negativo</span>' : ''}${rs ? `<div class="small muted sm-only">${cant(p.Codigo, rs)} apartado(s) por pedidos</div>` : ''}</td>
+          <td class="r num">${sc ? '<span class="small muted qty">sin contar</span>' : `<b style="${st < -0.001 ? 'color:var(--bad)' : ''}">${cantH(p.Codigo, st)}</b>`}</td>
+          <td class="r num muted hm">${rs ? cantH(p.Codigo, rs) : ''}</td><td class="r num hm">${sc ? '' : cantH(p.Codigo, S.disponible[p.Codigo])}</td>
+          <td class="r num muted hm">${mi ? cantH(p.Codigo, mi) : ''}</td><td class="r num hm">${n2(p.Costo)}</td><td class="r num hm">${n2(p.Precio)}</td>
+          <td class="r num">${vDe(p) > 0.005 ? usd(vDe(p)) : '<span class="muted">—</span>'}</td>
           <td class="r num" style="color:${m < obj - 0.03 ? 'var(--bad)' : 'var(--ok)'}" title="Objetivo ${pct(obj)}">${pct(m)}</td></tr>`; }).join('')}
-    </table></div><p class="small muted">"Reservado" es lo apartado por pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
+      <tr class="totrow"><td>Total</td><td class="r num">${cantH('', kgTot)}${undTot ? `<div>${cantH(undCod, undTot)}</div>` : ''}</td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="r num">${usd(valor)}</td><td></td></tr>
+    </table></div><p class="small muted"><b>Valor</b> = lo que hay × el costo del producto (en dólares). "Reservado" es lo apartado por pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
     <div class="card"><h2>Ajuste rápido (merma, queso dañado, devolución)</h2>
       <div class="row"><div><label>Producto</label><select id="ajp">${prods.map(p => `<option value="${p.Codigo}">${esc(p.Nombre)}</option>`).join('')}</select></div>
         <div><label>Kg o unidades (− resta, + suma)</label><input id="ajk" class="num" inputmode="decimal" placeholder="-1,5"></div>
