@@ -72,7 +72,7 @@ td.r,th.r{text-align:right}
 .p-local{background:#e6eef8;color:var(--local)}.p-mayor{background:#fbefd9;color:var(--mayor)}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
 .seg button{border:0;background:none;padding:9px 12px;cursor:pointer;font-weight:500;color:var(--muted)}
-.seg.ord button{padding:7px 11px;font-size:13px}.seg.ord button.on{background:var(--brand);color:#fff}
+.seg.ord button{padding:7px 11px;font-size:13px}th.ordh{cursor:pointer;user-select:none;text-decoration:underline dotted;text-underline-offset:3px}th.ordh:hover{color:var(--brand)}.seg.ord button.on{background:var(--brand);color:#fff}
 .seg button.on.local{background:var(--local);color:#fff}.seg button.on.mayor{background:var(--mayor);color:#fff}
 .seg button.on.plain{background:var(--brand);color:#fff}
 .linea{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px}
@@ -288,7 +288,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16.1'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.2'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1132,20 +1132,30 @@ function vCobrar() {
 function confirmar(btn, txt) { if (btn.dataset.ok) return true; btn.dataset.ok = 1; const o = btn.innerHTML; btn.innerHTML = txt; btn.style.color = 'var(--bad)'; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.ok; btn.innerHTML = o; btn.style.color = ''; } }, 2500); return false; }
 
 /* ===== DEUDAS ===== */
-let ORDEN_DEUDAS = 'antigua'; // V16.1 (Marlo): por defecto, el cliente con la nota pendiente más vieja primero
+// V16.2: orden interactivo (tocar el mismo botón invierte el orden) y la app recuerda el último en cada pantalla
+const ordLeer = (k, def) => { try { const o = JSON.parse(store('ord_' + k) || 'null'); return o && o.k ? o : def; } catch (e) { return def; } };
+const ordTocar = (k, o, campo, dirInicial) => { const n = o.k === campo ? { k: campo, dir: -o.dir } : { k: campo, dir: dirInicial }; store('ord_' + k, JSON.stringify(n)); return n; };
+const flecha = (o, campo) => o.k === campo ? (o.dir > 0 ? ' ↑' : ' ↓') : '';
+const DEU_DIR = { fecha: 1, monto: -1, nombre: 1, vencido: -1 };
+let ORD_DEU = ordLeer('deudas', { k: 'fecha', dir: 1 }); // V16.1 (Marlo): por defecto, la nota pendiente más vieja primero
+let ORD_INV = ordLeer('inv', { k: '', dir: 1 });
+const DEU_TXT = o => ({ fecha: o.dir > 0 ? 'la deuda más antigua primero' : 'la deuda más reciente primero', monto: o.dir < 0 ? 'el que más debe primero' : 'el que menos debe primero', nombre: o.dir > 0 ? 'nombre de la A a la Z' : 'nombre de la Z a la A', vencido: o.dir < 0 ? 'el más vencido primero' : 'el menos vencido primero' })[o.k];
 function vDeudas() {
   const h = hoy(), d = deudasPorCliente().map(c => ({ ...c, notas: [...c.notas].sort((a, b) => String(a.Fecha).localeCompare(String(b.Fecha)) || (Number(a.Nota) || 0) - (Number(b.Nota) || 0)) }));
-  if (ORDEN_DEUDAS === 'antigua') d.sort((a, b) => a.fechaMin.localeCompare(b.fechaMin) || b.saldo - a.saldo);
+  const o = ORD_DEU, cmp = { fecha: (a, b) => a.fechaMin.localeCompare(b.fechaMin), monto: (a, b) => a.saldo - b.saldo, nombre: (a, b) => a.cliente.localeCompare(b.cliente, 'es'), vencido: (a, b) => a.vencido - b.vencido }[o.k] || ((a, b) => a.fechaMin.localeCompare(b.fechaMin));
+  d.sort((a, b) => o.dir * cmp(a, b) || b.saldo - a.saldo);
   const tot = d.reduce((s, x) => s + x.saldo, 0), ven = d.reduce((s, x) => s + x.vencido, 0);
   $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">
       <div class="kpi"><small>Total por cobrar</small><b>${usd(tot)}</b></div>
       <div class="kpi bad"><small>Vencido</small><b>${usd(ven)}</b></div>
       <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
     <div class="card"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0;flex:none">Por cliente</h2>
-      <div class="seg ord" style="flex:none"><button class="${ORDEN_DEUDAS === 'antigua' ? 'on' : ''}" data-ordd="antigua">Más antigua</button><button class="${ORDEN_DEUDAS === 'monto' ? 'on' : ''}" data-ordd="monto">Más vencido</button></div></div>
+      <input id="deuq" type="search" placeholder="🔎 Buscar cliente" style="flex:1;min-width:150px;max-width:260px"></div>
+      <div class="row" style="align-items:center;gap:8px;margin-bottom:4px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Fecha'], ['monto', 'Monto'], ['nombre', 'Nombre'], ['vencido', 'Vencido']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordd="${k}">${t}${flecha(o, k)}</button>`).join('')}</div></div>
+      <p class="small muted" id="deuord" style="margin:0 0 6px">${DEU_TXT(o) ? 'Ordenado: ' + DEU_TXT(o) + '. Toca otra vez para invertir.' : ''}</p>
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
-      return `<details><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
+      return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
@@ -1155,7 +1165,10 @@ function vDeudas() {
       <p class="small muted" style="margin-top:-6px">Pagaron de más (o se les corrigió o devolvió una nota). Se les descuenta solo en su próxima compra.</p>
       <div class="tbl"><table>${Object.keys(S.favor).filter(k => !d.some(x => x.cliente === k)).sort().map(k => `<tr><td>${esc(k)}</td><td class="r num"><b>${usd(S.favor[k])}</b></td></tr>`).join('')}</table></div></div>` : ''}`;
   bindCobrar(); bindHist();
-  document.querySelectorAll('[data-ordd]').forEach(b => b.onclick = () => { ORDEN_DEUDAS = b.dataset.ordd; vDeudas(); });
+  document.querySelectorAll('[data-ordd]').forEach(b => b.onclick = () => { const q = $('#deuq').value; ORD_DEU = ordTocar('deudas', ORD_DEU, b.dataset.ordd, DEU_DIR[b.dataset.ordd]); vDeudas(); $('#deuq').value = q; filtraDeu(); });
+  const filtraDeu = () => { const t = normTxt($('#deuq').value); let n = 0; document.querySelectorAll('details[data-n]').forEach(x => { const ok = !t || x.dataset.n.includes(t); x.style.display = ok ? '' : 'none'; n += ok; });
+    $('#deuord').textContent = t ? `${n} cliente(s) con "${$('#deuq').value}"` : (DEU_TXT(ORD_DEU) ? 'Ordenado: ' + DEU_TXT(ORD_DEU) + '. Toca otra vez para invertir.' : ''); };
+  $('#deuq').oninput = filtraDeu;
   document.querySelectorAll('[data-usarfav]').forEach(b => b.onclick = () => busy(b, async () => { const r = await call('usarFavor', { cliente: b.dataset.usarfav }); toast('Se usaron ' + usd(r.usado) + ' a favor en ' + r.notas + ' nota(s)'); await recargar(); }));
 }
 function bindHist() {
@@ -1863,7 +1876,9 @@ function invStock() {
   const vDe = p => Math.max(0, Number(p.Stock) || 0) * (Number(p.Costo) || 0); // V16.1: valor al costo de cada producto
   const valor = prods.reduce((s, p) => s + vDe(p), 0);
   const kgTot = prods.reduce((s, p) => s + (esUnd(p.Codigo) ? 0 : Math.max(0, Number(p.Stock) || 0)), 0), undCod = (prods.find(p => esUnd(p.Codigo)) || {}).Codigo, undTot = prods.reduce((s, p) => s + (esUnd(p.Codigo) ? Math.max(0, Number(p.Stock) || 0) : 0), 0);
-  const contado = p => !(S.controlados && !S.controlados.includes(p.Codigo)) || Number(p.Stock); const orden = [...prods.filter(contado), ...prods.filter(p => !contado(p))]; // los "sin contar" al final
+  const contado = p => !(S.controlados && !S.controlados.includes(p.Codigo)) || Number(p.Stock); const oi = ORD_INV, ci = { producto: (a, b) => String(a.Nombre).localeCompare(String(b.Nombre), 'es'), stock: (a, b) => (Number(a.Stock) || 0) - (Number(b.Stock) || 0), valor: (a, b) => vDe(a) - vDe(b), margen: (a, b) => margenDe(Number(a.Costo), Number(a.Precio)) - margenDe(Number(b.Costo), Number(b.Precio)) }[oi.k];
+  const ordena = l => ci ? [...l].sort((a, b) => oi.dir * ci(a, b)) : l;
+  const orden = oi.k === 'producto' || oi.k === 'margen' ? ordena(prods) : [...ordena(prods.filter(contado)), ...prods.filter(p => !contado(p))]; // por stock o valor, los "sin contar" siempre al final
   const bajos = prods.filter(p => Number(p.Minimo) > 0 && Number(p.Stock) < Number(p.Minimo));
   const sinConteo = !S.movimientos.some(m => m.Tipo === 'Inventario inicial') && prods.every(p => !Number(p.Stock));
   $('#inv').innerHTML = `${sinConteo ? '<div class="banner warn">📦 Todavía no hay inventario cargado. Empieza por <b>Conteo</b>: pesa (o cuenta) lo que hay y escribe la cantidad de cada producto.</div>' : ''}
@@ -1872,7 +1887,7 @@ function invStock() {
       <div class="kpi"><small>Valor al costo</small><b>${usd(valor)}</b></div>
       <div class="kpi ${bajos.length ? 'bad' : ''}"><small>Bajo el mínimo</small><b>${bajos.length}</b></div></div>
     <div class="card"><div class="tbl"><table class="inv">
-      <tr><th>Producto</th><th class="r">Stock</th><th class="r hm">Reservado</th><th class="r hm">Disponible</th><th class="r hm">Mínimo</th><th class="r hm">Costo</th><th class="r hm">Precio</th><th class="r">Valor</th><th class="r">Margen</th></tr>
+      <tr><th class="ordh" data-ordi="producto">Producto${flecha(ORD_INV, 'producto')}</th><th class="r ordh" data-ordi="stock">Stock${flecha(ORD_INV, 'stock')}</th><th class="r hm">Reservado</th><th class="r hm">Disponible</th><th class="r hm">Mínimo</th><th class="r hm">Costo</th><th class="r hm">Precio</th><th class="r ordh" data-ordi="valor">Valor${flecha(ORD_INV, 'valor')}</th><th class="r ordh" data-ordi="margen">Margen${flecha(ORD_INV, 'margen')}</th></tr>
       ${orden.map(p => { const st = Number(p.Stock) || 0, mi = Number(p.Minimo) || 0, m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0, rs = reservado(p.Codigo);
         const sc = S.controlados && !S.controlados.includes(p.Codigo);
         return `<tr><td>${esc(p.Nombre)} ${mi && st < mi ? '<span class="pill p-bad">bajo</span>' : ''}${st < -0.001 ? ' <span class="pill p-bad" title="Haz un conteo para corregirlo">negativo</span>' : ''}${rs ? `<div class="small muted sm-only">${cant(p.Codigo, rs)} apartado(s) por pedidos</div>` : ''}</td>
@@ -1882,11 +1897,12 @@ function invStock() {
           <td class="r num">${vDe(p) > 0.005 ? usd(vDe(p)) : '<span class="muted">—</span>'}</td>
           <td class="r num" style="color:${m < obj - 0.03 ? 'var(--bad)' : 'var(--ok)'}" title="Objetivo ${pct(obj)}">${pct(m)}</td></tr>`; }).join('')}
       <tr class="totrow"><td>Total</td><td class="r num">${cantH('', kgTot)}${undTot ? `<div>${cantH(undCod, undTot)}</div>` : ''}</td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="hm"></td><td class="r num">${usd(valor)}</td><td></td></tr>
-    </table></div><p class="small muted"><b>Valor</b> = lo que hay × el costo del producto (en dólares). "Reservado" es lo apartado por pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
+    </table></div><p class="small muted">Toca <b>Producto</b>, <b>Stock</b>, <b>Valor</b> o <b>Margen</b> para ordenar (otra vez para invertir). <b>Valor</b> = lo que hay × el costo del producto (en dólares). "Reservado" es lo apartado por pedidos de clientes todavía sin confirmar. El margen sale en rojo si está más de 3 puntos por debajo del objetivo del producto (Ajustes → Productos).</p></div>
     <div class="card"><h2>Ajuste rápido (merma, queso dañado, devolución)</h2>
       <div class="row"><div><label>Producto</label><select id="ajp">${prods.map(p => `<option value="${p.Codigo}">${esc(p.Nombre)}</option>`).join('')}</select></div>
         <div><label>Kg o unidades (− resta, + suma)</label><input id="ajk" class="num" inputmode="decimal" placeholder="-1,5"></div>
         <div style="flex:2"><label>Motivo</label><input id="ajm" placeholder="Ej: queso dañado"></div><button class="btn" id="ajg" style="flex:none">Guardar</button></div></div>`;
+  document.querySelectorAll('[data-ordi]').forEach(h => h.onclick = () => { const k = h.dataset.ordi; ORD_INV = ordTocar('inv', ORD_INV, k, k === 'producto' ? 1 : -1); invStock(); });
   $('#ajg').onclick = e => busy(e.target, async () => { const kg = num($('#ajk').value); if (!kg) throw new Error('Escribe la cantidad'); validarEnteros([{ codigo: $('#ajp').value, kg }]); await call('guardarAjuste', { lineas: [{ codigo: $('#ajp').value, kg, motivo: $('#ajm').value }] }); toast('Ajuste guardado'); await recargar(); });
 }
 /** V12: mercancía que la empleada anotó al llegar al local: ya está en el inventario, falta costo y proveedor. */
