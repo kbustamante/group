@@ -90,15 +90,15 @@ details summary{cursor:pointer;list-style:none}details summary::-webkit-details-
 .cli{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 summary.cli>div:first-child{flex:1 1 0;min-width:0}
 /* V16.5: Quién me debe como tabla alineada con encabezado */
-.deurow{display:grid;grid-template-columns:minmax(170px,2.2fr) 52px 80px 90px 80px 100px minmax(140px,1.4fr) 108px;gap:10px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;list-style:none}
+.deurow{display:grid;grid-template-columns:minmax(180px,2.4fr) 56px 90px 60px 104px minmax(140px,1.4fr) 110px;gap:10px;align-items:center;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;list-style:none}
 .deurow::-webkit-details-marker{display:none}.deurow:hover{background:rgba(31,58,95,.035)}details[open]>.deurow{background:rgba(31,58,95,.05)}
 .deuhead{cursor:default;padding:8px 6px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line)}.deuhead:hover{background:none}
 .deurow .lbl{display:none}.deurow .c-cli{min-width:0}.deurow .c-not{text-align:center}.deuhead>div:nth-child(2){text-align:center}.deurow .c-pag{font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.deurow .c-des,.deurow .c-ven{font-size:13px;white-space:nowrap}
-@media(max-width:860px){.deurow{grid-template-columns:minmax(140px,2fr) 40px 76px 88px 70px 92px minmax(110px,1.3fr) 96px;gap:7px}}
-.deurow .c-dia,.deuhead>div:nth-child(5){text-align:center}
+@media(max-width:860px){.deurow{grid-template-columns:minmax(140px,2fr) 42px 80px 46px 92px minmax(110px,1.3fr) 96px;gap:7px}}
+.deurow .c-dia,.deuhead>div:nth-child(4){text-align:center}.deurow .c-dia .dc{font-size:15px}
 .deurow .c-mob{display:none}
 @media(max-width:700px){.deuhead{display:none}.deurow{grid-template-columns:1fr auto;row-gap:2px;padding:10px 2px}
-  .deurow .c-not,.deurow .c-des,.deurow .c-ven,.deurow .c-dia,.deurow .c-abo,.deurow .c-pag{display:none}.deurow .c-mob{display:block;grid-column:1/-1;line-height:1.6}
+  .deurow .c-not,.deurow .c-des,.deurow .c-dia,.deurow .c-abo,.deurow .c-pag{display:none}.deurow .c-mob{display:block;grid-column:1/-1;line-height:1.6}
   .deurow .c-deb .lbl{display:block;font-size:12px;color:var(--muted)}}
 .prodtbl input{padding:7px 8px}.prodtbl td{padding:5px 4px}
 .prodtbl tr.has td{background:#fff8e5}
@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16.7'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.8'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1193,9 +1193,9 @@ const botonesDescarga = id => `<div class="row" style="gap:6px;flex:none"><butto
 const ref4 = r => { const d = String(r || '').replace(/\D/g, ''); return d ? '···' + d.slice(-4) : ''; };
 const medioPago = c => /favor/i.test(c.Metodo) ? 'Saldo a favor' : [c.Banco || c.Metodo || 'Pago', ref4(c.Referencia)].filter(Boolean).join(' ');
 const pagosDe = notas => { const ids = new Set(notas.map(n => n.ID)); return (S.cobros || []).filter(c => ids.has(c.VentaID) && Number(c.MontoUSD) > 0.005).sort((a, b) => String(b.Fecha).localeCompare(String(a.Fecha)) || String(b.CreadoEn || '').localeCompare(String(a.CreadoEn || ''))); };
-let ORD_DEU = ordLeer('deudas', { k: 'fecha', dir: 1 }); // V16.1 (Marlo): por defecto, la nota pendiente más vieja primero
+let ORD_DEU = ordLeer('deudas', { k: 'fecha', dir: 1 }); if (ORD_DEU.k === 'vencido') ORD_DEU = { k: 'fecha', dir: 1 }; // V16.1 (Marlo): por defecto, la nota pendiente más vieja primero
 let ORD_INV = ordLeer('inv', { k: '', dir: 1 });
-const DEU_TXT = o => ({ fecha: o.dir > 0 ? 'la deuda más antigua primero' : 'la deuda más reciente primero', monto: o.dir < 0 ? 'el que más debe primero' : 'el que menos debe primero', nombre: o.dir > 0 ? 'nombre de la A a la Z' : 'nombre de la Z a la A', vencido: o.dir < 0 ? 'el que lleva más días pasado del plazo primero' : 'el que lleva menos días pasado del plazo primero' })[o.k];
+const DEU_TXT = o => ({ fecha: o.dir > 0 ? 'más días primero' : 'menos días primero', monto: o.dir < 0 ? 'el que más debe primero' : 'el que menos debe primero', nombre: o.dir > 0 ? 'nombre de la A a la Z' : 'nombre de la Z a la A', vencido: o.dir < 0 ? 'el que lleva más días pasado del plazo primero' : 'el que lleva menos días pasado del plazo primero' })[o.k];
 function vDeudas() {
   const h = hoy(), d = deudasPorCliente().map(c => ({ ...c, notas: [...c.notas].sort((a, b) => String(a.Fecha).localeCompare(String(b.Fecha)) || (Number(a.Nota) || 0) - (Number(b.Nota) || 0)) }));
   const o = ORD_DEU, cmp = { fecha: (a, b) => a.fechaMin.localeCompare(b.fechaMin), monto: (a, b) => a.saldo - b.saldo, nombre: (a, b) => a.cliente.localeCompare(b.cliente, 'es'), vencido: (a, b) => b.venceMin.localeCompare(a.venceMin) }[o.k] || ((a, b) => a.fechaMin.localeCompare(b.fechaMin));
@@ -1207,9 +1207,9 @@ function vDeudas() {
       <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
     <div class="card"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0;flex:none">Por cliente</h2>
       <input id="deuq" type="search" placeholder="🔎 Buscar cliente" style="flex:1;min-width:150px;max-width:260px">${botonesDescarga('deud')}</div>
-      <div class="row" style="align-items:center;gap:8px;margin-bottom:4px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Fecha'], ['monto', 'Monto'], ['nombre', 'Nombre'], ['vencido', 'Vencido']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordd="${k}">${t}${flecha(o, k)}</button>`).join('')}</div></div>
+      <div class="row" style="align-items:center;gap:8px;margin-bottom:4px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Días'], ['monto', 'Monto'], ['nombre', 'Nombre']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordd="${k}">${t}${k === 'fecha' ? flecha({ k: o.k, dir: -o.dir }, k) : flecha(o, k)}</button>`).join('')}</div></div>
       <p class="small muted" id="deuord" style="margin:0 0 6px">${DEU_TXT(o) ? 'Ordenado: ' + DEU_TXT(o) + '. Toca otra vez para invertir.' : ''}</p>
-      ${d.length ? '<div class="deurow deuhead"><div>Cliente</div><div>Notas</div><div>Desde</div><div>Vence</div><div title="Días desde la compra más vieja que debe; debajo, cuántos días se pasó del plazo">Días</div><div class="r">Abonado</div><div>Último pago</div><div class="r">Debe</div></div>' : ''}
+      ${d.length ? '<div class="deurow deuhead"><div>Cliente</div><div>Notas</div><div>Compra</div><div title="Días desde la compra más vieja que debe. En rojo: ya se pasó del plazo">Días</div><div class="r">Abonado</div><div>Último pago</div><div class="r">Debe</div></div>' : ''}
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
       const pg = pagosDe(c.notas), abon = c.notas.reduce((s, n) => s + (Number(n.Abonado) || 0), 0), ult = pg[0];
@@ -1219,13 +1219,12 @@ function vDeudas() {
       return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="deurow">
         <div class="c-cli"><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}${favorDe(c.cliente) ? `<div><span class="pill p-ok">${usd(favorDe(c.cliente))} a favor</span></div>` : ''}</div>
         <div class="c-not"><span class="lbl">Notas</span>${c.notas.length}</div>
-        <div class="c-des"><span class="lbl">Desde</span><span class="dfec">${fdate(c.fechaMin)}</span></div>
-        <div class="c-ven"><span class="lbl">Vence</span>${venc ? `<span class="pill p-bad" title="Vencida hace ${dias} día(s)">${fdate(c.venceMin)}</span>` : fdate(c.venceMin)}</div>
-        <div class="c-dia"><span class="lbl">Días</span><b class="dc" style="${venc ? 'color:var(--bad)' : ''}">${dCompra}</b><div class="small ${venc ? '' : 'muted'}" style="${venc ? 'color:var(--bad)' : ''}">${venc ? dias + ' vencido' : 'al día'}</div></div>
+        <div class="c-des"><span class="lbl">Compra</span><span class="dfec">${fdate(c.fechaMin)}</span></div>
+        <div class="c-dia" title="${venc ? 'Ya se pasó del plazo (vencía el ' + fdate(c.venceMin) + ')' : 'Dentro del plazo (vence el ' + fdate(c.venceMin) + ')'}"><span class="lbl">Días</span><b class="dc" style="color:${venc ? 'var(--bad)' : 'var(--muted)'}">${dCompra}</b></div>
         <div class="c-abo r"><span class="lbl">Abonado</span>${abon > 0.005 ? `<b class="num" style="color:var(--ok)">${usd(abon)}</b>` : '<span class="muted">—</span>'}</div>
         <div class="c-pag"><span class="lbl">Último pago</span>${ult ? `${fdate(ult.Fecha)} <span class="muted">· ${hace === 0 ? 'hoy' : hace === 1 ? 'ayer' : 'hace ' + hace + ' días'}</span>${pg.length > 1 ? `<div class="small muted">${pg.length} pagos</div>` : ''}` : '<span class="muted">Sin abonos</span>'}</div>
         <div class="c-deb r"><span class="lbl">Debe</span><b class="num" style="${venc ? 'color:var(--bad)' : ''}">${usd(c.saldo)}</b></div>
-        <div class="c-mob small muted">${c.notas.length} nota${c.notas.length === 1 ? '' : 's'} · desde ${fdate(c.fechaMin)} (<b class="dc" style="${venc ? 'color:var(--bad)' : ''}">${dCompra}</b> días) · ${venc ? `<span class="pill p-bad">${dias} vencido</span>` : 'al día'}<br>${abon > 0.005 ? `Abonado <b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? ' · último pago ' + fdate(ult.Fecha) + ' (' + (hace === 0 ? 'hoy' : hace === 1 ? 'ayer' : 'hace ' + hace + ' días') + ')' : ''}` : 'Sin abonos'}</div></summary>
+        <div class="c-mob small muted">${c.notas.length} nota${c.notas.length === 1 ? '' : 's'} · compra ${fdate(c.fechaMin)} · <b class="dc" style="color:${venc ? 'var(--bad)' : 'var(--muted)'}">${dCompra} días</b><br>${abon > 0.005 ? `Abonado <b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? ' · último pago ' + fdate(ult.Fecha) + ' (' + (hace === 0 ? 'hoy' : hace === 1 ? 'ayer' : 'hace ' + hace + ' días') + ')' : ''}` : 'Sin abonos'}</div></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="hm">Pagos</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="small muted hm">${pg.filter(x => x.VentaID === n.ID).map(x => `${esc(medioPago(x))} ${usd(x.MontoUSD)} (${fdate(x.Fecha)})`).join('<br>')}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
@@ -1241,10 +1240,10 @@ function vDeudas() {
   $('#deuq').oninput = filtraDeu;
   const datosDeu = () => { const t = normTxt($('#deuq').value), filas = []; let tg = 0;
     d.filter(c => !t || normTxt(c.cliente + ' ' + ((S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion || '')).includes(t)).forEach(c => { const pg = pagosDe(c.notas);
-      c.notas.forEach(n => filas.push([c.cliente, n.Nota || '', n.Fecha, n.Vence, Math.round((new Date(h) - new Date(n.Fecha)) / 864e5), n.Vence < h ? Math.round((new Date(h) - new Date(n.Vence)) / 864e5) : 0, r2(n.Total), r2(n.Abonado), pg.filter(x => x.VentaID === n.ID).map(x => medioPago(x) + ' ' + usd(x.MontoUSD) + ' (' + fdate(x.Fecha) + ')').join('; '), r2(n.Saldo)]));
-      if (c.notas.length > 1) filas.push({ total: true, v: ['Total ' + c.cliente, '', '', '', '', '', '', r2(c.notas.reduce((s, n) => s + Number(n.Abonado || 0), 0)), '', r2(c.saldo)] }); tg += c.saldo; });
-    filas.push({ total: true, gran: true, v: ['TOTAL POR COBRAR', '', '', '', '', '', '', '', '', r2(tg)] }); return filas; };
-  const colsDeu = [{ t: 'Cliente', w: 32 }, { t: 'Nota', w: 8 }, { t: 'Fecha', w: 11, f: 'fecha' }, { t: 'Vence', w: 11, f: 'fecha' }, { t: 'Días desde la compra', w: 12, f: 'int' }, { t: 'Días vencida', w: 12, f: 'int' }, { t: 'Total', w: 12, f: 'usd' }, { t: 'Abonado', w: 12, f: 'usd' }, { t: 'Pagos (banco, referencia, monto, fecha)', w: 44, f: 'txt' }, { t: 'Debe', w: 12, f: 'usd' }];
+      c.notas.forEach(n => filas.push([c.cliente, n.Nota || '', n.Fecha, n.Vence, Math.round((new Date(h) - new Date(n.Fecha)) / 864e5), r2(n.Total), r2(n.Abonado), pg.filter(x => x.VentaID === n.ID).map(x => medioPago(x) + ' ' + usd(x.MontoUSD) + ' (' + fdate(x.Fecha) + ')').join('; '), r2(n.Saldo)]));
+      if (c.notas.length > 1) filas.push({ total: true, v: ['Total ' + c.cliente, '', '', '', '', '', r2(c.notas.reduce((s, n) => s + Number(n.Abonado || 0), 0)), '', r2(c.saldo)] }); tg += c.saldo; });
+    filas.push({ total: true, gran: true, v: ['TOTAL POR COBRAR', '', '', '', '', '', '', '', r2(tg)] }); return filas; };
+  const colsDeu = [{ t: 'Cliente', w: 32 }, { t: 'Nota', w: 8 }, { t: 'Fecha', w: 11, f: 'fecha' }, { t: 'Vence', w: 11, f: 'fecha' }, { t: 'Días', w: 8, f: 'int' }, { t: 'Total', w: 12, f: 'usd' }, { t: 'Abonado', w: 12, f: 'usd' }, { t: 'Pagos (banco, referencia, monto, fecha)', w: 44, f: 'txt' }, { t: 'Debe', w: 12, f: 'usd' }];
   const subDeu = () => `Al ${fdate(h)} · Tasa ${n2(tasaHoy())} bolívares por dólar${$('#deuq').value ? ' · Filtro: ' + $('#deuq').value : ''}`;
   $('#deudx').onclick = e => busy(e.target, () => excelTabla('Quien_me_debe_' + h + '.xlsx', 'Quién me debe', subDeu(), colsDeu, datosDeu()));
   $('#deudp').onclick = () => pdfTabla('Quién me debe', subDeu(), colsDeu, datosDeu(), 'Notas pendientes por cliente, de la más vieja a la más nueva');
