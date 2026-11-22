@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16.8'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.9'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1225,8 +1225,8 @@ function vDeudas() {
         <div class="c-pag"><span class="lbl">Último pago</span>${ult ? `${fdate(ult.Fecha)} <span class="muted">· ${hace === 0 ? 'hoy' : hace === 1 ? 'ayer' : 'hace ' + hace + ' días'}</span>${pg.length > 1 ? `<div class="small muted">${pg.length} pagos</div>` : ''}` : '<span class="muted">Sin abonos</span>'}</div>
         <div class="c-deb r"><span class="lbl">Debe</span><b class="num" style="${venc ? 'color:var(--bad)' : ''}">${usd(c.saldo)}</b></div>
         <div class="c-mob small muted">${c.notas.length} nota${c.notas.length === 1 ? '' : 's'} · compra ${fdate(c.fechaMin)} · <b class="dc" style="color:${venc ? 'var(--bad)' : 'var(--muted)'}">${dCompra} días</b><br>${abon > 0.005 ? `Abonado <b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? ' · último pago ' + fdate(ult.Fecha) + ' (' + (hace === 0 ? 'hoy' : hace === 1 ? 'ayer' : 'hace ' + hace + ' días') + ')' : ''}` : 'Sin abonos'}</div></summary>
-        <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="hm">Pagos</th><th class="r">Saldo</th></tr>
-        ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="small muted hm">${pg.filter(x => x.VentaID === n.ID).map(x => `${esc(medioPago(x))} ${usd(x.MontoUSD)} (${fdate(x.Fecha)})`).join('<br>')}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
+        <div class="tbl"><table><tr><th>Nota</th><th>Compra</th><th class="r" title="Días desde la compra. En rojo: ya se pasó del plazo">Días</th><th class="r">Total</th><th class="r">Abonado</th><th class="hm">Pagos</th><th class="r">Saldo</th></tr>
+        ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td class="r num" title="${n.Vence < h ? 'Ya se pasó del plazo (vencía el ' + fdate(n.Vence) + ')' : 'Dentro del plazo (vence el ' + fdate(n.Vence) + ')'}"><b class="dn" style="color:${n.Vence < h ? 'var(--bad)' : 'var(--muted)'}">${difD(h, n.Fecha)}</b></td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="small muted hm">${pg.filter(x => x.VentaID === n.ID).map(x => `${esc(medioPago(x))} ${usd(x.MontoUSD)} (${fdate(x.Fecha)})`).join('<br>')}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
       </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
     </div>
