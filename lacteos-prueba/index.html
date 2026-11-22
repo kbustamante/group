@@ -88,6 +88,8 @@ td.r,th.r{text-align:right}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 details summary{cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}
 .cli{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+summary.cli>div:first-child{flex:1 1 0;min-width:0}summary.cli .abn{flex:0 0 260px;line-height:1.35}
+@media(max-width:560px){summary.cli{flex-wrap:wrap}summary.cli .abn{order:3;flex:1 1 100%;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}summary.cli .abn .small{font-size:12px}}
 .prodtbl input{padding:7px 8px}.prodtbl td{padding:5px 4px}
 .prodtbl tr.has td{background:#fff8e5}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -288,7 +290,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16.2'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.3'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1137,6 +1139,10 @@ const ordLeer = (k, def) => { try { const o = JSON.parse(store('ord_' + k) || 'n
 const ordTocar = (k, o, campo, dirInicial) => { const n = o.k === campo ? { k: campo, dir: -o.dir } : { k: campo, dir: dirInicial }; store('ord_' + k, JSON.stringify(n)); return n; };
 const flecha = (o, campo) => o.k === campo ? (o.dir > 0 ? ' ↑' : ' ↓') : '';
 const DEU_DIR = { fecha: 1, monto: -1, nombre: 1, vencido: -1 };
+// V16.3 (Marlo): en Quién me debe, lo abonado a las notas pendientes con banco y últimos 4 dígitos de la referencia
+const ref4 = r => { const d = String(r || '').replace(/\D/g, ''); return d ? '···' + d.slice(-4) : ''; };
+const medioPago = c => /favor/i.test(c.Metodo) ? 'Saldo a favor' : [c.Banco || c.Metodo || 'Pago', ref4(c.Referencia)].filter(Boolean).join(' ');
+const pagosDe = notas => { const ids = new Set(notas.map(n => n.ID)); return (S.cobros || []).filter(c => ids.has(c.VentaID) && Number(c.MontoUSD) > 0.005).sort((a, b) => String(b.Fecha).localeCompare(String(a.Fecha)) || String(b.CreadoEn || '').localeCompare(String(a.CreadoEn || ''))); };
 let ORD_DEU = ordLeer('deudas', { k: 'fecha', dir: 1 }); // V16.1 (Marlo): por defecto, la nota pendiente más vieja primero
 let ORD_INV = ordLeer('inv', { k: '', dir: 1 });
 const DEU_TXT = o => ({ fecha: o.dir > 0 ? 'la deuda más antigua primero' : 'la deuda más reciente primero', monto: o.dir < 0 ? 'el que más debe primero' : 'el que menos debe primero', nombre: o.dir > 0 ? 'nombre de la A a la Z' : 'nombre de la Z a la A', vencido: o.dir < 0 ? 'el más vencido primero' : 'el menos vencido primero' })[o.k];
@@ -1155,9 +1161,11 @@ function vDeudas() {
       <p class="small muted" id="deuord" style="margin:0 0 6px">${DEU_TXT(o) ? 'Ordenado: ' + DEU_TXT(o) + '. Toca otra vez para invertir.' : ''}</p>
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
-      return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div><b class="num">${usd(c.saldo)}</b></summary>
-        <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="r">Saldo</th></tr>
-        ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
+      const pg = pagosDe(c.notas), abon = c.notas.reduce((s, n) => s + (Number(n.Abonado) || 0), 0), ult = pg[0];
+      const abn = abon > 0.005 ? `<div class="abn"><div class="small muted">Abonado</div><b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? `<div class="small muted">${esc(medioPago(ult))} · ${fdate(ult.Fecha)}${pg.length > 1 ? ` <span class="pill">+${pg.length - 1} pago${pg.length > 2 ? 's' : ''}</span>` : ''}</div>` : ''}</div>` : '<div class="abn small muted">Sin abonos</div>';
+      return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div>${abn}<div class="r" style="flex:none;min-width:96px"><div class="small muted">Debe</div><b class="num">${usd(c.saldo)}</b></div></summary>
+        <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="hm">Pagos</th><th class="r">Saldo</th></tr>
+        ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="small muted hm">${pg.filter(x => x.VentaID === n.ID).map(x => `${esc(medioPago(x))} ${usd(x.MontoUSD)} (${fdate(x.Fecha)})`).join('<br>')}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
       </details>`; }).join('') || '<div class="empty">✅ No hay deudas pendientes</div>'}
     </div>
