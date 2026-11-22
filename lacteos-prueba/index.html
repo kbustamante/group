@@ -88,8 +88,8 @@ td.r,th.r{text-align:right}
 .empty{padding:24px;text-align:center;color:var(--muted)}
 details summary{cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}
 .cli{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-summary.cli>div:first-child{flex:1 1 0;min-width:0}summary.cli .abn{flex:0 0 260px;line-height:1.35}
-@media(max-width:560px){summary.cli{flex-wrap:wrap}summary.cli .abn{order:3;flex:1 1 100%;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}summary.cli .abn .small{font-size:12px}}
+summary.cli>div:first-child{flex:1 1 0;min-width:0}summary.cli .abn{flex:0 1 auto;max-width:52%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}summary.cli .debe{flex:none;min-width:130px;white-space:nowrap}
+@media(max-width:560px){summary.cli{flex-wrap:wrap;row-gap:4px}summary.cli .debe{min-width:0}summary.cli .abn{order:3;flex:1 1 100%;white-space:normal}summary.cli .abn .small{font-size:12px}}
 .prodtbl input{padding:7px 8px}.prodtbl td{padding:5px 4px}
 .prodtbl tr.has td{background:#fff8e5}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -290,7 +290,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V16.3'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V16.4'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -383,6 +383,9 @@ async function busy(btn, fn) {
 }
 
 function hoy() { return (S && S.hoy) || new Date().toISOString().slice(0, 10); }
+const addD = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d; };
+const fmtD = d => d.toISOString().slice(0, 10);
+const mesPasado = () => { const h = hoy(), ini = new Date(h.slice(0, 7) + '-01T12:00:00Z'); ini.setUTCMonth(ini.getUTCMonth() - 1); const fin = addD(h.slice(0, 7) + '-01', -1); return [fmtD(ini), fmtD(fin)]; };
 function tasaPara(fecha) {
   const t = (S && S.tasas || []).filter(x => x.Fecha <= fecha).sort((a, b) => a.Fecha < b.Fecha ? 1 : -1)[0];
   return t ? Number(t.Tasa) : (S && S.tasaHoy && S.tasaHoy.tasa) || null;
@@ -463,7 +466,7 @@ function renderLogin(err) {
 const GRUPOS = [
   ['inicio', 'Inicio', '🏠', [['inicio', '']]],
   ['mayor', 'Ventas al mayor', '🧾', [['vender', 'Nueva venta'], ['ventas', 'Historial'], ['subirv', 'Subir Excel']], 'Ventas'],
-  ['cobros', 'Cobros', '💵', [['cobrar', 'Registrar cobro'], ['deudas', 'Quién me debe']]],
+  ['cobros', 'Cobros', '💵', [['cobrar', 'Registrar cobro'], ['deudas', 'Quién me debe'], ['pagosrec', 'Pagos recibidos']]],
   ['pedidos', 'Pedidos', '🛒', [['pedidos', '']]],
   ['local', 'Local', '🏪', [['cierre', 'Cierre del día'], ['local', 'Conciliación'], ['subirl', 'Subir Excel']]],
   ['compras', 'Compras', '🚚', [['entrada', 'Entrada'], ['debo', 'Lo que debo'], ['gastos', 'Gastos'], ['proveedores', 'Proveedores']]],
@@ -478,7 +481,7 @@ const FS = (...ks) => ks.some(F);
 const V12 = () => Number(USER && USER.version) >= 12; // el servidor ya tiene la V12 (inventario nuevo)
 const AL = () => USER && (USER.rol === 'admin' || USER.rol === 'otro'); // admin y el 4.º perfil usan el menú grande
 const VISTA_F_V15 = { historial: [] };
-const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['venta', 'corregir', 'cobros'], subirv: ['subir'], cobrar: ['cobros'], deudas: ['cobros', 'whatsapp'],
+const VISTA_F = { inicio: ['reportes', 'venta'], vender: ['venta'], ventas: ['venta', 'corregir', 'cobros'], subirv: ['subir'], cobrar: ['cobros'], pagosrec: ['cobros'], deudas: ['cobros', 'whatsapp'],
   pedidos: ['pedidos'], cierre: ['cierre'], local: ['conciliacion'], subirl: ['subir'], entrada: ['compras'], debo: ['compras'], gastos: ['gastos'], proveedores: ['compras'],
   stock: ['inventario'], vencer: ['lotes'], traslado: ['inventario'], conteo: ['inventario'], movs: ['inventario'],
   r_mes: ['reportes'], reportes: ['reportes'], productos: ['reportes'], r_cobranza: ['reportes'], r_prov: ['reportes'], r_local: ['reportes'], r_inv: ['reportes'], ajustes: ['ajustes'], funciones: ['ajustes'], registro: ['ajustes'], excel: ['excel'],
@@ -522,7 +525,7 @@ function render() {
   ULTIMA[grupoDe(TAB)[0]] = TAB;
   const mas = $('#mas'); if (mas) { const sh = $('#sheet'); mas.onclick = () => sh.classList.add('on'); sh.onclick = e => { if (e.target === sh) sh.classList.remove('on'); }; }
   const inv = f => () => { $('#main').innerHTML = '<div id="inv"></div>'; f(); };
-  ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, local: vLocal, ventas: vVentas, subirv: vSubirVentas, subirl: vSubirCierres, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
+  ({ inicio: vInicio, vender: vVender, cobrar: vCobrar, deudas: vDeudas, pagosrec: vPagosRec, local: vLocal, ventas: vVentas, subirv: vSubirVentas, subirl: vSubirCierres, reportes: vReportes, ajustes: vAjustes, cierre: vCierre, productos: vProductos,
      pedidos: vPedidos, stock: inv(invStock), entrada: inv(() => { invEntrada(); porCompletar(); }), traslado: inv(invTraslado), conteo: inv(invConteo), proveedores: inv(invProveedores), movs: inv(invMovs), debo: vDebo,
      r_mes: vResumenMes, r_cobranza: vCobranza, r_prov: vRepProveedores, r_local: vRepLocal, r_inv: vRepInventario,
      gastos: vGastos, vencer: vVencer, wa: vCobrarLocal, nada: vNada, funciones: vFunciones, registro: vRegistro, excel: vExcel,
@@ -1138,7 +1141,44 @@ function confirmar(btn, txt) { if (btn.dataset.ok) return true; btn.dataset.ok =
 const ordLeer = (k, def) => { try { const o = JSON.parse(store('ord_' + k) || 'null'); return o && o.k ? o : def; } catch (e) { return def; } };
 const ordTocar = (k, o, campo, dirInicial) => { const n = o.k === campo ? { k: campo, dir: -o.dir } : { k: campo, dir: dirInicial }; store('ord_' + k, JSON.stringify(n)); return n; };
 const flecha = (o, campo) => o.k === campo ? (o.dir > 0 ? ' ↑' : ' ↓') : '';
+let PROD_Q = '', US_NUEVO = false; // V16.4: búsqueda de productos y fila de usuario nuevo abierta
 const DEU_DIR = { fecha: 1, monto: -1, nombre: 1, vencido: -1 };
+// V16.4: descargas bien armadas. Excel: título, fecha y tasa arriba, columnas con ancho, montos con formato y filas de total. PDF: la misma tabla lista para imprimir o guardar.
+const NEGOCIO = 'Ventas Lácteos';
+const tasaHoy = () => Number(((S && S.tasas) || [])[0] && S.tasas[0].Tasa) || 0;
+function excelTabla(archivo, titulo, sub, cols, filas) { // cols: [{t, w, f:'usd'|'bs'|'n'|'int'}]; filas: arrays; una fila {total:true, v:[...]} va como total
+  return cargarXLSX().then(() => {
+    const fec = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? new Date(v + 'T12:00:00') : v; // las fechas van como fecha de verdad (se pueden ordenar y filtrar)
+    const aoa = [[titulo], [sub], [], cols.map(c => c.t), ...filas.map(f => (f.total ? f.v : f).map((v, i) => cols[i] && cols[i].f === 'fecha' ? fec(v) : v))];
+    const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true }), fmt = { usd: '"$"#,##0.00', bs: '#,##0.00', n: '#,##0.00', int: '0', fecha: 'dd/mm/yyyy' };
+    ws['!cols'] = cols.map(c => ({ wch: c.w || 14 })); ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: cols.length - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: cols.length - 1 } }];
+    for (let r = 4; r < aoa.length; r++) cols.forEach((c, ci) => { const cell = ws[XLSX.utils.encode_cell({ r, c: ci })]; if (cell && (typeof cell.v === 'number' || cell.v instanceof Date) && fmt[c.f]) cell.z = fmt[c.f]; });
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 3, c: 0 }, e: { r: 3, c: cols.length - 1 } }) };
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, titulo.slice(0, 30).replace(/[\\/?*\[\]:]/g, ''));
+    if (window.__capturaExcel) return window.__capturaExcel(archivo, aoa, ws); // solo en las pruebas
+    XLSX.writeFile(wb, archivo);
+  });
+}
+function pdfTabla(titulo, sub, cols, filas, pie) { // abre la vista para imprimir o "Guardar como PDF"
+  const cel = (c, v) => v === '' || v == null ? '' : c.f === 'usd' ? usd(v) : c.f === 'bs' || c.f === 'n' ? n2(v) : c.f === 'fecha' && /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? fdate(v) : esc(String(v));
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(titulo)}</title><style>
+    @page{size:A4 ${cols.length > 7 ? 'landscape' : 'portrait'};margin:12mm}body{font-family:Arial,Helvetica,sans-serif;color:#1d2b3a;font-size:11px;margin:0}
+    header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #1f3a5f;padding-bottom:6px;margin-bottom:10px}
+    h1{font-size:17px;margin:0;color:#1f3a5f}.neg{font-weight:700;font-size:12px;color:#c58b00}.sub{color:#5b6b7b;font-size:11px;text-align:right}
+    table{width:100%;border-collapse:collapse}th{background:#1f3a5f;color:#fff;text-align:left;padding:5px 6px;font-size:10.5px}td{padding:4px 6px;border-bottom:1px solid #e3e7ec;vertical-align:top}
+    tr:nth-child(even) td{background:#f6f8fa}.r{text-align:right;white-space:nowrap}tr.tot td{background:#fff4d6!important;font-weight:700;border-top:1.5px solid #c58b00}tr.gran td{background:#1f3a5f!important;color:#fff;font-weight:700}
+    footer{margin-top:10px;color:#8a97a5;font-size:9.5px}</style></head><body>
+    <header><div><div class="neg">${esc(NEGOCIO)}</div><h1>${esc(titulo)}</h1></div><div class="sub">${esc(sub)}</div></header>
+    <table><thead><tr>${cols.map(c => `<th class="${c.f && c.f !== 'txt' && c.f !== 'fecha' ? 'r' : ''}">${esc(c.t)}</th>`).join('')}</tr></thead><tbody>
+    ${filas.map(f => { const v = f.total ? f.v : f; return `<tr class="${f.gran ? 'gran' : f.total ? 'tot' : ''}">${cols.map((c, i) => `<td class="${c.f && c.f !== 'txt' && c.f !== 'fecha' ? 'r' : ''}">${cel(c, v[i])}</td>`).join('')}</tr>`; }).join('')}
+    </tbody></table><footer>${esc(pie || '')} · Generado el ${fdate(hoy())}</footer></body></html>`;
+  if (window.__capturaPdf) return window.__capturaPdf(html); // solo en las pruebas
+  let fr = document.getElementById('frpdf'); if (fr) fr.remove();
+  fr = document.createElement('iframe'); fr.id = 'frpdf'; fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; document.body.appendChild(fr);
+  const d = fr.contentWindow.document; d.open(); d.write(html); d.close();
+  setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) { toast('No se pudo abrir la impresión: ' + e.message); } }, 300);
+}
+const botonesDescarga = id => `<div class="row" style="gap:6px;flex:none"><button class="btn sm sec" id="${id}x" style="flex:none" title="Descargar en Excel">⬇ Excel</button><button class="btn sm sec" id="${id}p" style="flex:none" title="Ver para imprimir o guardar como PDF">⬇ PDF</button></div>`;
 // V16.3 (Marlo): en Quién me debe, lo abonado a las notas pendientes con banco y últimos 4 dígitos de la referencia
 const ref4 = r => { const d = String(r || '').replace(/\D/g, ''); return d ? '···' + d.slice(-4) : ''; };
 const medioPago = c => /favor/i.test(c.Metodo) ? 'Saldo a favor' : [c.Banco || c.Metodo || 'Pago', ref4(c.Referencia)].filter(Boolean).join(' ');
@@ -1156,14 +1196,14 @@ function vDeudas() {
       <div class="kpi bad"><small>Vencido</small><b>${usd(ven)}</b></div>
       <div class="kpi"><small>Clientes con deuda</small><b>${d.length}</b></div></div>
     <div class="card"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0;flex:none">Por cliente</h2>
-      <input id="deuq" type="search" placeholder="🔎 Buscar cliente" style="flex:1;min-width:150px;max-width:260px"></div>
+      <input id="deuq" type="search" placeholder="🔎 Buscar cliente" style="flex:1;min-width:150px;max-width:260px">${botonesDescarga('deud')}</div>
       <div class="row" style="align-items:center;gap:8px;margin-bottom:4px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Fecha'], ['monto', 'Monto'], ['nombre', 'Nombre'], ['vencido', 'Vencido']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordd="${k}">${t}${flecha(o, k)}</button>`).join('')}</div></div>
       <p class="small muted" id="deuord" style="margin:0 0 6px">${DEU_TXT(o) ? 'Ordenado: ' + DEU_TXT(o) + '. Toca otra vez para invertir.' : ''}</p>
     ${d.map(c => {
       const dir = (S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion;
       const pg = pagosDe(c.notas), abon = c.notas.reduce((s, n) => s + (Number(n.Abonado) || 0), 0), ult = pg[0];
-      const abn = abon > 0.005 ? `<div class="abn"><div class="small muted">Abonado</div><b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? `<div class="small muted">${esc(medioPago(ult))} · ${fdate(ult.Fecha)}${pg.length > 1 ? ` <span class="pill">+${pg.length - 1} pago${pg.length > 2 ? 's' : ''}</span>` : ''}</div>` : ''}</div>` : '<div class="abn small muted">Sin abonos</div>';
-      return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div>${abn}<div class="r" style="flex:none;min-width:96px"><div class="small muted">Debe</div><b class="num">${usd(c.saldo)}</b></div></summary>
+      const abn = abon > 0.005 ? `<div class="abn"><span class="small muted">Abonado</span> <b class="num" style="color:var(--ok)">${usd(abon)}</b>${ult ? `<span class="small muted"> · ${esc(medioPago(ult))} · ${fdate(ult.Fecha)}</span>${pg.length > 1 ? ` <span class="pill">+${pg.length - 1} pago${pg.length > 2 ? 's' : ''}</span>` : ''}` : ''}</div>` : '<div class="abn small muted">Sin abonos</div>';
+      return `<details data-n="${esc(normTxt(c.cliente + ' ' + (dir || '')))}"><summary class="cli"><div><b>${esc(c.cliente)}</b>${dir ? `<div class="small muted">📍 ${esc(dir)}</div>` : ''}<div class="small muted">${c.notas.length} nota(s) · desde ${fdate(c.fechaMin)} · vence ${fdate(c.venceMin)} ${favorDe(c.cliente) ? '<span class="pill p-ok">' + usd(favorDe(c.cliente)) + ' a favor</span> ' : ''}${c.vencido ? '<span class="pill p-bad">vencido ' + usd(c.vencido) + '</span>' : ''}</div></div>${abn}<div class="r debe"><span class="small muted">Debe</span> <b class="num">${usd(c.saldo)}</b></div></summary>
         <div class="tbl"><table><tr><th>Nota</th><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Abonado</th><th class="hm">Pagos</th><th class="r">Saldo</th></tr>
         ${c.notas.map(n => `<tr><td>${esc(n.Nota || '-')}</td><td>${fdate(n.Fecha)}</td><td>${n.Vence < h ? `<span class="pill p-bad">${fdate(n.Vence)}</span>` : fdate(n.Vence)}</td><td class="r num">${usd(n.Total)}</td><td class="r num">${usd(n.Abonado)}</td><td class="small muted hm">${pg.filter(x => x.VentaID === n.ID).map(x => `${esc(medioPago(x))} ${usd(x.MontoUSD)} (${fdate(x.Fecha)})`).join('<br>')}</td><td class="r num"><b>${usd(n.Saldo)}</b></td></tr>`).join('')}</table></div>
         <div class="row" style="margin:10px 0 14px">${F('cobros') ? `<button class="btn sm" data-cobrar="${esc(c.cliente)}" style="flex:none">Registrar cobro</button>` : ''}${F('cobros') && favorDe(c.cliente) ? `<button class="btn sm sec" data-usarfav="${esc(c.cliente)}" style="flex:none">Usar los ${usd(favorDe(c.cliente))} a favor</button>` : ''}${puedeVer('ventas') ? `<button class="btn sm sec" data-hist="${esc(c.cliente)}" style="flex:none">Historial completo</button>` : ''}${botonWA(c, 'Cobrar por WhatsApp')}</div>
@@ -1177,7 +1217,57 @@ function vDeudas() {
   const filtraDeu = () => { const t = normTxt($('#deuq').value); let n = 0; document.querySelectorAll('details[data-n]').forEach(x => { const ok = !t || x.dataset.n.includes(t); x.style.display = ok ? '' : 'none'; n += ok; });
     $('#deuord').textContent = t ? `${n} cliente(s) con "${$('#deuq').value}"` : (DEU_TXT(ORD_DEU) ? 'Ordenado: ' + DEU_TXT(ORD_DEU) + '. Toca otra vez para invertir.' : ''); };
   $('#deuq').oninput = filtraDeu;
+  const datosDeu = () => { const t = normTxt($('#deuq').value), filas = []; let tg = 0;
+    d.filter(c => !t || normTxt(c.cliente + ' ' + ((S.clientes.find(x => x.Nombre === c.cliente) || {}).Direccion || '')).includes(t)).forEach(c => { const pg = pagosDe(c.notas);
+      c.notas.forEach(n => filas.push([c.cliente, n.Nota || '', n.Fecha, n.Vence, n.Vence < h ? Math.round((new Date(h) - new Date(n.Vence)) / 864e5) : 0, r2(n.Total), r2(n.Abonado), pg.filter(x => x.VentaID === n.ID).map(x => medioPago(x) + ' ' + usd(x.MontoUSD) + ' (' + fdate(x.Fecha) + ')').join('; '), r2(n.Saldo)]));
+      if (c.notas.length > 1) filas.push({ total: true, v: ['Total ' + c.cliente, '', '', '', '', '', r2(c.notas.reduce((s, n) => s + Number(n.Abonado || 0), 0)), '', r2(c.saldo)] }); tg += c.saldo; });
+    filas.push({ total: true, gran: true, v: ['TOTAL POR COBRAR', '', '', '', '', '', '', '', r2(tg)] }); return filas; };
+  const colsDeu = [{ t: 'Cliente', w: 32 }, { t: 'Nota', w: 8 }, { t: 'Fecha', w: 11, f: 'fecha' }, { t: 'Vence', w: 11, f: 'fecha' }, { t: 'Días vencida', w: 12, f: 'int' }, { t: 'Total', w: 12, f: 'usd' }, { t: 'Abonado', w: 12, f: 'usd' }, { t: 'Pagos (banco, referencia, monto, fecha)', w: 44, f: 'txt' }, { t: 'Debe', w: 12, f: 'usd' }];
+  const subDeu = () => `Al ${fdate(h)} · Tasa ${n2(tasaHoy())} bolívares por dólar${$('#deuq').value ? ' · Filtro: ' + $('#deuq').value : ''}`;
+  $('#deudx').onclick = e => busy(e.target, () => excelTabla('Quien_me_debe_' + h + '.xlsx', 'Quién me debe', subDeu(), colsDeu, datosDeu()));
+  $('#deudp').onclick = () => pdfTabla('Quién me debe', subDeu(), colsDeu, datosDeu(), 'Notas pendientes por cliente, de la más vieja a la más nueva');
   document.querySelectorAll('[data-usarfav]').forEach(b => b.onclick = () => busy(b, async () => { const r = await call('usarFavor', { cliente: b.dataset.usarfav }); toast('Se usaron ' + usd(r.usado) + ' a favor en ' + r.notas + ' nota(s)'); await recargar(); }));
+}
+/* V16.4: quién pagó y por qué banco. Sirve para cuadrar con el estado de cuenta: busca por los dígitos de la referencia. */
+let PAGREC = null;
+function vPagosRec() {
+  const h = hoy(); if (!PAGREC) PAGREC = { desde: h.slice(0, 8) + '01', hasta: h, banco: '', q: '' };
+  const P = PAGREC, ventas = Object.fromEntries((S.ventas || []).map(v => [v.ID, v]));
+  const todos = (S.cobros || []).filter(c => Number(c.MontoUSD) > 0.005 && !/favor/i.test(c.Metodo));
+  const desdeApp = todos.reduce((m, c) => (c.Fecha < m ? c.Fecha : m), '9999');
+  const medio = c => String(c.Banco || c.Metodo || 'Sin indicar').trim();
+  const enRango = todos.filter(c => c.Fecha >= P.desde && c.Fecha <= P.hasta);
+  const bancos = {}; enRango.forEach(c => { const b = bancos[medio(c)] = bancos[medio(c)] || { n: 0, usd: 0, bs: 0 }; b.n++; b.usd += Number(c.MontoUSD) || 0; b.bs += Number(c.MontoBs) || 0; });
+  const t = normTxt(P.q), dig = String(P.q).replace(/\D/g, '');
+  const lista = enRango.filter(c => (!P.banco || medio(c) === P.banco) && (!t || normTxt(c.Cliente).includes(t) || (dig.length >= 3 && String(c.Referencia || '').replace(/\D/g, '').includes(dig))))
+    .sort((a, b) => String(b.Fecha).localeCompare(String(a.Fecha)) || String(b.CreadoEn || '').localeCompare(String(a.CreadoEn || '')));
+  const totU = lista.reduce((s, c) => s + (Number(c.MontoUSD) || 0), 0), totB = lista.reduce((s, c) => s + (Number(c.MontoBs) || 0), 0);
+  const nota = c => c.VentaID ? ((ventas[c.VentaID] || {}).Nota || '') : 'a favor';
+  $('#main').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0;flex:none">Pagos recibidos</h2>${botonesDescarga('pgr')}</div>
+      <p class="small muted" style="margin:4px 0 10px">Quién pagó, cuánto y por qué banco. Para cuadrar con el banco, escribe en el buscador los últimos dígitos de la referencia que sale en el estado de cuenta.</p>
+      <div class="row"><div><label>Desde</label><input type="date" id="prd" value="${P.desde}"></div><div><label>Hasta</label><input type="date" id="prh" value="${P.hasta}"></div>
+        <div><label>Banco o medio</label><select id="prb"><option value="">Todos</option>${Object.keys(bancos).sort().map(b => `<option ${P.banco === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select></div>
+        <div style="flex:2;min-width:180px"><label>Buscar cliente o referencia</label><input id="prq" type="search" value="${esc(P.q)}" placeholder="🔎 Ej: Gaviota o 1234"></div></div>
+      <div class="row" style="gap:6px;margin-top:8px">${[['Este mes', h.slice(0, 8) + '01', h], ['Hoy', h, h], ['Últimos 7 días', fmtD(addD(h, -6)), h], ['Mes pasado', mesPasado()[0], mesPasado()[1]]].map(([n, a, b]) => `<button class="btn sm sec" data-prr="${a}|${b}" style="flex:none">${n}</button>`).join('')}</div>
+      ${P.desde < desdeApp ? `<p class="small" style="color:var(--warn,#a86a00);margin:8px 0 0">La app tiene cargados los pagos desde el ${fdate(desdeApp)}. Para fechas anteriores usa Reportes → Excel → Cobros.</p>` : ''}</div>
+    <div class="grid g3" style="margin:14px 0">${Object.entries(bancos).sort((a, b) => b[1].usd - a[1].usd).map(([b, x]) => `<div class="kpi" data-prbank="${esc(b)}" style="cursor:pointer;${P.banco === b ? 'outline:2px solid var(--brand)' : ''}"><small>${esc(b)}</small><b>${usd(x.usd)}</b><div class="small muted">${x.n} pago${x.n === 1 ? '' : 's'}${x.bs > 0.005 ? ' · ' + n2(x.bs) + ' bolívares' : ''}</div></div>`).join('') || '<div class="kpi"><small>Sin pagos</small><b>$0,00</b><div class="small muted">en estas fechas</div></div>'}</div>
+    <div class="card"><div class="small muted" style="margin-bottom:6px">${lista.length} pago${lista.length === 1 ? '' : 's'}${P.banco ? ' por ' + esc(P.banco) : ''}${P.q ? ' que coinciden con "' + esc(P.q) + '"' : ''} · ${fdate(P.desde)} al ${fdate(P.hasta)}</div>
+      <div class="tbl"><table id="prtab"><tr><th>Fecha</th><th>Cliente</th><th class="hm">Nota</th><th>Banco o medio</th><th class="hm">Referencia</th><th class="r hm">Bolívares</th><th class="r hm">Tasa</th><th class="r">Dólares</th></tr>
+      ${lista.map(c => `<tr><td style="white-space:nowrap">${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}</td><td class="hm">${esc(nota(c))}</td><td>${esc(medio(c))}${c.Referencia ? `<div class="small muted sm-only">${esc(ref4(c.Referencia))}</div>` : ''}</td><td class="mono hm">${esc(c.Referencia || '')}</td><td class="r num hm">${Number(c.MontoBs) ? n2(c.MontoBs) : ''}</td><td class="r num hm">${Number(c.Tasa) ? n2(c.Tasa) : ''}</td><td class="r num"><b>${usd(c.MontoUSD)}</b></td></tr>`).join('') || '<tr><td colspan="8" class="muted">No hay pagos con esos filtros</td></tr>'}
+      ${lista.length ? `<tr class="totrow"><td>Total</td><td></td><td class="hm"></td><td></td><td class="hm"></td><td class="r num hm">${totB ? n2(totB) : ''}</td><td class="hm"></td><td class="r num">${usd(totU)}</td></tr>` : ''}</table></div></div>`;
+  const ir = () => { P.desde = $('#prd').value || P.desde; P.hasta = $('#prh').value || P.hasta; if (P.desde > P.hasta) [P.desde, P.hasta] = [P.hasta, P.desde]; P.banco = $('#prb').value; vPagosRec(); };
+  $('#prd').onchange = ir; $('#prh').onchange = ir; $('#prb').onchange = ir;
+  let tq; $('#prq').oninput = e => { clearTimeout(tq); tq = setTimeout(() => { P.q = e.target.value; const pos = e.target.selectionStart; vPagosRec(); const q = $('#prq'); q.focus(); try { q.setSelectionRange(pos, pos); } catch (er) {} }, 250); };
+  document.querySelectorAll('[data-prr]').forEach(b => b.onclick = () => { [P.desde, P.hasta] = b.dataset.prr.split('|'); vPagosRec(); });
+  document.querySelectorAll('[data-prbank]').forEach(k => k.onclick = () => { P.banco = P.banco === k.dataset.prbank ? '' : k.dataset.prbank; vPagosRec(); });
+  const cols = [{ t: 'Fecha', w: 11, f: 'fecha' }, { t: 'Cliente', w: 32 }, { t: 'Nota', w: 8 }, { t: 'Banco o medio', w: 18 }, { t: 'Referencia', w: 18 }, { t: 'Bolívares', w: 14, f: 'bs' }, { t: 'Tasa', w: 10, f: 'n' }, { t: 'Dólares', w: 12, f: 'usd' }];
+  const filas = () => { const f = lista.map(c => [c.Fecha, c.Cliente, nota(c), medio(c), String(c.Referencia || ''), Number(c.MontoBs) ? r2(c.MontoBs) : '', Number(c.Tasa) ? r2(c.Tasa) : '', r2(c.MontoUSD)]);
+    const porB = {}; lista.forEach(c => { porB[medio(c)] = (porB[medio(c)] || 0) + (Number(c.MontoUSD) || 0); });
+    Object.entries(porB).sort((a, b) => b[1] - a[1]).forEach(([b, v]) => f.push({ total: true, v: ['Total ' + b, '', '', '', '', '', '', r2(v)] }));
+    f.push({ total: true, gran: true, v: ['TOTAL RECIBIDO', '', '', '', '', totB ? r2(totB) : '', '', r2(totU)] }); return f; };
+  const sub = () => `Del ${fdate(P.desde)} al ${fdate(P.hasta)}${P.banco ? ' · ' + P.banco : ''}${P.q ? ' · Búsqueda: ' + P.q : ''}`;
+  $('#pgrx').onclick = e => busy(e.target, () => excelTabla('Pagos_recibidos_' + P.desde + '_a_' + P.hasta + '.xlsx', 'Pagos recibidos', sub(), cols, filas()));
+  $('#pgrp').onclick = () => pdfTabla('Pagos recibidos', sub(), cols, filas(), 'Pagos de clientes por fecha, con banco y referencia');
 }
 function bindHist() {
   document.querySelectorAll('[data-hist]').forEach(b => b.onclick = () => busy(b, async () => {
@@ -2067,15 +2157,18 @@ function invProveedores() {
   const deuda = info.reduce((s, p) => s + p.deuda, 0);
   $('#inv').innerHTML = `<div class="grid g3" style="margin-bottom:14px"><div class="kpi"><small>Le debemos a proveedores</small><b>${usd(deuda)}</b></div>
       <div class="kpi ${info.some(p => p.vencido) ? 'bad' : ''}"><small>Vencido</small><b>${usd(info.reduce((s, p) => s + p.vencido, 0))}</b></div><div class="kpi"><small>Proveedores</small><b>${info.length}</b></div></div>
-    <div class="card"><h2>Proveedores</h2>
-    ${info.map((p, i) => `<details><summary class="cli"><div><b>${esc(p.Nombre)}</b><div class="small muted">${p.Telefono ? '📞 ' + esc(p.Telefono) + ' · ' : ''}compras 12 meses ${usd(p.comprado)}${p.ultima ? ' · última ' + fdate(p.ultima) : ''}</div></div>
+    <div class="card"><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;flex:none">Proveedores</h2>
+      <input id="pvq" type="search" placeholder="🔎 Buscar proveedor" style="flex:1;min-width:150px;max-width:280px"><button class="btn sm" id="pvnew" style="flex:none">＋ Nuevo proveedor</button></div>
+    <div id="pvform" class="row" style="display:none;margin:10px 0;padding:10px;border-radius:12px;background:var(--bg2,#f7f3ea)"><div style="flex:2"><label>Nombre del proveedor nuevo</label><input id="npv" placeholder="Nombre"></div><div><label>Teléfono</label><input id="npt"></div><button class="btn" id="npg2" style="flex:none">Agregar</button></div>
+    ${info.map((p, i) => `<details data-pvn0="${esc(normTxt(p.Nombre + ' ' + (p.Telefono || '')))}"><summary class="cli"><div><b>${esc(p.Nombre)}</b><div class="small muted">${p.Telefono ? '📞 ' + esc(p.Telefono) + ' · ' : ''}compras 12 meses ${usd(p.comprado)}${p.ultima ? ' · última ' + fdate(p.ultima) : ''}</div></div>
         <div class="right">${p.deuda > 0.01 ? `<b class="num" style="color:${p.vencido ? 'var(--bad)' : 'var(--ink)'}">${usd(p.deuda)}</b><div class="small muted">por pagar</div>` : '<span class="pill p-ok">al día</span>'}</div></summary>
       <div class="tbl"><table><tr><th>Fecha</th><th class="r">Total</th><th>Pago</th><th>Vence</th><th class="r">Saldo</th></tr>
         ${p.entradas.slice().sort((a, b) => a.Fecha < b.Fecha ? 1 : -1).slice(0, 10).map(e => `<tr><td>${fdate(e.Fecha)}</td><td class="r num">${usd(e.Total)}</td><td class="small">${esc(e.Condicion)}</td><td>${Number(e.Saldo) > 0.01 ? (e.Vence < hoy() ? `<span class="pill p-bad">${fdate(e.Vence)}</span>` : fdate(e.Vence)) : ''}</td><td class="r num">${Number(e.Saldo) > 0.01 ? usd(e.Saldo) : ''}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Sin compras registradas</td></tr>'}</table></div>
       ${p.deuda > 0.01 ? `<div class="row" style="margin:10px 0"><div><label>Pagar $</label><input class="num" data-ppm="${i}" inputmode="decimal" value="${n2(p.deuda)}"></div><div><label>Método</label><select data-ppx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-ppg="${i}" style="flex:none">Registrar pago</button></div>` : ''}
       <div class="row" style="margin:10px 0 16px"><div><label>Teléfono</label><input data-pvt="${i}" value="${esc(p.Telefono || '')}"></div><div style="flex:2"><label>Notas</label><input data-pvn="${i}" value="${esc(p.Notas || '')}"></div><button class="btn sm sec" data-pvg="${i}" style="flex:none">Guardar datos</button></div>
-    </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo aquí.</div>'}
-    <div class="row" style="margin-top:12px"><div style="flex:2"><label>Nuevo proveedor</label><input id="npv" placeholder="Nombre"></div><div><label>Teléfono</label><input id="npt"></div><button class="btn" id="npg2" style="flex:none">Agregar</button></div></div>`;
+    </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo con ＋ Nuevo proveedor.</div>'}</div>`;
+  $('#pvnew').onclick = () => { const f = $('#pvform'), ver = f.style.display === 'none'; f.style.display = ver ? '' : 'none'; if (ver) { if ($('#pvq').value) $('#npv').value = $('#pvq').value; $('#npv').focus(); } };
+  $('#pvq').oninput = () => { const t = normTxt($('#pvq').value); document.querySelectorAll('details[data-pvn0]').forEach(x => { x.style.display = !t || x.dataset.pvn0.includes(t) ? '' : 'none'; }); };
   document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.ppg; await call('pagarProveedor', { proveedor: info[i].Nombre, monto: numMonto($(`[data-ppm="${i}"]`).value), metodo: $(`[data-ppx="${i}"]`).value }); toast('Pago registrado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
   document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
   $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); });
@@ -2579,15 +2672,17 @@ function vAjustes() {
       <div class="row" style="margin-top:10px"><button class="btn" id="tg">Guardar tasa</button><button class="btn sec" id="tb">Buscar BCV ahora</button></div>
       <h3>Historial</h3><div class="tbl"><table>${S.tasas.slice(0, AJ_TASAS_TODAS ? S.tasas.length : 10).map(t => `<tr><td>${fdate(t.Fecha)}</td><td class="r num">${n2(t.Tasa)}</td><td class="small muted">${esc(t.Fuente)}</td></tr>`).join('') || '<tr><td class="muted">Sin tasas aún</td></tr>'}</table></div>${S.tasas.length > 10 ? `<button class="btn sm sec" id="tvt" style="margin-top:8px">${AJ_TASAS_TODAS ? 'Ver solo las últimas 10' : 'Ver todas (' + S.tasas.length + ')'}</button>` : ''}
     </div>
-    <div class="card" style="grid-column:1/-1"><h2>Productos, precios y margen</h2>
-      <p class="small muted" style="margin-top:-6px">Margen objetivo = % de ganancia sobre el precio de venta (precio = costo ÷ (1 − margen)). Mínimo = avisa cuando el inventario baja de ahí. Parecidos = qué sugerirle al cliente si se agota (escribe los nombres separados por coma).</p><p class="small solo-m" style="color:var(--brand-2);margin:-4px 0 8px">↔ Desliza la tabla hacia los lados para ver todas las columnas.</p>
-      <div class="tbl"><table class="prodtbl"><tr><th>Producto</th><th>Se vende por</th><th>Costo</th><th>Precio</th><th>Margen obj. %</th><th>Mínimo</th><th>Parecidos (si se agota)</th><th></th></tr>
-      ${S.productos.map(p => `<tr><td><input value="${esc(p.Nombre)}" data-pn="${p.Codigo}" style="min-width:110px"></td><td><select data-pu="${p.Codigo}" data-u0="${uni(p.Codigo)}" style="min-width:96px"><option value="kg" ${esUnd(p.Codigo) ? '' : 'selected'}>Kilo</option><option value="und" ${esUnd(p.Codigo) ? 'selected' : ''}>Unidad</option></select></td><td><input class="num" style="width:76px" value="${esc(p.Costo)}" data-pc="${p.Codigo}"></td><td><input class="num" style="width:76px" value="${esc(p.Precio)}" data-pp="${p.Codigo}"></td>
-        <td><input class="num" style="width:70px" value="${p.Margen !== '' && p.Margen != null ? Math.round(Number(p.Margen) * 1000) / 10 : ''}" data-pm="${p.Codigo}"></td><td><input class="num" style="width:70px" value="${esc(p.Minimo)}" data-pmin="${p.Codigo}"></td>
-        <td><input value="${esc((String(p.Sustitutos || '')).split(/[,;]/).map(x => x.trim()).filter(Boolean).map(x => nombreProd(x.toUpperCase()) || x).join(', '))}" data-psu="${p.Codigo}" placeholder="Ej: Mozarella, Mano" style="min-width:150px"></td><td><button class="btn sm sec" data-ps="${p.Codigo}">✓</button></td></tr>`).join('')}
-      <tr><td><input id="npn" placeholder="Nuevo producto"></td><td><select id="npu" title="¿Qué unidad de medida quieres que tenga este producto?" style="min-width:96px"><option value="">¿Kilo o unidad?</option><option value="kg">Kilo</option><option value="und">Unidad</option></select></td><td><input id="npc" class="num" placeholder="costo"></td><td><input id="npp" class="num" placeholder="precio"></td><td colspan="3"></td><td><button class="btn sm" id="npg">+</button></td></tr>
-    </table></div></div>
-    <div class="card" style="grid-column:1/-1"><h2>Usuarios</h2>
+    <div class="card" style="grid-column:1/-1"><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;flex:none">Productos, precios y margen</h2>
+      <input id="pq" type="search" value="${esc(PROD_Q)}" placeholder="🔎 Buscar producto" style="flex:1;min-width:150px;max-width:280px"><button class="btn sm" id="npnew" style="flex:none">＋ Nuevo producto</button></div>
+      <div id="npform" class="card" style="display:none;margin:10px 0;background:var(--bg2,#f7f3ea)"><h3 style="margin-top:0">Nuevo producto</h3>
+        <div class="row"><div style="flex:2;min-width:160px"><label>Nombre</label><input id="npn" placeholder="Ej: Mortadela Carol UND"></div>
+          <div><label>¿Qué unidad de medida quieres que tenga este producto?</label><select id="npu"><option value="">Elige…</option><option value="kg">Kilo</option><option value="und">Unidad</option></select></div>
+          <div><label>Costo $</label><input id="npc" class="num" inputmode="decimal" placeholder="0,00"></div><div><label>Precio $</label><input id="npp" class="num" inputmode="decimal" placeholder="0,00"></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="npg" style="flex:none">Guardar producto</button><button class="btn sec" id="npx" style="flex:none">Cancelar</button></div></div>
+      <p class="small muted" style="margin:6px 0">Toca un producto para cambiar sus datos. Margen objetivo = % de ganancia sobre el precio de venta (precio = costo ÷ (1 − margen)). Mínimo = avisa cuando el inventario baja de ahí. Parecidos = qué sugerirle al cliente si se agota.</p>
+      <div class="tbl"><table class="prodtbl inv" id="ptab"></table></div><div class="small muted" id="pcount" style="margin-top:6px"></div></div>
+    <div class="card" style="grid-column:1/-1"><div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;flex:none">Usuarios</h2>
+      <input id="uq" type="search" placeholder="🔎 Buscar usuario" style="flex:1;min-width:150px;max-width:280px"><button class="btn sm" id="unew" style="flex:none">＋ Nuevo usuario</button></div>
       <p class="small muted" style="margin-top:-6px">Cada persona entra con su usuario (único) y su PIN (4 a 8 números). Rol: admin, empleado (el local), cliente o ${esc(S.perfilOtro || 'otro')} (el 4.º perfil). Lo que cada rol puede hacer se decide en <a href="#" data-ira="funciones">Ajustes → Funciones</a>. Para un cliente, elige a qué cliente corresponde. Deja el PIN vacío para no cambiarlo.</p>
       <div class="tbl"><table id="utab"></table></div></div>
     <div class="card" style="grid-column:1/-1"><h2>Clientes</h2><input id="cq" placeholder="Buscar cliente" style="margin-bottom:8px">
@@ -2628,12 +2723,32 @@ function vAjustes() {
   const codDe = t => { t = t.trim(); const p = S.productos.find(x => x.Nombre.toLowerCase() === t.toLowerCase() || x.Codigo === t.toUpperCase()); return p ? p.Codigo : t; };
   // V16: la unidad solo se manda si cambió (el servidor no deja cambiarla si el producto ya tiene movimientos).
   const unidadCambio = c => { const el = $(`[data-pu="${c}"]`); if (!el || el.value === el.dataset.u0) return {}; if ((Number(USER.version) || 0) < 16) throw new Error('Para manejar productos por unidad hay que actualizar el servidor a la V16'); return { Unidad: el.value }; };
-  document.querySelectorAll('[data-ps]').forEach(b => b.onclick = () => busy(b, async () => { const c = b.dataset.ps; await call('guardarProducto', { Codigo: c, Nombre: $(`[data-pn="${c}"]`).value, Costo: num($(`[data-pc="${c}"]`).value), Precio: num($(`[data-pp="${c}"]`).value),
-    Margen: $(`[data-pm="${c}"]`).value === '' ? '' : num($(`[data-pm="${c}"]`).value) / 100, Minimo: num($(`[data-pmin="${c}"]`).value), Sustitutos: $(`[data-psu="${c}"]`).value.split(',').map(codDe).filter(Boolean).join(','), ...unidadCambio(c) }); toast('Producto actualizado'); await recargar(); }));
+  const PROD_MAX = 200; let PROD_ABIERTO = '';
+  const editorProd = p => `<tr class="ped"><td colspan="7"><div class="row" style="padding:6px 0 10px">
+      <div style="flex:2;min-width:150px"><label>Nombre</label><input value="${esc(p.Nombre)}" data-pn="${p.Codigo}"></div>
+      <div><label>Se vende por</label><select data-pu="${p.Codigo}" data-u0="${uni(p.Codigo)}"><option value="kg" ${esUnd(p.Codigo) ? '' : 'selected'}>Kilo</option><option value="und" ${esUnd(p.Codigo) ? 'selected' : ''}>Unidad</option></select></div>
+      <div><label>Costo $</label><input class="num" inputmode="decimal" value="${esc(p.Costo)}" data-pc="${p.Codigo}"></div><div><label>Precio $</label><input class="num" inputmode="decimal" value="${esc(p.Precio)}" data-pp="${p.Codigo}"></div>
+      <div><label>Margen obj. %</label><input class="num" inputmode="decimal" value="${p.Margen !== '' && p.Margen != null ? Math.round(Number(p.Margen) * 1000) / 10 : ''}" data-pm="${p.Codigo}"></div><div><label>Mínimo</label><input class="num" inputmode="decimal" value="${esc(p.Minimo)}" data-pmin="${p.Codigo}"></div>
+      <div style="flex:2;min-width:180px"><label>Parecidos (si se agota)</label><input value="${esc((String(p.Sustitutos || '')).split(/[,;]/).map(x => x.trim()).filter(Boolean).map(x => nombreProd(x.toUpperCase()) || x).join(', '))}" data-psu="${p.Codigo}" placeholder="Ej: Mozarella, Mano"></div></div>
+      <div class="row" style="margin-bottom:8px"><button class="btn sm" data-ps="${p.Codigo}" style="flex:none">Guardar cambios</button><button class="btn sm sec" data-pcl style="flex:none">Cerrar</button><span class="small muted" style="flex:none">Código ${esc(p.Codigo)}</span></div></td></tr>`;
+  const pintarProd = () => { const t = normTxt($('#pq').value), todos = S.productos.filter(p => !t || normTxt(p.Nombre + ' ' + p.Codigo).includes(t)), ver = todos.slice(0, PROD_MAX);
+    $('#ptab').innerHTML = '<tr><th>Producto</th><th>Se vende por</th><th class="r">Costo</th><th class="r">Precio</th><th class="r">Margen</th><th class="r hm">Mínimo</th><th></th></tr>' + ver.map(p => { const m = margenDe(Number(p.Costo), Number(p.Precio)), obj = Number(p.Margen) || 0;
+      return `<tr class="prow" data-pe="${p.Codigo}" style="cursor:pointer"><td><b>${esc(p.Nombre)}</b>${String(p.Activo).toUpperCase() === 'NO' ? ' <span class="pill">inactivo</span>' : ''}</td><td>${esUnd(p.Codigo) ? 'Unidad' : 'Kilo'}</td><td class="r num">${n2(p.Costo)}</td><td class="r num">${n2(p.Precio)}</td><td class="r num" style="color:${m < obj - 0.03 ? 'var(--bad)' : 'var(--ok)'}">${pct(m)}</td><td class="r num hm">${Number(p.Minimo) ? cant(p.Codigo, p.Minimo) : ''}</td><td class="r" style="color:var(--brand)">✎</td></tr>${PROD_ABIERTO === p.Codigo ? editorProd(p) : ''}`; }).join('') + (todos.length ? '' : `<tr><td colspan="7" class="muted">Ningún producto con "${esc($('#pq').value)}". Puedes crearlo con ＋ Nuevo producto.</td></tr>`);
+    $('#pcount').textContent = todos.length > PROD_MAX ? `Se ven ${PROD_MAX} de ${todos.length}: escribe en el buscador para encontrar el que buscas.` : `${todos.length} producto${todos.length === 1 ? '' : 's'}`;
+    document.querySelectorAll('[data-pe]').forEach(r => r.onclick = () => { PROD_ABIERTO = PROD_ABIERTO === r.dataset.pe ? '' : r.dataset.pe; pintarProd(); const n = $(`[data-pn="${PROD_ABIERTO}"]`); if (n) n.focus(); });
+    document.querySelectorAll('[data-pcl]').forEach(b => b.onclick = () => { PROD_ABIERTO = ''; pintarProd(); });
+    bindProd(); };
+  $('#pq').oninput = () => { PROD_Q = $('#pq').value; pintarProd(); };
+  $('#npnew').onclick = () => { const f = $('#npform'), ver = f.style.display === 'none'; f.style.display = ver ? '' : 'none'; if (ver) { if ($('#pq').value && !$('#npn').value) $('#npn').value = $('#pq').value; $('#npn').focus(); } };
+  $('#npx').onclick = () => { $('#npform').style.display = 'none'; };
+  const bindProd = () => document.querySelectorAll('[data-ps]').forEach(b => b.onclick = () => busy(b, async () => { const c = b.dataset.ps; await call('guardarProducto', { Codigo: c, Nombre: $(`[data-pn="${c}"]`).value, Costo: num($(`[data-pc="${c}"]`).value), Precio: num($(`[data-pp="${c}"]`).value),
+    Margen: $(`[data-pm="${c}"]`).value === '' ? '' : num($(`[data-pm="${c}"]`).value) / 100, Minimo: num($(`[data-pmin="${c}"]`).value), Sustitutos: $(`[data-psu="${c}"]`).value.split(',').map(codDe).filter(Boolean).join(','), ...unidadCambio(c) }); toast('Producto actualizado'); PROD_ABIERTO = ''; await recargar(); }));
+  pintarProd();
   const pintarUs = () => {
-    const rows = S.usuarios.concat([{ nuevo: true, Nombre: '', Usuario: '', Rol: 'empleado', Email: '', Activo: 'SI', Cliente: '' }]);
+    const uq = normTxt(($('#uq') || {}).value || ''); // V16.4: el usuario nuevo va arriba (con el botón) y hay buscador
+    const rows = (US_NUEVO ? [{ nuevo: true, Nombre: '', Usuario: '', Rol: 'empleado', Email: '', Activo: 'SI', Cliente: '' }] : []).concat(S.usuarios.filter(u => !uq || normTxt([u.Nombre, u.Usuario, u.Rol, u.Cliente].join(' ')).includes(uq)));
     $('#utab').innerHTML = '<tr><th>Nombre</th><th>Usuario</th><th>PIN nuevo</th><th>Rol</th><th>Cliente</th><th>Correo</th><th>Activo</th><th>Último ingreso</th><th></th></tr>' + rows.map((u, i) => `<tr>
-      <td><input data-un="${i}" value="${esc(u.Nombre)}" placeholder="${u.nuevo ? 'Nuevo usuario' : ''}" style="min-width:110px"></td><td><input data-uu="${i}" value="${esc(u.Usuario)}" autocapitalize="none" style="min-width:90px"></td>
+      <td><input data-un="${i}" value="${esc(u.Nombre)}" placeholder="${u.nuevo ? 'Nombre del usuario nuevo' : ''}" style="min-width:110px"></td><td><input data-uu="${i}" value="${esc(u.Usuario)}" autocapitalize="none" style="min-width:90px"></td>
       <td><input data-up="${i}" class="mono" inputmode="numeric" maxlength="8" placeholder="${u.nuevo ? 'PIN' : '••••'}" style="width:80px"></td>
       <td><select data-ur="${i}" style="min-width:112px">${['admin', 'empleado', 'cliente', 'otro'].map(r => `<option value="${r}" ${String(u.Rol).toLowerCase() === r ? 'selected' : ''}>${r === 'otro' ? esc(S.perfilOtro || 'otro') : r}</option>`).join('')}</select></td>
       <td><input data-uc="${i}" list="dl-cli3" value="${esc(u.Cliente)}" style="min-width:150px"></td><td><input data-ue="${i}" value="${esc(u.Email)}" style="min-width:150px"></td>
@@ -2644,10 +2759,12 @@ function vAjustes() {
       const propio = b.dataset.orig && b.dataset.orig === USR, nuevoPin = v('up').trim();
       await call('guardarUsuario', { original: b.dataset.orig, Nombre: v('un'), Usuario: v('uu'), PIN: nuevoPin, Rol: v('ur'), Cliente: v('uc'), Email: v('ue'), Activo: v('ua') });
       if (propio) { USR = v('uu').trim().toLowerCase(); store('usr', USR); if (nuevoPin) { await reentrar(nuevoPin); } } // tu propio usuario: se entra de nuevo con el PIN nuevo
-      toast(propio && nuevoPin ? 'Tu PIN quedó cambiado' : 'Usuario guardado'); await recargar(); TAB = 'ajustes'; render(); }));
+      if (!b.dataset.orig) US_NUEVO = false; toast(propio && nuevoPin ? 'Tu PIN quedó cambiado' : 'Usuario guardado'); await recargar(); TAB = 'ajustes'; render(); }));
   };
   pintarUs();
-  document.querySelectorAll('[data-ub]').forEach(b => b.onclick = () => busy(b, async () => { await call('desbloquear', { usuario: b.dataset.ub }); toast(b.dataset.ub + ' desbloqueado: ya puede volver a intentar'); }));
+  $('#uq').oninput = () => { pintarUs(); bindUb(); };
+  $('#unew').onclick = () => { US_NUEVO = !US_NUEVO; pintarUs(); bindUb(); const n = $('[data-un="0"]'); if (US_NUEVO && n) n.focus(); };
+  const bindUb = () => document.querySelectorAll('[data-ub]').forEach(b => b.onclick = () => busy(b, async () => { await call('desbloquear', { usuario: b.dataset.ub }); toast(b.dataset.ub + ' desbloqueado: ya puede volver a intentar'); })); bindUb();
   $('#npg').onclick = e => busy(e.target, async () => { const n = $('#npn').value.trim(); if (!n) throw new Error('Escribe el nombre'); const u = $('#npu').value; if (!u) throw new Error('¿Qué unidad de medida quieres que tenga este producto? Elige Kilo o Unidad'); if (u === 'und' && (Number(USER.version) || 0) < 16) throw new Error('Para manejar productos por unidad hay que actualizar el servidor a la V16'); const cod = n.normalize('NFD').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() + (S.productos.length + 1); await call('guardarProducto', { Codigo: cod, Nombre: n, Costo: num($('#npc').value), Precio: num($('#npp').value), Unidad: u }); toast('Producto agregado' + (u === 'und' ? ' (por unidad)' : ' (por kilo)')); VENTA = null; await recargar(); });
   const pintarCli = () => { const q = $('#cq').value.toLowerCase(); $('#ctab').innerHTML = '<tr><th>Nombre</th><th>Cédula / RIF</th><th>Teléfono</th><th>Dirección</th><th>Zona</th><th class="r">Días</th><th></th></tr>' + S.clientes.filter(c => !q || String(c.Nombre).toLowerCase().includes(q)).map((c, i) => `<tr><td><input value="${esc(c.Nombre)}" data-cn="${i}" style="min-width:200px"></td><td><input value="${esc(c.Documento || '')}" data-cdoc="${i}" placeholder="V- / J-" style="min-width:110px"></td><td><input value="${esc(c.Telefono)}" data-ct="${i}" inputmode="tel" style="min-width:110px"></td><td><input value="${esc(c.Direccion || '')}" data-cdir="${i}" style="min-width:160px"></td><td><input value="${esc(c.Zona)}" data-cz="${i}"></td><td><input class="num" style="width:56px" value="${esc(c.DiasCredito)}" data-cd="${i}"></td><td><button class="btn sm sec" data-cs="${i}" data-orig="${esc(c.Nombre)}">✓</button></td></tr>`).join('');
     document.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.cs; await call('guardarCliente', { original: b.dataset.orig, Nombre: $(`[data-cn="${i}"]`).value.trim(), Telefono: $(`[data-ct="${i}"]`).value, Zona: $(`[data-cz="${i}"]`).value, Direccion: $(`[data-cdir="${i}"]`).value, Documento: $(`[data-cdoc="${i}"]`).value.trim(), DiasCredito: num($(`[data-cd="${i}"]`).value) }); toast('Cliente guardado'); await recargar(); })); };
