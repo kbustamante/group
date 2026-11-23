@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V18b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V18c'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1655,7 +1655,7 @@ function vDebo() {
     const und = m => esUnd(m.Codigo), cant = m => und(m) ? Math.round(Number(m.Kg)) + ' und' : n2(m.Kg) + ' kg';
     tr.firstElementChild.innerHTML = ls.length ? `<div style="padding:6px 0"><b class="small">Lo que compraste en esta factura</b><div class="tbl"><table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Costo</th><th class="r">Total</th></tr>
       ${ls.map(m => `<tr><td>${esc(m.Producto || m.Codigo)}</td><td class="r num">${cant(m)}</td><td class="r num">${usd(m.Costo)}</td><td class="r num">${usd(Number(m.Kg) * Number(m.Costo))}</td></tr>`).join('')}
-      <tr class="totrow"><td>Total de la factura</td><td></td><td></td><td class="r num">${usd(e.Total)}</td></tr></table></div>${e.Notas ? `<p class="small">📝 ${esc(e.Notas)}</p>` : ''}</div>` : '<span class="small muted">No encontré el detalle de esta factura (puede ser una compra anotada sin productos).</span>';
+      <tr class="totrow"><td>Total de la factura</td><td></td><td></td><td class="r num">${usd(e.Total)}</td></tr></table></div>${e.Notas ? `<p class="small"><b>Nota:</b> ${esc(e.Notas)}</p>` : ''}</div>` : '<span class="small muted">No encontré el detalle de esta factura (puede ser una compra anotada sin productos).</span>';
     tr.classList.remove('hide');
   });
   document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = numMonto($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
