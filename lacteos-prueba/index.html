@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V22'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V23'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1227,31 +1227,37 @@ async function corregirFactura(id) {
   let ls = lineasCompra(id);
   if (!ls.length) { try { ls = (await call('detalleCompra', { id })).lineas || []; } catch (er) { ls = []; } }
   if (!ls.length) return toast('No encontré lo que se compró en esa factura', true);
-  const pagado = Number(e.Pagado) || 0, cont = e.Condicion === 'Contado', lab = l => esUnd(l.Codigo) ? 'und' : 'kg';
+  const pagado = Number(e.Pagado) || 0, cont = e.Condicion === 'Contado', lab = l => esUnd(l.Codigo) ? 'und' : 'kg', hayCond = Number(USER.version) >= 23, condIni = cont ? 'Contado' : 'Crédito', diasIni = cont ? 15 : (Math.round(diasEntre(e.Fecha, e.Vence)) || 15); let cond = condIni;
   modal(`<h2 style="margin-top:0">Corregir factura</h2><p><b>${esc(e.Proveedor)}</b> · ${fdate(e.Fecha)} · total ${usd(e.Total)}${cont ? ' (contado)' : ' · ya pagado ' + usd(pagado)}</p>
     <div class="tbl"><table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Costo</th><th class="r">Total</th></tr>
     ${ls.map((l, i) => `<tr><td>${esc(l.Producto || l.Codigo)}</td><td class="r"><input class="num" data-ck="${i}" inputmode="decimal" value="${n2(l.Kg)}" style="width:92px"> ${lab(l)}</td><td class="r"><input class="num" data-cc="${i}" inputmode="decimal" value="${n2(l.Costo)}" style="width:80px"></td><td class="r num" id="ct${i}">${usd(l.Kg * l.Costo)}</td></tr>`).join('')}
     <tr class="totrow"><td>Total nuevo</td><td></td><td></td><td class="r num" id="ctt">${usd(e.Total)}</td></tr></table></div>
+    ${hayCond ? `<div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:none"><label>Pago</label><div class="seg"><button class="${cond === 'Contado' ? 'on plain' : ''}" data-cc2="Contado">Contado</button><button class="${cond === 'Crédito' ? 'on plain' : ''}" data-cc2="Crédito">Crédito</button></div></div><div id="cdw" class="${cond === 'Crédito' ? '' : 'hide'}" style="max-width:110px"><label>Días de crédito</label><input id="cdi" class="num" inputmode="numeric" value="${diasIni}"></div></div>` : ''}
     <p class="small muted" id="cav">Cambiar kilos suma o resta inventario solo por la diferencia. No se borra nada: queda guardado quién corrigió y qué cambió.</p>
     <label>¿Qué corriges? (opcional)</label><input id="cmo" maxlength="150" placeholder="Ej.: puse mal los kilos del requesón">
     <div class="row" style="margin-top:10px"><button class="btn sec" id="c0" style="flex:none">Cancelar</button><button class="btn" id="c1" style="flex:none">Revisar cambios</button></div>`, d => {
     const val = () => ls.map((l, i) => ({ codigo: l.Codigo, kg: numMonto(d.querySelector(`[data-ck="${i}"]`).value) || 0, costo: numMonto(d.querySelector(`[data-cc="${i}"]`).value) || 0 }));
     const calc = () => { let t = 0; val().forEach((v, i) => { t += v.kg * v.costo; d.querySelector('#ct' + i).textContent = usd(v.kg * v.costo); }); t = r2(t); d.querySelector('#ctt').textContent = usd(t);
-      const av = d.querySelector('#cav'); if (!cont && t < pagado - 0.005) { av.style.color = 'var(--bad)'; av.textContent = `El nuevo total (${usd(t)}) es menor que lo ya pagado (${usd(pagado)}). Primero anula el pago que sobra.`; } else { av.style.color = ''; av.textContent = 'Cambiar kilos suma o resta inventario solo por la diferencia. No se borra nada: queda guardado quién corrigió y qué cambió.'; } return t; };
+      const av = d.querySelector('#cav'); if (cond === 'Crédito' && t < pagado - 0.005) { av.style.color = 'var(--bad)'; av.textContent = `El nuevo total (${usd(t)}) es menor que lo ya pagado (${usd(pagado)}). Primero anula el pago que sobra.`; } else { av.style.color = ''; av.textContent = 'Cambiar kilos suma o resta inventario solo por la diferencia. No se borra nada: queda guardado quién corrigió y qué cambió.'; } return t; };
     d.querySelectorAll('input[data-ck],input[data-cc]').forEach(x => x.oninput = calc);
+    d.querySelectorAll('[data-cc2]').forEach(b => b.onclick = () => { cond = b.dataset.cc2; d.querySelectorAll('[data-cc2]').forEach(x => x.classList.toggle('on', x.dataset.cc2 === cond)); d.querySelectorAll('[data-cc2]').forEach(x => x.classList.toggle('plain', x.dataset.cc2 === cond)); d.querySelector('#cdw').classList.toggle('hide', cond !== 'Crédito'); calc(); });
     d.querySelector('#c0').onclick = cerrarModal;
     d.querySelector('#c1').onclick = () => {
       const v = val(), t = calc(), camb = v.map((x, i) => ({ ...x, antes: ls[i] })).filter(x => Math.abs(x.kg - x.antes.Kg) > 0.0001 || Math.abs(x.costo - x.antes.Costo) > 0.00001);
-      if (!camb.length) return toast('No cambiaste ningún dato', true);
+      const dn = hayCond && cond === 'Crédito' ? (numMonto(d.querySelector('#cdi').value) || 0) : 0, cambioCond = hayCond && cond !== condIni, cambioDias = hayCond && cond === 'Crédito' && condIni === 'Crédito' && dn > 0 && dn !== diasIni;
+      if (!camb.length && !cambioCond && !cambioDias) return toast('No cambiaste ningún dato', true);
+      if (cambioCond && cond === 'Contado' && pagado > 0.005) return toast('Esa factura ya tiene pagos. Anúlalos primero para pasarla a contado.', true);
+      if (cond === 'Crédito' && dn <= 0 && hayCond) return toast('Escribe los días de crédito', true);
       if (v.some(x => !(x.kg > 0) || !(x.costo > 0))) return toast('Cada producto necesita cantidad y costo mayores que cero. Para quitarlo todo, anula la factura.', true);
-      if (!cont && t < pagado - 0.005) return toast('El nuevo total es menor que lo ya pagado: primero anula el pago que sobra', true);
+      if (cond === 'Crédito' && t < pagado - 0.005) return toast('El nuevo total es menor que lo ya pagado: primero anula el pago que sobra', true);
       const mot = d.querySelector('#cmo').value.trim();
       modal(`<h2 style="margin-top:0">Última confirmación</h2><p><b>${esc(e.Proveedor)}</b> · ${fdate(e.Fecha)}</p>
-        <div class="tbl"><table><tr><th>Producto</th><th>Antes</th><th>Ahora</th></tr>${camb.map(x => `<tr><td>${esc(x.antes.Producto || x.codigo)}</td><td class="num">${n2(x.antes.Kg)} ${lab(x.antes)} × ${usd(x.antes.Costo)}</td><td class="num"><b>${n2(x.kg)} ${lab(x.antes)} × ${usd(x.costo)}</b></td></tr>`).join('')}</table></div>
-        <p>Total: <b>${usd(e.Total)}</b> → <b>${usd(t)}</b>${cont ? '' : ' · Debo: ' + usd(e.Saldo) + ' → <b>' + usd(r2(t - pagado)) + '</b>'}. El inventario cambia por la diferencia de kilos.</p>
+        ${cambioCond ? `<p style="padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.14)"><b>Pago:</b> ${condIni} → <b>${cond}</b>${cond === 'Crédito' ? ' · queda una deuda de ' + usd(r2(t - pagado)) + ' a ' + dn + ' días' : ' · se considera pagada y no queda deuda'}</p>` : (cambioDias ? `<p><b>Días de crédito:</b> ${diasIni} → <b>${dn}</b></p>` : '')}
+        ${camb.length ? `<div class="tbl"><table><tr><th>Producto</th><th>Antes</th><th>Ahora</th></tr>${camb.map(x => `<tr><td>${esc(x.antes.Producto || x.codigo)}</td><td class="num">${n2(x.antes.Kg)} ${lab(x.antes)} × ${usd(x.antes.Costo)}</td><td class="num"><b>${n2(x.kg)} ${lab(x.antes)} × ${usd(x.costo)}</b></td></tr>`).join('')}</table></div>
+        <p>Total: <b>${usd(e.Total)}</b> → <b>${usd(t)}</b>${cond === 'Contado' ? '' : ' · Debo: ' + usd(e.Saldo) + ' → <b>' + usd(r2(t - pagado)) + '</b>'}. El inventario cambia por la diferencia de kilos.</p>` : ''}
         <div class="row"><button class="btn sec" id="c2" style="flex:none">No, cancelar</button><button class="btn bad" id="c3" style="flex:none">Sí, corregir factura</button></div>`, d2 => {
         d2.querySelector('#c2').onclick = cerrarModal;
-        d2.querySelector('#c3').onclick = b => busy(b.currentTarget, async () => { await call('corregirEntrada', { id, motivo: mot, lineas: v }); cerrarModal(); toast('Factura corregida'); await recargar(); });
+        d2.querySelector('#c3').onclick = b => busy(b.currentTarget, async () => { await call('corregirEntrada', { id, motivo: mot, lineas: v, ...(cambioCond ? { condicion: cond } : {}), ...(cond === 'Crédito' && (cambioCond || cambioDias) ? { dias: dn } : {}) }); cerrarModal(); toast('Factura corregida'); await recargar(); });
       });
     };
   });
@@ -2241,12 +2247,24 @@ function invEntrada() {
   $('#ep').oninput = e => E.proveedor = e.target.value; $('#ef').onchange = e => E.fecha = e.target.value; $('#en').oninput = e => E.notas = e.target.value;
   const ed = $('#ed'); if (ed) ed.oninput = e => E.dias = e.target.value;
   $('#elimp').onclick = () => { ENTRADA = null; invEntrada(); };
-  $('#eg').onclick = e => busy(e.target, async () => {
-    if (!E.proveedor.trim()) throw new Error('Escribe el proveedor');
-    const lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio, vence: l.vence || '' })); validarEnteros(lineas);
-    const r = await call('guardarEntrada', { fecha: E.fecha, proveedor: E.proveedor.trim(), condicion: E.condicion, dias: num(E.dias), notas: E.notas, lineas });
-    toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; await recargar(); TAB = 'stock'; render();
-  });
+  $('#eg').onclick = e => {
+    const btn = e.currentTarget; let lineas;
+    try {
+      if (!E.proveedor.trim()) throw new Error('Escribe el proveedor');
+      lineas = E.lineas.filter(l => num(l.kg) > 0).map(l => ({ codigo: l.codigo, kg: num(l.kg), costo: num(l.costo), precio: num(l.precio), margen: num(l.margen) / 100, actualizarPrecio: !!l.actualizarPrecio, vence: l.vence || '' })); validarEnteros(lineas);
+    } catch (er) { return toast(er.message, true); }
+    const tot = r2(lineas.reduce((s, l) => s + l.kg * l.costo, 0)), cred = E.condicion === 'Crédito', dd = num(E.dias) || 15, vence = cred ? (() => { const x = new Date(E.fecha + 'T12:00:00'); x.setDate(x.getDate() + dd); return x.toISOString().slice(0, 10); })() : '';
+    modal(`<h2 style="margin-top:0">¿Guardar esta entrada?</h2><p><b>${esc(E.proveedor.trim())}</b> · ${fdate(E.fecha)} · ${lineas.length} producto${lineas.length === 1 ? '' : 's'} · <b>${usd(tot)}</b></p>
+      <p style="padding:10px 12px;border-radius:8px;background:${cred ? 'rgba(245,158,11,.16)' : 'rgba(34,197,94,.14)'}">${cred ? `<b>A crédito:</b> quedan <b>${usd(tot)}</b> por pagar a ${esc(E.proveedor.trim())}. Vence el <b>${fdate(vence)}</b> (${dd} días) y sale en Lo que debo.` : `<b>De contado:</b> se considera pagada hoy. <b>No queda deuda</b> y no saldrá en Lo que debo.`}</p>
+      <div class="row"><button class="btn sec" id="eg0" style="flex:none">Volver y cambiar</button><button class="btn acc" id="eg1" style="flex:none">Sí, guardar ${cred ? 'a crédito' : 'de contado'}</button></div>`, d => {
+      d.querySelector('#eg0').onclick = cerrarModal;
+      d.querySelector('#eg1').onclick = () => { cerrarModal(); busy(btn, async () => {
+        const r = await call('guardarEntrada', { fecha: E.fecha, proveedor: E.proveedor.trim(), condicion: E.condicion, dias: num(E.dias), notas: E.notas, lineas });
+        toast('Entrada guardada · ' + usd(r.total)); ENTRADA = null; await recargar(); TAB = 'stock'; render();
+      }); };
+    });
+  };
+
 }
 function formTraslado(T, cont, onSave, titulo, ayuda, prods) {
   cont.innerHTML = `<div class="card"><h2>${titulo}</h2><p class="small muted" style="margin-top:-6px">${ayuda}</p>
