@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V23b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V24'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1227,11 +1227,14 @@ async function corregirFactura(id) {
   let ls = lineasCompra(id);
   if (!ls.length) { try { ls = (await call('detalleCompra', { id })).lineas || []; } catch (er) { ls = []; } }
   if (!ls.length) return toast('No encontré lo que se compró en esa factura', true);
-  const cont = e.Condicion === 'Contado', pagado = cont ? 0 : (Number(e.Pagado) || 0), lab = l => esUnd(l.Codigo) ? 'und' : 'kg', hayCond = Number(USER.version) >= 23, condIni = cont ? 'Contado' : 'Crédito', diasIni = cont ? 15 : (Math.round(diasEntre(e.Fecha, e.Vence)) || 15); let cond = condIni;
+  const cont = e.Condicion === 'Contado', pagado = cont ? 0 : (Number(e.Pagado) || 0), lab = l => esUnd(l.Codigo) ? 'und' : 'kg', hayCond = Number(USER.version) >= 23, hayFecha = Number(USER.version) >= 24, condIni = cont ? 'Contado' : 'Crédito', diasIni = cont ? 15 : (Math.round(diasEntre(e.Fecha, e.Vence)) || 15); let cond = condIni;
+  const hayAdd = Number(USER.version) >= 24, rowH = (l, i) => `<tr><td>${esc(l.Producto || l.Codigo)}${l.nuevo ? ' <span class="small muted">(nuevo)</span>' : ''}</td><td class="r"><input class="num" data-ck="${i}" inputmode="decimal" value="${l.nuevo ? '' : n2(l.Kg)}" style="width:92px"> ${lab(l)}</td><td class="r"><input class="num" data-cc="${i}" inputmode="decimal" value="${n2(l.Costo)}" style="width:80px"></td><td class="r num" id="ct${i}">${usd(l.Kg * l.Costo)}</td></tr>`;
   modal(`<h2 style="margin-top:0">Corregir factura</h2><p><b>${esc(e.Proveedor)}</b> · ${fdate(e.Fecha)} · total ${usd(e.Total)}${cont ? ' (contado)' : ' · ya pagado ' + usd(pagado)}</p>
     <div class="tbl"><table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Costo</th><th class="r">Total</th></tr>
-    ${ls.map((l, i) => `<tr><td>${esc(l.Producto || l.Codigo)}</td><td class="r"><input class="num" data-ck="${i}" inputmode="decimal" value="${n2(l.Kg)}" style="width:92px"> ${lab(l)}</td><td class="r"><input class="num" data-cc="${i}" inputmode="decimal" value="${n2(l.Costo)}" style="width:80px"></td><td class="r num" id="ct${i}">${usd(l.Kg * l.Costo)}</td></tr>`).join('')}
+    ${ls.map(rowH).join('')}
     <tr class="totrow"><td>Total nuevo</td><td></td><td></td><td class="r num" id="ctt">${usd(e.Total)}</td></tr></table></div>
+    ${hayAdd ? `<div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:2"><label>¿Faltó un producto?</label><select id="cadd"><option value="">Elige el producto que faltó…</option>${(S.productos || []).filter(p => String(p.Activo).toUpperCase() !== 'NO' && !ls.some(l => l.Codigo === p.Codigo)).map(p => `<option value="${esc(p.Codigo)}">${esc(p.Nombre)}</option>`).join('')}</select></div><button class="btn sm sec" id="cadb" style="flex:none">Agregar a la factura</button></div>` : ''}
+    ${hayFecha ? `<div style="margin-top:8px;max-width:190px"><label>Fecha de la factura</label><input id="cfe" type="date" value="${esc(e.Fecha)}" max="${hoy()}"></div>` : ''}
     ${hayCond ? `<div class="row" style="margin-top:8px;align-items:flex-end"><div style="flex:none"><label>Pago</label><div class="seg"><button class="${cond === 'Contado' ? 'on plain' : ''}" data-cc2="Contado">Contado</button><button class="${cond === 'Crédito' ? 'on plain' : ''}" data-cc2="Crédito">Crédito</button></div></div><div id="cdw" class="${cond === 'Crédito' ? '' : 'hide'}" style="max-width:110px"><label>Días de crédito</label><input id="cdi" class="num" inputmode="numeric" value="${diasIni}"></div></div>` : ''}
     <p class="small muted" id="cav">Cambiar kilos suma o resta inventario solo por la diferencia. No se borra nada: queda guardado quién corrigió y qué cambió.</p>
     <label>¿Qué corriges? (opcional)</label><input id="cmo" maxlength="150" placeholder="Ej.: puse mal los kilos del requesón">
@@ -1240,24 +1243,28 @@ async function corregirFactura(id) {
     const calc = () => { let t = 0; val().forEach((v, i) => { t += v.kg * v.costo; d.querySelector('#ct' + i).textContent = usd(v.kg * v.costo); }); t = r2(t); d.querySelector('#ctt').textContent = usd(t);
       const av = d.querySelector('#cav'); if (cond === 'Crédito' && t < pagado - 0.005) { av.style.color = 'var(--bad)'; av.textContent = `El nuevo total (${usd(t)}) es menor que lo ya pagado (${usd(pagado)}). Primero anula el pago que sobra.`; } else { av.style.color = ''; av.textContent = 'Cambiar kilos suma o resta inventario solo por la diferencia. No se borra nada: queda guardado quién corrigió y qué cambió.'; } return t; };
     d.querySelectorAll('input[data-ck],input[data-cc]').forEach(x => x.oninput = calc);
+    if (hayAdd) d.querySelector('#cadb').onclick = () => { const cod = d.querySelector('#cadd').value; if (!cod) return toast('Elige el producto que faltó', true); const pr = (S.productos || []).find(p => p.Codigo === cod) || {}, i = ls.length; ls.push({ Codigo: cod, Producto: pr.Nombre || cod, Kg: 0, Costo: Number(pr.Costo) || 0, nuevo: true }); d.querySelector('#ctt').closest('tr').insertAdjacentHTML('beforebegin', rowH(ls[i], i)); d.querySelector('#cadd').querySelector(`option[value="${cod}"]`).remove(); d.querySelector('#cadd').value = ''; d.querySelectorAll('input[data-ck],input[data-cc]').forEach(x => x.oninput = calc); const k = d.querySelector(`[data-ck="${i}"]`); k.focus(); calc(); };
     d.querySelectorAll('[data-cc2]').forEach(b => b.onclick = () => { cond = b.dataset.cc2; d.querySelectorAll('[data-cc2]').forEach(x => x.classList.toggle('on', x.dataset.cc2 === cond)); d.querySelectorAll('[data-cc2]').forEach(x => x.classList.toggle('plain', x.dataset.cc2 === cond)); d.querySelector('#cdw').classList.toggle('hide', cond !== 'Crédito'); calc(); });
     d.querySelector('#c0').onclick = cerrarModal;
     d.querySelector('#c1').onclick = () => {
       const v = val(), t = calc(), camb = v.map((x, i) => ({ ...x, antes: ls[i] })).filter(x => Math.abs(x.kg - x.antes.Kg) > 0.0001 || Math.abs(x.costo - x.antes.Costo) > 0.00001);
       const dn = hayCond && cond === 'Crédito' ? (numMonto(d.querySelector('#cdi').value) || 0) : 0, cambioCond = hayCond && cond !== condIni, cambioDias = hayCond && cond === 'Crédito' && condIni === 'Crédito' && dn > 0 && dn !== diasIni;
-      if (!camb.length && !cambioCond && !cambioDias) return toast('No cambiaste ningún dato', true);
+      const fn = hayFecha ? (d.querySelector('#cfe').value || e.Fecha) : e.Fecha, cambioFecha = fn !== e.Fecha;
+      if (cambioFecha && fn > hoy()) return toast('La fecha no puede ser futura', true);
+      if (!camb.length && !cambioCond && !cambioDias && !cambioFecha) return toast('No cambiaste ningún dato', true);
       if (cambioCond && cond === 'Contado' && pagado > 0.005) return toast('Esa factura ya tiene pagos. Anúlalos primero para pasarla a contado.', true);
       if (cond === 'Crédito' && dn <= 0 && hayCond) return toast('Escribe los días de crédito', true);
       if (v.some(x => !(x.kg > 0) || !(x.costo > 0))) return toast('Cada producto necesita cantidad y costo mayores que cero. Para quitarlo todo, anula la factura.', true);
       if (cond === 'Crédito' && t < pagado - 0.005) return toast('El nuevo total es menor que lo ya pagado: primero anula el pago que sobra', true);
       const mot = d.querySelector('#cmo').value.trim();
       modal(`<h2 style="margin-top:0">Última confirmación</h2><p><b>${esc(e.Proveedor)}</b> · ${fdate(e.Fecha)}</p>
+        ${cambioFecha ? `<p style="padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.14)"><b>Fecha:</b> ${fdate(e.Fecha)} → <b>${fdate(fn)}</b>${cond === 'Crédito' ? ' · el vencimiento se calcula desde la fecha nueva' : ''}</p>` : ''}
         ${cambioCond ? `<p style="padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.14)"><b>Pago:</b> ${condIni} → <b>${cond}</b>${cond === 'Crédito' ? ' · queda una deuda de ' + usd(r2(t - pagado)) + ' a ' + dn + ' días' : ' · se considera pagada y no queda deuda'}</p>` : (cambioDias ? `<p><b>Días de crédito:</b> ${diasIni} → <b>${dn}</b></p>` : '')}
-        ${camb.length ? `<div class="tbl"><table><tr><th>Producto</th><th>Antes</th><th>Ahora</th></tr>${camb.map(x => `<tr><td>${esc(x.antes.Producto || x.codigo)}</td><td class="num">${n2(x.antes.Kg)} ${lab(x.antes)} × ${usd(x.antes.Costo)}</td><td class="num"><b>${n2(x.kg)} ${lab(x.antes)} × ${usd(x.costo)}</b></td></tr>`).join('')}</table></div>
+        ${camb.length ? `<div class="tbl"><table><tr><th>Producto</th><th>Antes</th><th>Ahora</th></tr>${camb.map(x => `<tr><td>${esc(x.antes.Producto || x.codigo)}</td><td class="num">${x.antes.nuevo ? '<span class="muted">No estaba</span>' : n2(x.antes.Kg) + ' ' + lab(x.antes) + ' × ' + usd(x.antes.Costo)}</td><td class="num"><b>${n2(x.kg)} ${lab(x.antes)} × ${usd(x.costo)}</b></td></tr>`).join('')}</table></div>
         <p>Total: <b>${usd(e.Total)}</b> → <b>${usd(t)}</b>${cond === 'Contado' ? '' : ' · Debo: ' + usd(e.Saldo) + ' → <b>' + usd(r2(t - pagado)) + '</b>'}. El inventario cambia por la diferencia de kilos.</p>` : ''}
         <div class="row"><button class="btn sec" id="c2" style="flex:none">No, cancelar</button><button class="btn bad" id="c3" style="flex:none">Sí, corregir factura</button></div>`, d2 => {
         d2.querySelector('#c2').onclick = cerrarModal;
-        d2.querySelector('#c3').onclick = b => busy(b.currentTarget, async () => { await call('corregirEntrada', { id, motivo: mot, lineas: v, ...(cambioCond ? { condicion: cond } : {}), ...(cond === 'Crédito' && (cambioCond || cambioDias) ? { dias: dn } : {}) }); cerrarModal(); toast('Factura corregida'); await recargar(); });
+        d2.querySelector('#c3').onclick = b => busy(b.currentTarget, async () => { await call('corregirEntrada', { id, motivo: mot, lineas: v, ...(cambioFecha ? { fecha: fn } : {}), ...(cambioCond ? { condicion: cond } : {}), ...(cond === 'Crédito' && (cambioCond || cambioDias || cambioFecha) ? { dias: dn } : {}) }); cerrarModal(); toast('Factura corregida'); await recargar(); });
       });
     };
   });
@@ -2347,6 +2354,7 @@ function invProveedores() {
         const ps = Object.values(g).sort((a, b) => a.f < b.f ? 1 : a.f > b.f ? -1 : (a.k < b.k ? 1 : -1)).slice(0, 8);
         return ps.length ? `<div class="small muted" style="margin:10px 0 4px">Pagos hechos</div><div class="tbl"><table><tr><th>Fecha</th><th class="r">Pagado</th><th>Cómo pagué</th>${puedeCorr ? '<th></th>' : ''}</tr>${ps.map(r => `<tr><td>${fdate(r.f)}</td><td class="r num">${usd(r.usd)}${r.bs > 0 ? `<div class="small muted">${n2(r.bs)} bolívares${Number(r.tasa) ? ' · tasa ' + n2(r.tasa) : ''}</div>` : ''}</td><td class="small">${esc(r.met || '')}${r.bk ? ' · <b>' + esc(r.bk) + '</b>' : ''}</td>${puedeCorr ? `<td><button class="btn sm bad" data-apg="${esc(r.k)}" data-apv="${esc(p.Nombre)}" style="flex:none">Anular</button></td>` : ''}</tr>`).join('')}</table></div>` : ''; })()}
       ${p.deuda > 0.01 ? `<div class="row" style="margin:10px 0;align-items:center"><span class="small muted">Para pagar, ve a Lo que debo.</span><button class="btn sm" data-ppir="${i}" style="flex:none">Ir a pagar →</button></div>` : ''}
+      <div class="row" style="margin:10px 0 0"><div style="flex:2"><label>Nombre del proveedor</label><input data-pvm="${i}" value="${esc(p.Nombre)}" maxlength="80"></div></div>
       <div class="row" style="margin:10px 0 16px"><div><label>Teléfono</label><input data-pvt="${i}" value="${esc(p.Telefono || '')}"></div><div style="flex:2"><label>Notas</label><input data-pvn="${i}" value="${esc(p.Notas || '')}"></div><button class="btn sm sec" data-pvg="${i}" style="flex:none">Guardar datos</button></div>
     </details>`).join('') || '<div class="empty">Aún no hay proveedores. Se crean solos al registrar una entrada, o agrégalo con ＋ Nuevo proveedor.</div>'}</div>`;
   $('#pvnew').onclick = () => { const f = $('#pvform'), ver = f.style.display === 'none'; f.style.display = ver ? '' : 'none'; if (ver) { if ($('#pvq').value) $('#npv').value = $('#pvq').value; $('#npv').focus(); } };
@@ -2354,7 +2362,7 @@ function invProveedores() {
   document.querySelectorAll('[data-apg]').forEach(b => b.onclick = () => { const k = b.dataset.apg, nom = b.dataset.apv, rs = (S.pagosProveedor || []).filter(x => String(x.ID).replace(/-\d+$/, '') === k); anularPagoProv({ k, p: nom, f: (rs[0] || {}).Fecha, usd: rs.reduce((s, x) => s + Number(x.Monto || 0), 0), bs: rs.reduce((s, x) => s + Number(x.MontoBs || 0), 0), bk: (rs[0] || {}).Banco }); });
   document.querySelectorAll('[data-corr]').forEach(b => b.onclick = () => corregirFactura(b.dataset.corr));
   document.querySelectorAll('[data-ppir]').forEach(b => b.onclick = () => { const n = info[b.dataset.ppir].Nombre; DEBO_MON[n] = Object.assign({ mon: 'Bs', tasa: '' }, DEBO_MON[n], { abierto: true }); TAB = 'debo'; ULTIMA.compras = 'debo'; render(); });
-  document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; await call('guardarProveedor', { original: info[i].Nombre, Nombre: info[i].Nombre, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast('Proveedor guardado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
+  document.querySelectorAll('[data-pvg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.pvg; const nn = ((USER.version >= 24 && $(`[data-pvm="${i}"]`)) ? $(`[data-pvm="${i}"]`).value : info[i].Nombre).trim(); if (!nn) throw new Error('Escribe el nombre'); await call('guardarProveedor', { original: info[i].Nombre, Nombre: nn, Telefono: $(`[data-pvt="${i}"]`).value, Notas: $(`[data-pvn="${i}"]`).value }); toast(nn !== info[i].Nombre ? 'Proveedor guardado con el nombre nuevo' : 'Proveedor guardado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); }));
   $('#npg2').onclick = e => busy(e.target, async () => { const n = $('#npv').value.trim(); if (!n) throw new Error('Escribe el nombre'); await call('guardarProveedor', { Nombre: n, Telefono: $('#npt').value }); toast('Proveedor agregado'); await recargar(); TAB = TAB === 'debo' ? 'debo' : 'proveedores'; render(); });
 }
 function invMovs() {
