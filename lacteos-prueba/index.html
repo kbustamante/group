@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V23'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V23b'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1227,7 +1227,7 @@ async function corregirFactura(id) {
   let ls = lineasCompra(id);
   if (!ls.length) { try { ls = (await call('detalleCompra', { id })).lineas || []; } catch (er) { ls = []; } }
   if (!ls.length) return toast('No encontré lo que se compró en esa factura', true);
-  const pagado = Number(e.Pagado) || 0, cont = e.Condicion === 'Contado', lab = l => esUnd(l.Codigo) ? 'und' : 'kg', hayCond = Number(USER.version) >= 23, condIni = cont ? 'Contado' : 'Crédito', diasIni = cont ? 15 : (Math.round(diasEntre(e.Fecha, e.Vence)) || 15); let cond = condIni;
+  const cont = e.Condicion === 'Contado', pagado = cont ? 0 : (Number(e.Pagado) || 0), lab = l => esUnd(l.Codigo) ? 'und' : 'kg', hayCond = Number(USER.version) >= 23, condIni = cont ? 'Contado' : 'Crédito', diasIni = cont ? 15 : (Math.round(diasEntre(e.Fecha, e.Vence)) || 15); let cond = condIni;
   modal(`<h2 style="margin-top:0">Corregir factura</h2><p><b>${esc(e.Proveedor)}</b> · ${fdate(e.Fecha)} · total ${usd(e.Total)}${cont ? ' (contado)' : ' · ya pagado ' + usd(pagado)}</p>
     <div class="tbl"><table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Costo</th><th class="r">Total</th></tr>
     ${ls.map((l, i) => `<tr><td>${esc(l.Producto || l.Codigo)}</td><td class="r"><input class="num" data-ck="${i}" inputmode="decimal" value="${n2(l.Kg)}" style="width:92px"> ${lab(l)}</td><td class="r"><input class="num" data-cc="${i}" inputmode="decimal" value="${n2(l.Costo)}" style="width:80px"></td><td class="r num" id="ct${i}">${usd(l.Kg * l.Costo)}</td></tr>`).join('')}
