@@ -1614,19 +1614,54 @@ function deudaProveedores() {
 }
 
 /* ===== COMPRAS: lo que debo ===== */
+/* V18: Lo que debo con Días, detalle de lo comprado y casillas para elegir qué facturas pagar.
+   La más vieja viene marcada (prioridad) pero se puede marcar cualquiera. Con servidor V17 o anterior no hay casillas (pagaría la más vieja). */
+let ORD_DEBO = ordLeer('debo', { k: 'fecha', dir: 1 }), DEBO_SEL = {};
+const DEBO_DIR = { fecha: 1, monto: -1, nombre: 1 };
 function vDebo() {
-  const d = deudaProveedores(), h = hoy();
+  const d = deudaProveedores(), h = hoy(), conSel = Number(USER.version) >= 18;
   const porProv = {}; d.lista.forEach(e => (porProv[e.Proveedor] = porProv[e.Proveedor] || []).push(e));
-  const provs = Object.keys(porProv).sort((a, b) => porProv[b].reduce((s, e) => s + Number(e.Saldo), 0) - porProv[a].reduce((s, e) => s + Number(e.Saldo), 0));
+  Object.values(porProv).forEach(fs => fs.sort((x, y) => String(x.Fecha).localeCompare(String(y.Fecha)) || String(x.ID).localeCompare(String(y.ID))));
+  const totDe = p => porProv[p].reduce((s, e) => s + Number(e.Saldo), 0), viejaDe = p => porProv[p][0], o = ORD_DEBO;
+  const provs = Object.keys(porProv).sort((x, y) => o.k === 'monto' ? (totDe(x) - totDe(y)) * o.dir : o.k === 'nombre' ? x.localeCompare(y) * o.dir : String(viejaDe(x).Fecha).localeCompare(String(viejaDe(y).Fecha)) * o.dir);
+  Object.keys(porProv).forEach(p => { const ids = new Set(porProv[p].map(e => e.ID)); const ya = DEBO_SEL[p]; if (!ya) DEBO_SEL[p] = new Set([viejaDe(p).ID]); else { [...ya].forEach(i => { if (!ids.has(i)) ya.delete(i); }); if (!ya.size && !ya.tocado) ya.add(viejaDe(p).ID); } }); // la más vieja viene marcada
+  const dias = e => Math.max(0, diasEntre(e.Fecha, h)), colorD = e => e.Vence < h ? 'var(--bad)' : 'var(--muted,#777)';
   $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">${kpi('Le debo a proveedores', usd(d.total))}${kpi('Vencido', usd(d.vencido), d.vencido > 0.01 ? 'bad' : '')}${kpi('Vence en 7 días', usd(d.pronto.reduce((s, e) => s + Number(e.Saldo), 0)), '', `<div class="small muted">${d.pronto.length} factura(s)</div>`)}</div>
-    ${provs.map((p, i) => { const fs = porProv[p], tot = fs.reduce((s, e) => s + Number(e.Saldo), 0), tel = (S.proveedores.find(x => x.Nombre === p) || {}).Telefono;
-      return `<div class="card"><div class="cli" style="border:0;padding-top:0"><div><b>${esc(p)}</b>${tel ? `<div class="small muted">📞 ${esc(tel)}</div>` : ''}</div><b class="num" style="color:${fs.some(e => e.Vence < h) ? 'var(--bad)' : 'var(--ink)'}">${usd(tot)}</b></div>
-        <div class="tbl"><table><tr><th>Fecha</th><th>Vence</th><th class="r">Total</th><th class="r">Debo</th></tr>
-        ${fs.map(e => `<tr><td>${fdate(e.Fecha)}</td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)} · vencida</span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b></td></tr>`).join('')}</table></div>
-        <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(tot)}"></div><div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
-        <p class="small muted" style="margin:6px 0 0">El pago se aplica primero a la factura más vieja.</p></div>`; }).join('') || '<div class="card empty">✅ No le debes nada a ningún proveedor</div>'}`;
+    ${provs.length > 1 ? `<div class="row" style="align-items:center;gap:8px;margin-bottom:10px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Días'], ['monto', 'Monto'], ['nombre', 'Nombre']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordb="${k}">${t}${k === 'fecha' ? flecha({ k: o.k, dir: -o.dir }, k) : flecha(o, k)}</button>`).join('')}</div></div>` : ''}
+    ${provs.map((p, i) => { const fs = porProv[p], tot = totDe(p), tel = (S.proveedores.find(x => x.Nombre === p) || {}).Telefono, v = viejaDe(p);
+      return `<div class="card"><div class="cli" style="border:0;padding-top:0"><div><b>${esc(p)}</b>${tel ? `<div class="small muted">📞 ${esc(tel)}</div>` : ''}<div class="small" style="color:${colorD(v)}">${fs.length} factura${fs.length === 1 ? '' : 's'} · la más vieja: <b>${dias(v)} día${dias(v) === 1 ? '' : 's'}</b>${v.Vence < h ? ' · vencida' : ''}</div></div><b class="num" style="color:${fs.some(e => e.Vence < h) ? 'var(--bad)' : 'var(--ink)'}">${usd(tot)}</b></div>
+        <div class="tbl"><table><tr>${conSel ? '<th title="Marca las facturas que vas a pagar">Pagar</th>' : ''}<th>Fecha</th><th class="r">Días</th><th>Vence</th><th class="r hm">Total</th><th class="r">Debo</th></tr>
+        ${fs.map(e => `<tr>${conSel ? `<td><input type="checkbox" data-fc="${i}" data-fid="${esc(e.ID)}" ${DEBO_SEL[p].has(e.ID) ? 'checked' : ''} style="width:20px;height:20px" title="Marcar esta factura para pagarla"></td>` : ''}<td style="white-space:nowrap">${fdate(e.Fecha)}<div><button class="btn sm sec" data-fdet="${esc(e.ID)}" style="flex:none;padding:2px 8px;font-size:12px" title="Ver lo que compré en esta factura">Ver compra</button></div></td><td class="r num" style="color:${colorD(e)}"><b>${dias(e)}</b></td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)}<span class="hm"> · vencida</span></span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num hm">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b></td></tr>
+          <tr class="hide" id="fd-${esc(e.ID)}"><td colspan="${conSel ? 6 : 5}"></td></tr>`).join('')}</table></div>
+        ${conSel ? `<div class="small" id="dsum-${i}" style="margin:8px 0 0"></div><div class="small" id="dwarn-${i}" style="margin:2px 0 0;color:var(--warn,#a86a00)"></div>` : ''}
+        <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(conSel ? [...DEBO_SEL[p]].reduce((s, id) => s + Number((fs.find(e => e.ID === id) || {}).Saldo || 0), 0) : tot)}"></div><div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
+        <p class="small muted" style="margin:6px 0 0">${conSel ? 'Marca la factura que vas a pagar (la más vieja viene marcada, pero puedes elegir cualquiera). Si escribes menos del total, se paga primero la más vieja de las marcadas.' : 'El pago se aplica primero a la factura más vieja.'}</p></div>`; }).join('') || '<div class="card empty">✅ No le debes nada a ningún proveedor</div>'}`;
+  const marcadas = i => provs[i] ? porProv[provs[i]].filter(e => DEBO_SEL[provs[i]].has(e.ID)) : [];
+  const resumen = (i, poner) => { // texto de abajo, aviso y monto sugerido
+    if (!conSel) return; const p = provs[i], m = marcadas(i), t = m.reduce((s, e) => s + Number(e.Saldo), 0);
+    $('#dsum-' + i).innerHTML = m.length ? `Vas a pagar <b>${m.length} factura${m.length === 1 ? '' : 's'}</b>: ${usd(t)}` : '<b>No marcaste ninguna factura.</b> Marca la que vas a pagar.';
+    const venc = porProv[p].filter(e => e.Vence < h && !DEBO_SEL[p].has(e.ID));
+    $('#dwarn-' + i).textContent = m.length && venc.length ? `⚠ ${venc.length === 1 ? 'La factura del ' + fdate(venc[0].Fecha) + ' está vencida y no la marcaste.' : venc.length + ' facturas vencidas no están marcadas (la más vieja: ' + fdate(venc[0].Fecha) + ').'} Solo es un aviso.` : '';
+    if (poner) $(`[data-dm="${i}"]`).value = n2(t);
+  };
+  provs.forEach((p, i) => resumen(i, false));
+  document.querySelectorAll('[data-fc]').forEach(c => c.onchange = () => { const i = c.dataset.fc, p = provs[i], sel = DEBO_SEL[p]; if (c.checked) sel.add(c.dataset.fid); else sel.delete(c.dataset.fid); sel.tocado = true; resumen(i, true); });
+  document.querySelectorAll('[data-ordb]').forEach(b => b.onclick = () => { ORD_DEBO = ordTocar('debo', ORD_DEBO, b.dataset.ordb, DEBO_DIR[b.dataset.ordb]); vDebo(); });
+  document.querySelectorAll('[data-fdet]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.fdet, tr = $('#fd-' + id); if (!tr.classList.contains('hide')) return tr.classList.add('hide');
+    const e = S.entradas.find(x => x.ID === id) || {};
+    let ls = (S.movimientos || []).filter(m => m.Ref === id && m.Tipo === 'Entrada');
+    if (!ls.length && conSel) { tr.firstElementChild.innerHTML = '<span class="small muted">Buscando lo que compraste…</span>'; tr.classList.remove('hide'); try { ls = (await call('detalleCompra', { id })).lineas || []; } catch (er) { ls = []; } }
+    const und = m => esUnd(m.Codigo), cant = m => und(m) ? Math.round(Number(m.Kg)) + ' und' : n2(m.Kg) + ' kg';
+    tr.firstElementChild.innerHTML = ls.length ? `<div style="padding:6px 0"><b class="small">Lo que compraste en esta factura</b><div class="tbl"><table><tr><th>Producto</th><th class="r">Cantidad</th><th class="r">Costo</th><th class="r">Total</th></tr>
+      ${ls.map(m => `<tr><td>${esc(m.Producto || m.Codigo)}</td><td class="r num">${cant(m)}</td><td class="r num">${usd(m.Costo)}</td><td class="r num">${usd(Number(m.Kg) * Number(m.Costo))}</td></tr>`).join('')}
+      <tr class="totrow"><td>Total de la factura</td><td></td><td></td><td class="r num">${usd(e.Total)}</td></tr></table></div>${e.Notas ? `<p class="small">📝 ${esc(e.Notas)}</p>` : ''}</div>` : '<span class="small muted">No encontré el detalle de esta factura (puede ser una compra anotada sin productos).</span>';
+    tr.classList.remove('hide');
+  });
   document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = numMonto($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
-    await call('pagarProveedor', { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value }); toast('Pago registrado a ' + provs[i]); await recargar(); }));
+    const datos = { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value };
+    if (conSel) { const mk = marcadas(i), t = mk.reduce((s, e) => s + Number(e.Saldo), 0); if (!mk.length) throw new Error('Marca la factura que vas a pagar'); if (m > t + 0.005) throw new Error('El monto es mayor que lo marcado (' + usd(t) + '). Marca más facturas o baja el monto.'); datos.entradaIds = mk.map(e => e.ID); }
+    await call('pagarProveedor', datos); delete DEBO_SEL[provs[i]]; toast('Pago registrado a ' + provs[i]); await recargar(); }));
 }
 
 /* ===== REPORTES V9 ===== */
