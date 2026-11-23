@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V18c'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V19'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1619,7 +1619,7 @@ function deudaProveedores() {
 let ORD_DEBO = ordLeer('debo', { k: 'fecha', dir: 1 }), DEBO_SEL = {};
 const DEBO_DIR = { fecha: 1, monto: -1, nombre: 1 };
 function vDebo() {
-  const d = deudaProveedores(), h = hoy(), conSel = Number(USER.version) >= 18;
+  const d = deudaProveedores(), h = hoy(), conSel = Number(USER.version) >= 18, tz = Number(tasaPara(h)) || 0, hayBs = conSel && Number(USER.version) >= 19 && tz > 0, bsDe = x => n2(r2(Number(x) * tz)), bsLn = x => tz > 0 ? `<div class="small muted">${bsDe(x)} bolívares</div>` : '', bsEd = {};
   const porProv = {}; d.lista.forEach(e => (porProv[e.Proveedor] = porProv[e.Proveedor] || []).push(e));
   Object.values(porProv).forEach(fs => fs.sort((x, y) => String(x.Fecha).localeCompare(String(y.Fecha)) || String(x.ID).localeCompare(String(y.ID))));
   const totDe = p => porProv[p].reduce((s, e) => s + Number(e.Saldo), 0), viejaDe = p => porProv[p][0], o = ORD_DEBO;
@@ -1629,23 +1629,27 @@ function vDebo() {
   $('#main').innerHTML = `<div class="grid g3" style="margin-bottom:14px">${kpi('Le debo a proveedores', usd(d.total))}${kpi('Vencido', usd(d.vencido), d.vencido > 0.01 ? 'bad' : '')}${kpi('Vence en 7 días', usd(d.pronto.reduce((s, e) => s + Number(e.Saldo), 0)), '', `<div class="small muted">${d.pronto.length} factura(s)</div>`)}</div>
     ${provs.length > 1 ? `<div class="row" style="align-items:center;gap:8px;margin-bottom:10px"><span class="small muted" style="flex:none">Ordenar por</span><div class="seg ord" style="flex:none">${[['fecha', 'Días'], ['monto', 'Monto'], ['nombre', 'Nombre']].map(([k, t]) => `<button class="${o.k === k ? 'on' : ''}" data-ordb="${k}">${t}${k === 'fecha' ? flecha({ k: o.k, dir: -o.dir }, k) : flecha(o, k)}</button>`).join('')}</div></div>` : ''}
     ${provs.map((p, i) => { const fs = porProv[p], tot = totDe(p), tel = (S.proveedores.find(x => x.Nombre === p) || {}).Telefono, v = viejaDe(p);
-      return `<div class="card"><div class="cli" style="border:0;padding-top:0"><div><b>${esc(p)}</b>${tel ? `<div class="small muted">📞 ${esc(tel)}</div>` : ''}<div class="small" style="color:${colorD(v)}">${fs.length} factura${fs.length === 1 ? '' : 's'} · la más vieja: <b>${dias(v)} día${dias(v) === 1 ? '' : 's'}</b>${v.Vence < h ? ' · vencida' : ''}</div></div><b class="num" style="color:${fs.some(e => e.Vence < h) ? 'var(--bad)' : 'var(--ink)'}">${usd(tot)}</b></div>
+      return `<div class="card"><div class="cli" style="border:0;padding-top:0"><div><b>${esc(p)}</b>${tel ? `<div class="small muted">📞 ${esc(tel)}</div>` : ''}<div class="small" style="color:${colorD(v)}">${fs.length} factura${fs.length === 1 ? '' : 's'} · la más vieja: <b>${dias(v)} día${dias(v) === 1 ? '' : 's'}</b>${v.Vence < h ? ' · vencida' : ''}</div></div><div class="r"><b class="num" style="color:${fs.some(e => e.Vence < h) ? 'var(--bad)' : 'var(--ink)'}">${usd(tot)}</b>${bsLn(tot)}</div></div>
         <div class="tbl"><table><tr>${conSel ? '<th title="Marca las facturas que vas a pagar">Pagar</th>' : ''}<th>Fecha</th><th class="r">Días</th><th>Vence</th><th class="r hm">Total</th><th class="r">Debo</th></tr>
-        ${fs.map(e => `<tr>${conSel ? `<td><input type="checkbox" data-fc="${i}" data-fid="${esc(e.ID)}" ${DEBO_SEL[p].has(e.ID) ? 'checked' : ''} style="width:20px;height:20px" title="Marcar esta factura para pagarla"></td>` : ''}<td style="white-space:nowrap">${fdate(e.Fecha)}<div><button class="btn sm sec" data-fdet="${esc(e.ID)}" style="flex:none;padding:2px 8px;font-size:12px" title="Ver lo que compré en esta factura">Ver compra</button></div></td><td class="r num" style="color:${colorD(e)}"><b>${dias(e)}</b></td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)}<span class="hm"> · vencida</span></span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num hm">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b></td></tr>
+        ${fs.map(e => `<tr>${conSel ? `<td><input type="checkbox" data-fc="${i}" data-fid="${esc(e.ID)}" ${DEBO_SEL[p].has(e.ID) ? 'checked' : ''} style="width:20px;height:20px" title="Marcar esta factura para pagarla"></td>` : ''}<td style="white-space:nowrap">${fdate(e.Fecha)}<div><button class="btn sm sec" data-fdet="${esc(e.ID)}" style="flex:none;padding:2px 8px;font-size:12px" title="Ver lo que compré en esta factura">Ver compra</button></div></td><td class="r num" style="color:${colorD(e)}"><b>${dias(e)}</b></td><td>${e.Vence < h ? `<span class="pill p-bad">${fdate(e.Vence)}<span class="hm"> · vencida</span></span>` : e.Vence <= addDays(h, 7) ? `<span class="pill p-warn">${fdate(e.Vence)}</span>` : fdate(e.Vence)}</td><td class="r num hm">${usd(e.Total)}</td><td class="r num"><b>${usd(e.Saldo)}</b>${bsLn(e.Saldo)}</td></tr>
           <tr class="hide" id="fd-${esc(e.ID)}"><td colspan="${conSel ? 6 : 5}"></td></tr>`).join('')}</table></div>
         ${conSel ? `<div class="small" id="dsum-${i}" style="margin:8px 0 0"></div><div class="small" id="dwarn-${i}" style="margin:2px 0 0;color:var(--warn,#a86a00)"></div>` : ''}
-        <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(conSel ? [...DEBO_SEL[p]].reduce((s, id) => s + Number((fs.find(e => e.ID === id) || {}).Saldo || 0), 0) : tot)}"></div><div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
+        <div class="row" style="margin-top:10px"><div><label>Pagar $</label><input class="num" data-dm="${i}" inputmode="decimal" value="${n2(conSel ? [...DEBO_SEL[p]].reduce((s, id) => s + Number((fs.find(e => e.ID === id) || {}).Saldo || 0), 0) : tot)}"></div>${hayBs ? `<div><label>Pagar en bolívares (tasa ${n2(tz)})</label><input class="num" data-db="${i}" inputmode="decimal" value="${bsDe(conSel ? [...DEBO_SEL[p]].reduce((s, id) => s + Number((fs.find(e => e.ID === id) || {}).Saldo || 0), 0) : tot)}"></div>` : ''}<div><label>Método</label><select data-dx="${i}">${METODOS.map(m => `<option>${m}</option>`).join('')}</select></div><button class="btn" data-dg="${i}" style="flex:none">Registrar pago</button></div>
         <p class="small muted" style="margin:6px 0 0">${conSel ? 'Marca la factura que vas a pagar (la más vieja viene marcada, pero puedes elegir cualquiera). Si escribes menos del total, se paga primero la más vieja de las marcadas.' : 'El pago se aplica primero a la factura más vieja.'}</p></div>`; }).join('') || '<div class="card empty">✅ No le debes nada a ningún proveedor</div>'}`;
   const marcadas = i => provs[i] ? porProv[provs[i]].filter(e => DEBO_SEL[provs[i]].has(e.ID)) : [];
   const resumen = (i, poner) => { // texto de abajo, aviso y monto sugerido
     if (!conSel) return; const p = provs[i], m = marcadas(i), t = m.reduce((s, e) => s + Number(e.Saldo), 0);
-    $('#dsum-' + i).innerHTML = m.length ? `Vas a pagar <b>${m.length} factura${m.length === 1 ? '' : 's'}</b>: ${usd(t)}` : '<b>No marcaste ninguna factura.</b> Marca la que vas a pagar.';
+    $('#dsum-' + i).innerHTML = m.length ? `Vas a pagar <b>${m.length} factura${m.length === 1 ? '' : 's'}</b>: ${usd(t)}${tz > 0 ? ' · ' + bsDe(t) + ' bolívares' : ''}` : '<b>No marcaste ninguna factura.</b> Marca la que vas a pagar.';
     const venc = porProv[p].filter(e => e.Vence < h && !DEBO_SEL[p].has(e.ID));
     $('#dwarn-' + i).textContent = m.length && venc.length ? `⚠ ${venc.length === 1 ? 'La factura del ' + fdate(venc[0].Fecha) + ' está vencida y no la marcaste.' : venc.length + ' facturas vencidas no están marcadas (la más vieja: ' + fdate(venc[0].Fecha) + ').'} Solo es un aviso.` : '';
-    if (poner) $(`[data-dm="${i}"]`).value = n2(t);
+    if (poner) { $(`[data-dm="${i}"]`).value = n2(t); bsEd[i] = false; if (hayBs) $(`[data-db="${i}"]`).value = bsDe(t); }
   };
   provs.forEach((p, i) => resumen(i, false));
   document.querySelectorAll('[data-fc]').forEach(c => c.onchange = () => { const i = c.dataset.fc, p = provs[i], sel = DEBO_SEL[p]; if (c.checked) sel.add(c.dataset.fid); else sel.delete(c.dataset.fid); sel.tocado = true; resumen(i, true); });
+  if (hayBs) {
+    document.querySelectorAll('[data-dm]').forEach(c => c.oninput = () => { bsEd[c.dataset.dm] = false; $(`[data-db="${c.dataset.dm}"]`).value = bsDe(numMonto(c.value) || 0); });
+    document.querySelectorAll('[data-db]').forEach(c => c.oninput = () => { bsEd[c.dataset.db] = true; $(`[data-dm="${c.dataset.db}"]`).value = n2(r2((numMonto(c.value) || 0) / tz)); });
+  }
   document.querySelectorAll('[data-ordb]').forEach(b => b.onclick = () => { ORD_DEBO = ordTocar('debo', ORD_DEBO, b.dataset.ordb, DEBO_DIR[b.dataset.ordb]); vDebo(); });
   document.querySelectorAll('[data-fdet]').forEach(b => b.onclick = async () => {
     const id = b.dataset.fdet, tr = $('#fd-' + id); if (!tr.classList.contains('hide')) return tr.classList.add('hide');
@@ -1660,6 +1664,7 @@ function vDebo() {
   });
   document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = numMonto($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
     const datos = { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value };
+    if (hayBs && bsEd[i]) { const b = numMonto($(`[data-db="${i}"]`).value); if (!(b > 0)) throw new Error('Escribe los bolívares'); datos.montoBs = b; datos.tasa = tz; datos.monto = r2(b / tz); }
     if (conSel) { const mk = marcadas(i), t = mk.reduce((s, e) => s + Number(e.Saldo), 0); if (!mk.length) throw new Error('Marca la factura que vas a pagar'); if (m > t + 0.005) throw new Error('El monto es mayor que lo marcado (' + usd(t) + '). Marca más facturas o baja el monto.'); datos.entradaIds = mk.map(e => e.ID); }
     await call('pagarProveedor', datos); delete DEBO_SEL[provs[i]]; toast('Pago registrado a ' + provs[i]); await recargar(); }));
 }
