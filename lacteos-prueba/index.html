@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V21'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V22'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1731,7 +1731,7 @@ function vDebo() {
   document.querySelectorAll('[data-dg]').forEach(b => b.onclick = () => busy(b, async () => { const i = b.dataset.dg, m = numMonto($(`[data-dm="${i}"]`).value); if (!(m > 0)) throw new Error('Escribe el monto');
     const datos = { proveedor: provs[i], monto: m, metodo: $(`[data-dx="${i}"]`).value };
     if (hayBs && mon(provs[i]).mon === 'Bs') { const tp = numMonto($(`[data-dt="${i}"]`).value); if (!(tp > 0)) throw new Error('Escribe la tasa'); datos.montoBs = m; datos.tasa = tp; datos.monto = r2(m / tp); if (hayBanco) { const bk = $(`[data-dbk="${i}"]`).value; if (!bk) throw new Error('Elige el banco desde el que pagas'); datos.banco = bk; } }
-    if (conSel) { const mk = marcadas(i), t = mk.reduce((s, e) => s + Number(e.Saldo), 0); if (!mk.length) throw new Error('Marca la factura que vas a pagar'); if (datos.monto > t + 0.005) throw new Error('El monto es mayor que lo marcado (' + usd(t) + '). Marca más facturas o baja el monto.'); datos.entradaIds = mk.map(e => e.ID); }
+    if (conSel) { const mk = marcadas(i), t = mk.reduce((s, e) => s + Number(e.Saldo), 0); if (!mk.length) throw new Error('Marca la factura que vas a pagar'); if (datos.monto > t + (datos.montoBs ? 0.05 : 0.005)) throw new Error('El monto es mayor que lo marcado (' + usd(t) + '). Marca más facturas o baja el monto.'); datos.entradaIds = mk.map(e => e.ID); }
     await call('pagarProveedor', datos); delete DEBO_SEL[provs[i]]; toast('Pago registrado a ' + provs[i]); await recargar(); }));
 }
 
