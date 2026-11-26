@@ -300,7 +300,7 @@ body:has(#soloVer) main{opacity:.7;transition:opacity .2s}
 /* ===== Configuración =====
    Si abres esta página desde GitHub Pages, pega aquí la URL de la aplicación web de Apps Script (termina en /exec). */
 const API_URL = 'https://script.google.com/macros/s/AKfycbxtmLEtXUAL55bavdg6tDmgFaT1ViHnMEmmknjcFR2HGP730x0rAUg6eBtbelGjDeTG_w/exec';
-const PANTALLA = 'V25'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
+const PANTALLA = 'V26'; // versión de esta pantalla (sirve para saber si el celular ya bajó la última)
 // Cada app (real / prueba) guarda su usuario y PIN por separado, aunque estén en la misma dirección web.
 const NS = 'lac_' + (API_URL ? API_URL.replace(/\/exec$/, '').slice(-10) + '_' : '');
 
@@ -1086,6 +1086,11 @@ function textoPlanCobro(pl) {
   else t += `quedan a favor del cliente para su próxima compra.`;
   return t;
 }
+/** V26: lo que se avisa antes de guardar, según lo que el admin eligió hacer con el sobrante. */
+function textoPlanElegido(pl, modo) {
+  if (!modo || pl.sobrante <= 0.005) return textoPlanCobro(pl);
+  return modo === 'negocio' ? `Los ${usd(pl.sobrante)} de más quedan como sobrante para el negocio. No se le abonan al cliente.` : `Los ${usd(pl.sobrante)} de más quedan a favor del cliente. Las otras notas no se tocan ahora.`;
+}
 function textoCobroGuardado(r) {
   const pag = (r.aplicado || []).filter(f => f.venta), fu = r.favorUsado || [];
   let t = 'Cobro guardado';
@@ -1120,13 +1125,14 @@ function vCobrar() {
       <button class="btn sm sec" id="ptodo" style="margin-top:8px">Pagar todo: ${P.moneda === 'Bs' ? (enBs ? aBs(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo) : '—') : usd(P.ventaId ? (pend.find(v => v.ID === P.ventaId) || {}).Saldo : saldo)}</button>` : '<p class="small muted">Este cliente no tiene deudas; el pago quedará como saldo a favor (crédito para su próxima compra).</p>') : ''}
     ${pagoCampos(P, tasa, 'pp')}
     <div id="ppplan" class="banner warn hide" style="margin:10px 0 0"></div>
+    <div id="ppsobra" style="margin-top:10px"></div>
     <div id="ppcerrar" style="margin-top:10px"></div>
     <div style="margin-top:10px"><label>Notas</label><input id="pn" value="${esc(P.notas)}"></div>
     <button class="btn acc full" style="margin-top:14px" id="pg">Guardar cobro</button>
   </div>
   <div class="card"><h2>Últimos cobros</h2><div class="tbl"><table>
     <tr><th>Fecha</th><th>Cliente</th><th class="r hm">Bs</th><th class="r">$</th><th></th><th></th></tr>
-    ${recientes.map(c => esAjusteTasa(c) ? `<tr class="muted"><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small">Ajuste por tasa cambiaria${c.VentaID ? ' en la nota ' + esc(notaDe(c.VentaID)) : ' (se quitó el saldo a favor)'} · <b>no es dinero que entró</b></div></td><td class="hm"></td><td class="r"><div class="num">${usd(c.MontoUSD)}</div></td><td><span class="pill" style="background:var(--line)">Ajuste</span></td><td><button class="x" data-dc="${c.ID}" title="Deshacer el ajuste">×</button></td></tr>` : c.Metodo === 'Saldo a favor' ? `<tr class="muted"><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small">Crédito a favor usado en la nota ${esc(notaDe(c.VentaID))} · <b>no es dinero que entró</b></div></td><td class="hm"></td><td class="r"><div class="num">${usd(c.MontoUSD)}</div></td><td><span class="pill" style="background:var(--line)">Crédito</span></td><td><button class="x" data-dc="${c.ID}" title="Deshacer el uso del crédito">×</button></td></tr>` : `<tr><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small muted">${esc(String(c.Metodo).replace(' (histórico)', ''))}${c.Banco ? ' · ' + esc(c.Banco) : ''} · ${c.VentaID ? 'nota ' + esc(notaDe(c.VentaID)) : 'sobrante: pasó a crédito a favor'}</div></td><td class="r num small hm">${c.MontoBs ? n2(c.MontoBs) : ''}</td><td class="r"><div class="num">${usd(c.MontoUSD)}</div>${c.MontoBs ? `<div class="num small muted solo-m">${bs(c.MontoBs)}</div>` : ''}</td><td>${String(c.PorLocal).toUpperCase() === 'SI' ? '<span class="pill p-mayor" title="Entró por cuentas del local">Local</span>' : ''}</td><td><button class="x" data-dc="${c.ID}" title="Eliminar">×</button></td></tr>`).join('')}
+    ${recientes.map(c => esAjusteTasa(c) ? `<tr class="muted"><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small">Ajuste por tasa cambiaria${c.VentaID ? ' en la nota ' + esc(notaDe(c.VentaID)) : ' (se quitó el saldo a favor)'} · <b>no es dinero que entró</b></div></td><td class="hm"></td><td class="r"><div class="num">${usd(c.MontoUSD)}</div></td><td><span class="pill" style="background:var(--line)">Ajuste</span></td><td><button class="x" data-dc="${c.ID}" title="Deshacer el ajuste">×</button></td></tr>` : c.Metodo === 'Saldo a favor' ? `<tr class="muted"><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small">Crédito a favor usado en la nota ${esc(notaDe(c.VentaID))} · <b>no es dinero que entró</b></div></td><td class="hm"></td><td class="r"><div class="num">${usd(c.MontoUSD)}</div></td><td><span class="pill" style="background:var(--line)">Crédito</span></td><td><button class="x" data-dc="${c.ID}" title="Deshacer el uso del crédito">×</button></td></tr>` : `<tr><td>${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}<div class="small muted">${esc(String(c.Metodo).replace(' (histórico)', ''))}${c.Banco ? ' · ' + esc(c.Banco) : ''} · ${c.VentaID ? 'nota ' + esc(notaDe(c.VentaID)) : c.Sobrante === 'NEGOCIO' ? 'sobrante para el negocio' : 'sobrante: pasó a crédito a favor'}</div></td><td class="r num small hm">${c.MontoBs ? n2(c.MontoBs) : ''}</td><td class="r"><div class="num">${usd(c.MontoUSD)}</div>${c.MontoBs ? `<div class="num small muted solo-m">${bs(c.MontoBs)}</div>` : ''}</td><td>${String(c.PorLocal).toUpperCase() === 'SI' ? '<span class="pill p-mayor" title="Entró por cuentas del local">Local</span>' : ''}</td><td><button class="x" data-dc="${c.ID}" title="Eliminar">×</button></td></tr>`).join('')}
   </table></div></div>`;
   $('#pc').onchange = e => { P.cliente = e.target.value.trim(); P.ventaId = ''; setTimeout(vCobrar); };
   $('#pf').onchange = e => { P.fecha = e.target.value; P.tasa = ''; vCobrar(); };
@@ -1137,24 +1143,36 @@ function vCobrar() {
     if (!porCerrar || P.cerrar !== porCerrar.id) P.cerrar = ''; // si cambia el pago, hay que volver a marcarla
     el.innerHTML = porCerrar ? `<div class="banner warn" style="margin:0">A la nota ${esc(porCerrar.nota)} le faltarían <b>${usd(porCerrar.saldo)}</b>.<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="ppcz" style="width:auto" ${P.cerrar ? 'checked' : ''}> <span>Cerrar esta nota como diferencia de tasa</span></label></div>` : '';
     if (porCerrar) $('#ppcz').onchange = e => P.cerrar = e.target.checked ? porCerrar.id : ''; };
-  const verPlan = () => { verPlanTexto(); const m = numMonto(P.monto), t = num(P.tasa || tasa), mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m; verCerrar(P.cliente && pend.length && mu > 0 ? planCobro(mu, pend, P.ventaId, fav) : null); };
+  let haySobra = 0, claveSobra = '';
+  const verSobra = pl => { const el = $('#ppsobra'); if (!el) return; haySobra = S.sobranteOpc && pl && pl.sobrante > 0.004 ? pl.sobrante : 0;
+    if (!haySobra || (P.sobraDe !== undefined && Math.abs(P.sobraDe - haySobra) > 0.004)) { P.sobra = ''; } // si cambia el monto, vuelve a "como siempre"
+    P.sobraDe = haySobra || undefined;
+    const otras = pl && pl.cred.length > 0, clave = haySobra + '|' + otras;
+    if (clave === claveSobra) return; claveSobra = clave;
+    const ops = [['', otras ? 'Pagar otras notas del cliente' : 'Dejarlo a favor del cliente (como siempre)'], ...(otras ? [['favor', 'Dejarlo a favor del cliente, sin tocar otras notas']] : []), ['negocio', 'Sobrante para el negocio (no se le abona al cliente)']];
+    el.innerHTML = haySobra ? `<div class="banner warn" style="margin:0"><b>Sobran ${usd(haySobra)}. ¿Qué hago con ellos?</b>${ops.map(([v, t]) => `<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="radio" name="ppsb" value="${v}" ${(P.sobra || '') === v ? 'checked' : ''} style="width:auto"> <span>${t}</span></label>`).join('')}</div>` : '';
+    el.querySelectorAll('[name=ppsb]').forEach(r => r.onchange = () => { P.sobra = r.value; verPlan(); }); };
+  const verPlan = () => { { const m0 = numMonto(P.monto), t0 = num(P.tasa || tasa), u0 = P.moneda === 'Bs' ? (t0 ? m0 / t0 : 0) : m0; verSobra(P.cliente && pend.length && u0 > 0 ? planCobro(u0, pend, P.ventaId, fav) : null); } verPlanTexto(); const m = numMonto(P.monto), t = num(P.tasa || tasa), mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m; const pl = P.cliente && pend.length && mu > 0 ? planCobro(mu, pend, P.ventaId, fav) : null;
+    if (pl && P.sobra) { pl.cred.forEach(({ n, x }) => n.saldo = r2(n.saldo + x)); pl.cred = []; } // el sobrante no toca otras notas
+    verCerrar(pl); };
   const verPlanTexto = () => { const el = $('#ppplan'); if (!el) return; const m = numMonto(P.monto), t = num(P.tasa || tasa); const mu = P.moneda === 'Bs' ? (t ? m / t : 0) : m;
-    const tx = P.cliente && pend.length && mu > 0 ? textoPlanCobro(planCobro(mu, pend, P.ventaId, fav)) : ''; el.textContent = tx; el.classList.toggle('hide', !tx); };
+    const tx = P.cliente && pend.length && mu > 0 ? textoPlanElegido(planCobro(mu, pend, P.ventaId, fav), P.sobra) : ''; el.textContent = tx; el.classList.toggle('hide', !tx); };
   bindPago(P, 'pp', vCobrar, verPlan); verPlan();
   if ($('#ptodo')) $('#ptodo').onclick = () => { const x = P.ventaId ? Number((pend.find(v => v.ID === P.ventaId) || {}).Saldo) : saldo; if (P.moneda === 'Bs' && !enBs) return toast('Escribe la tasa primero'); P.monto = String(P.moneda === 'Bs' ? r2(x * tz) : r2(x)).replace('.', ','); vCobrar(); };
   $('#pg').onclick = e => busy(e.target, async () => {
     if (!P.cliente) throw new Error('Elige el cliente');
     if (!(numMonto(P.monto) > 0)) throw new Error('Escribe el monto');
     const nc = porCerrar && P.cerrar === porCerrar.id ? porCerrar : null, btn = e.target;
+    const modo = haySobra ? (P.sobra || '') : '', sobraUsd = haySobra;
     const guardar = async () => {
-      const r = await call('guardarCobro', { ...cobroPayload(P, P.cliente, P.fecha, P.ventaId), ...(nc ? { cerrarNota: nc.id, cerrarMonto: nc.saldo } : {}) });
-      const base = r.favorUsado ? textoCobroGuardado(r) : 'Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : '');
+      const r = await call('guardarCobro', { ...cobroPayload(P, P.cliente, P.fecha, P.ventaId), ...(modo ? { sobrante: modo } : {}), ...(nc ? { cerrarNota: nc.id, cerrarMonto: nc.saldo } : {}) });
+      const base = r.sobranteModo === 'negocio' ? `Cobro guardado · ${usd(sobraUsd)} quedan como sobrante para el negocio` : r.sobranteModo === 'favor' ? `Cobro guardado · ${usd(sobraUsd)} quedan a favor del cliente` : r.favorUsado ? textoCobroGuardado(r) : 'Cobro guardado' + (r.aplicado.filter(f => f.venta).length > 1 ? ` · repartido en ${r.aplicado.filter(f => f.venta).length} notas` : '') + (r.aFavor > 0.005 ? ` · le quedan ${usd(r.aFavor)} a favor` : '');
       if (r.ajusteError) toast('El cobro quedó guardado, pero no se hizo el ajuste: ' + r.ajusteError, true);
       else toast(base + (r.ajuste ? ` · nota ${r.ajuste.nota} cerrada con ajuste de ${usd(r.ajuste.ajustado)}` : ''));
       COBRO = nuevoCobro(); await recargar();
     };
-    if (!nc) return guardar();
-    modal(`<h2 style="margin-top:0">Confirmar cobro y ajuste</h2><p>Se guarda el pago y se cierra la nota <b>${esc(nc.nota)}</b> con un ajuste por tasa de <b>${usd(nc.saldo)}</b>.</p><p class="small muted">El ajuste no es dinero que entró. Queda con tu nombre y la fecha de hoy.</p>
+    if (!nc && modo !== 'negocio') return guardar();
+    modal(`<h2 style="margin-top:0">Confirmar cobro</h2>${nc ? `<p>Se guarda el pago y se cierra la nota <b>${esc(nc.nota)}</b> con un ajuste por tasa de <b>${usd(nc.saldo)}</b>.</p><p class="small muted">El ajuste no es dinero que entró.</p>` : ''}${modo === 'negocio' ? `<p><b>${usd(sobraUsd)}</b> de <b>${esc(P.cliente)}</b> quedan como <b>sobrante para el negocio</b>. No se le abonan.</p><p class="small muted">El dinero cuenta como recibido. Se puede deshacer en Pagos recibidos.</p>` : ''}<p class="small muted">Queda con tu nombre y la fecha.</p>
       <div class="row"><button class="btn sec" id="cz0" style="flex:none">Cancelar</button><button class="btn" id="cz1" style="flex:none">Sí, guardar</button></div>`, d => {
       d.querySelector('#cz0').onclick = cerrarModal;
       d.querySelector('#cz1').onclick = ev => busy(ev.currentTarget, async () => { await guardar(); cerrarModal(); });
@@ -1372,6 +1390,30 @@ function vDeudas() {
 }
 /* V16.4: quién pagó y por qué banco. Sirve para cuadrar con el estado de cuenta: busca por los dígitos de la referencia. */
 let PAGREC = null;
+/** V26 (admin): lo que quedó como sobrante para el negocio, con el cliente del que vino. Con servidor anterior no sale. */
+let SOB_Q = '';
+function filaSobrantes() {
+  const t = normTxt(SOB_Q), l = (S.sobrantes || []).filter(c => !t || normTxt(c.Cliente).includes(t)).sort((a, b) => String(b.Fecha).localeCompare(String(a.Fecha)));
+  return l.map(c => `<tr><td>${esc(c.Cliente)}<div class="small muted">${fdate(c.Fecha)} · ${esc(c.Banco || c.Metodo || '')}${c.Referencia ? ' · ref. ' + esc(String(c.Referencia)) : ''} · ${esc(c.RegistradoPor || '')}</div></td><td class="r num"><b>${usd(c.MontoUSD)}</b></td><td class="r"><button class="btn sm sec" data-sobab="${esc(c.ID)}" style="flex:none">Abonar al cliente</button></td></tr>`).join('') +
+    (l.length ? `<tr class="totrow"><td>Total</td><td class="r num">${usd(l.reduce((s, c) => s + Number(c.MontoUSD), 0))}</td><td></td></tr>` : '<tr><td colspan="3" class="muted">No hay sobrantes de ese cliente</td></tr>');
+}
+function tarjetaSobrantes() {
+  if (!S.sobrantes || !S.sobrantes.length) return '';
+  return `<details class="card" id="sobcard" style="margin-top:14px"><summary><b>Sobrantes para el negocio: ${usd(S.sobrantes.reduce((s, c) => s + Number(c.MontoUSD), 0))}</b> <span class="small muted">(${S.sobrantes.length}, de todas las fechas)</span></summary>
+    <input id="sobq" type="search" placeholder="🔎 Buscar cliente" value="${esc(SOB_Q)}" style="margin:8px 0"><div class="tbl"><table id="sobtab">${filaSobrantes()}</table></div></details>`;
+}
+function bindSobrantes() {
+  const botones = () => document.querySelectorAll('[data-sobab]').forEach(b => b.onclick = () => {
+    const c = S.sobrantes.find(x => x.ID === b.dataset.sobab);
+    modal(`<h2 style="margin-top:0">Abonar al cliente</h2><p>Los <b>${usd(c.MontoUSD)}</b> dejan de ser sobrante del negocio y pasan a <b>${esc(c.Cliente)}</b>.</p><p class="small muted">Pagan sus notas pendientes (la más vieja primero) y lo que quede va a favor.</p>
+      <div class="row"><button class="btn sec" id="sb0" style="flex:none">Cancelar</button><button class="btn" id="sb1" style="flex:none">Sí, abonar</button></div>`, d => {
+      d.querySelector('#sb0').onclick = cerrarModal;
+      d.querySelector('#sb1').onclick = e => busy(e.currentTarget, async () => { const r = await call('abonarSobrante', { id: c.ID }); cerrarModal(); toast('Abonado al cliente: ' + usd(r.monto)); await recargar(); });
+    });
+  });
+  botones();
+  const q = $('#sobq'); if (q) q.oninput = () => { SOB_Q = q.value; $('#sobtab').innerHTML = filaSobrantes(); botones(); };
+}
 function vPagosRec() {
   const h = hoy(); if (!PAGREC) PAGREC = { desde: h.slice(0, 8) + '01', hasta: h, banco: '', q: '', verif: '' };
   const P = PAGREC, ventas = Object.fromEntries((S.ventas || []).map(v => [v.ID, v]));
@@ -1387,7 +1429,7 @@ function vPagosRec() {
     .sort((a, b) => String(b.Fecha).localeCompare(String(a.Fecha)) || String(b.CreadoEn || '').localeCompare(String(a.CreadoEn || '')));
   const totU = lista.reduce((s, c) => s + (Number(c.MontoUSD) || 0), 0), totB = lista.reduce((s, c) => s + (Number(c.MontoBs) || 0), 0);
   const nVer = lista.filter(c => c.VerificadoPor).length, porVer = lista.filter(c => !c.VerificadoPor);
-  const nota = c => c.VentaID ? ((ventas[c.VentaID] || {}).Nota || '') : 'a favor';
+  const nota = c => c.VentaID ? ((ventas[c.VentaID] || {}).Nota || '') : c.Sobrante === 'NEGOCIO' ? 'sobrante' : 'a favor';
   $('#main').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0;flex:none">Pagos recibidos</h2>${botonesDescarga('pgr')}</div>
       <p class="small muted" style="margin:4px 0 10px">Quién pagó, cuánto y por qué banco. Para cuadrar con el banco, escribe en el buscador los últimos dígitos de la referencia que sale en el estado de cuenta.</p>
       <div class="row"><div><label>Desde</label><input type="date" id="prd" value="${P.desde}"></div><div><label>Hasta</label><input type="date" id="prh" value="${P.hasta}"></div>
@@ -1396,12 +1438,14 @@ function vPagosRec() {
         <div style="flex:2;min-width:180px"><label>Buscar cliente o referencia</label><input id="prq" type="search" value="${esc(P.q)}" placeholder="🔎 Ej: Gaviota o 1234"></div></div>
       <div class="row" style="gap:6px;margin-top:8px">${[['Este mes', h.slice(0, 8) + '01', h], ['Hoy', h, h], ['Últimos 7 días', fmtD(addD(h, -6)), h], ['Mes pasado', mesPasado()[0], mesPasado()[1]]].map(([n, a, b]) => `<button class="btn sm sec" data-prr="${a}|${b}" style="flex:none">${n}</button>`).join('')}</div>
       ${P.desde < desdeApp ? `<p class="small" style="color:var(--warn,#a86a00);margin:8px 0 0">La app tiene cargados los pagos desde el ${fdate(desdeApp)}. Para fechas anteriores usa Reportes → Excel → Cobros.</p>` : ''}</div>
+    ${tarjetaSobrantes()}
     <div class="grid g3" style="margin:14px 0">${Object.entries(bancos).sort((a, b) => b[1].usd - a[1].usd).map(([b, x]) => `<div class="kpi" data-prbank="${esc(b)}" style="cursor:pointer;${P.banco === b ? 'outline:2px solid var(--brand)' : ''}"><small>${esc(b)}</small><b>${usd(x.usd)}</b><div class="small muted">${x.n} pago${x.n === 1 ? '' : 's'}${x.bs > 0.005 ? ' · ' + n2(x.bs) + ' bolívares' : ''}</div>${hayVerif ? `<div class="small" style="color:${x.pend ? 'var(--warn,#a86a00)' : 'var(--ok,#1a7f4b)'}">${x.pend ? x.pend + ' por verificar' : '✓ todos verificados'}</div>` : ''}</div>`).join('') || '<div class="kpi"><small>Sin pagos</small><b>$0,00</b><div class="small muted">en estas fechas</div></div>'}</div>
     <div class="card"><div class="small muted" style="margin-bottom:6px">${lista.length} pago${lista.length === 1 ? '' : 's'}${P.banco ? ' por ' + esc(P.banco) : ''}${P.q ? ' que coinciden con "' + esc(P.q) + '"' : ''} · ${fdate(P.desde)} al ${fdate(P.hasta)}${hayVerif ? ` · <b>${nVer} de ${lista.length} verificados</b>` : ''}</div>
       ${hayVerif && esAdm && porVer.length ? `<div style="margin-bottom:8px"><button class="btn sm sec" id="pvall" style="flex:none">Marcar los ${porVer.length} que faltan como verificados</button></div>` : ''}
       <div class="tbl"><table id="prtab"><tr>${hayVerif ? '<th title="Verificado con el estado de cuenta del banco">✓</th>' : ''}<th>Fecha</th><th>Cliente</th><th class="hm">Nota</th><th>Banco o medio</th><th class="hm">Referencia</th><th class="r hm">Bolívares</th><th class="r hm">Tasa</th><th class="r">Dólares</th></tr>
       ${lista.map(c => `<tr>${hayVerif ? `<td>${esAdm ? `<input type="checkbox" data-pv="${c.ID}" ${c.VerificadoPor ? 'checked' : ''} title="Marca cuando ya cuadraste este pago con el estado de cuenta del banco" style="width:20px;height:20px">` : (c.VerificadoPor ? '✓' : '')}</td>` : ''}<td style="white-space:nowrap">${fdate(c.Fecha)}</td><td>${esc(c.Cliente)}${hayVerif && c.VerificadoPor ? `<div class="small" style="color:var(--ok,#1a7f4b)">✓ ${esc(verTxt(c).replace(/^Sí · /, ''))}</div>` : ''}</td><td class="hm">${esc(nota(c))}</td><td>${esc(medio(c))}${c.Referencia ? `<div class="small muted sm-only">${esc(ref4(c.Referencia))}</div>` : ''}</td><td class="mono hm">${esc(c.Referencia || '')}</td><td class="r num hm">${Number(c.MontoBs) ? n2(c.MontoBs) : ''}</td><td class="r num hm">${Number(c.Tasa) ? n2(c.Tasa) : ''}</td><td class="r num"><b>${usd(c.MontoUSD)}</b></td></tr>`).join('') || '<tr><td colspan="8" class="muted">No hay pagos con esos filtros</td></tr>'}
       ${lista.length ? `<tr class="totrow">${hayVerif ? '<td></td>' : ''}<td>Total</td><td></td><td class="hm"></td><td></td><td class="hm"></td><td class="r num hm">${totB ? n2(totB) : ''}</td><td class="hm"></td><td class="r num">${usd(totU)}</td></tr>` : ''}</table></div></div>`;
+  bindSobrantes();
   const ir = () => { P.desde = $('#prd').value || P.desde; P.hasta = $('#prh').value || P.hasta; if (P.desde > P.hasta) [P.desde, P.hasta] = [P.hasta, P.desde]; P.banco = $('#prb').value; vPagosRec(); };
   $('#prd').onchange = ir; $('#prh').onchange = ir; $('#prb').onchange = ir;
   if ($('#prv')) $('#prv').onchange = e => { P.verif = e.target.value; vPagosRec(); };
